@@ -1,0 +1,108 @@
+{
+  "tasks": {
+    "task-1775395328831-0r9jca": {
+      "taskId": "task-1775395328831-0r9jca",
+      "type": "feature",
+      "description": "Phase 1: Implement domain model — enums, units, 6 entity schemas, sample data, barrel export",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase1",
+        "domain-model"
+      ],
+      "createdAt": "2026-04-05T13:22:08.831Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1775396090294-hf9rm1": {
+      "taskId": "task-1775396090294-hf9rm1",
+      "type": "feature",
+      "description": "Phase 2: Weather Data Integration — Open-Meteo client, mapper, elevation, cache, service",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase2",
+        "weather",
+        "open-meteo"
+      ],
+      "createdAt": "2026-04-05T13:34:50.294Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1775396609913-0qttrx": {
+      "taskId": "task-1775396609913-0qttrx",
+      "type": "feature",
+      "description": "Phase 3: Feature Engineering — precipitation, snowmelt, soil, temperature, seasonal, catchment, lag, and official forecast features",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase3",
+        "feature-engineering",
+        "ml"
+      ],
+      "createdAt": "2026-04-05T13:43:29.913Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1775397221918-8wqiv9": {
+      "taskId": "task-1775397221918-8wqiv9",
+      "type": "feature",
+      "description": "Phase 4: Model Training Framework — data loading, train/val/test split, XGBoost training, evaluation metrics (NSE, MAPE, threshold accuracy)",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase4",
+        "model-training",
+        "ml",
+        "xgboost"
+      ],
+      "createdAt": "2026-04-05T13:53:41.918Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1775397977685-h5n1cw": {
+      "taskId": "task-1775397977685-h5n1cw",
+      "type": "feature",
+      "description": "Phase 5: Prediction Engine — forecast pipeline, confidence estimation, correlated rivers, threshold comparison",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase5",
+        "prediction",
+        "forecast"
+      ],
+      "createdAt": "2026-04-05T14:06:17.685Z",
+      "startedAt": null,
+      "completedAt": null
+    },
+    "task-1775400517798-07zh2x": {
+      "taskId": "task-1775400517798-07zh2x",
+      "type": "feature",
+      "description": "Phase 8: Web UI — river list, forecast display, API routes, basic dashboard",
+      "priority": "high",
+      "status": "completed",
+      "progress": 100,
+      "assignedTo": [],
+      "tags": [
+        "phase8",
+        "ui",
+        "nextjs",
+        "dashboard"
+      ],
+      "createdAt": "2026-04-05T14:48:37.798Z",
+      "startedAt": null,
+      "completedAt": null
+    }
+  },
+  "version": "3.0.0"
+}

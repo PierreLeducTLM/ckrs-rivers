@@ -1,0 +1,26 @@
+[
+  {
+    "id": "060601",
+    "name": "Ha! Ha! - à 7,1 km de l'embouchure",
+    "catchmentArea": 564,
+    "regime": "Non influencé",
+    "lat": 48.277499999999996,
+    "lon": -70.87222222222222
+  },
+  {
+    "id": "061029",
+    "name": "Aux Sables - à 75 m en amont du pont suspendu de Cépal",
+    "catchmentArea": 3400,
+    "regime": "Influencé",
+    "lat": 48.3725,
+    "lon": -71.28611111111111
+  },
+  {
+    "id": "061502",
+    "name": "Métabetchouane - à 9 km en amont de son embouchure.",
+    "catchmentArea": 2212,
+    "regime": "Non influencé",
+    "lat": 48.37555555555556,
+    "lon": -71.99666666666667
+  }
+]

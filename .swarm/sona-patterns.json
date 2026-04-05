@@ -1,0 +1,94 @@
+{
+  "version": "1.0.0",
+  "patterns": {
+    "architect:data+engineering+feature+features+flow+phase+river+station+transform+weather": {
+      "keywords": [
+        "feature",
+        "phase",
+        "engineering",
+        "transform",
+        "weather",
+        "station",
+        "data",
+        "features",
+        "river",
+        "flow"
+      ],
+      "agent": "architect",
+      "confidence": 0.55,
+      "successCount": 1,
+      "failureCount": 0,
+      "lastUsed": 1775396978214,
+      "createdAt": 1775396978214
+    },
+    "architect:boosted+build+framework+gradient+model+phase+pipeline+river+training+trees": {
+      "keywords": [
+        "build",
+        "phase",
+        "model",
+        "training",
+        "framework",
+        "pipeline",
+        "gradient",
+        "boosted",
+        "trees",
+        "river"
+      ],
+      "agent": "architect",
+      "confidence": 0.55,
+      "successCount": 1,
+      "failureCount": 0,
+      "lastUsed": 1775397937232,
+      "createdAt": 1775397937232
+    },
+    "architect:actionable+bands+confidence+engine+flow+forecasts+phase+prediction+produce+threshold": {
+      "keywords": [
+        "phase",
+        "prediction",
+        "engine",
+        "produce",
+        "actionable",
+        "flow",
+        "forecasts",
+        "confidence",
+        "bands",
+        "threshold"
+      ],
+      "agent": "architect",
+      "confidence": 0.55,
+      "successCount": 1,
+      "failureCount": 0,
+      "lastUsed": 1775398151296,
+      "createdAt": 1775398151296
+    },
+    "architect:bands+charts+confidence+dashboard+forecasts+next+phase+river+showing": {
+      "keywords": [
+        "phase",
+        "next",
+        "dashboard",
+        "showing",
+        "river",
+        "forecasts",
+        "charts",
+        "confidence",
+        "bands"
+      ],
+      "agent": "architect",
+      "confidence": 0.55,
+      "successCount": 1,
+      "failureCount": 0,
+      "lastUsed": 1775400750475,
+      "createdAt": 1775400750475
+    }
+  },
+  "stats": {
+    "trajectoriesProcessed": 4,
+    "successfulRoutings": 4,
+    "failedRoutings": 0,
+    "lastUpdate": 1775400750475
+  },
+  "metadata": {
+    "createdAt": "2026-04-05T14:52:30.476Z",
+    "savedAt": "2026-04-05T14:52:30.476Z"
+  }
+}

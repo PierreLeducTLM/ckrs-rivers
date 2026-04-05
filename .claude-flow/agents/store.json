@@ -1,0 +1,47 @@
+{
+  "agents": {
+    "phase3-spec-analyst": {
+      "agentId": "phase3-spec-analyst",
+      "agentType": "researcher",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T13:43:34.969Z",
+      "domain": "hydrology-ml",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "phase3-architect": {
+      "agentId": "phase3-architect",
+      "agentType": "architect",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T13:43:36.250Z",
+      "domain": "software-architecture",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    },
+    "phase4-ml-research": {
+      "agentId": "phase4-ml-research",
+      "agentType": "researcher",
+      "status": "idle",
+      "health": 1,
+      "taskCount": 0,
+      "config": {
+        "model": "sonnet"
+      },
+      "createdAt": "2026-04-05T13:54:14.529Z",
+      "domain": "machine-learning",
+      "model": "sonnet",
+      "modelRoutedBy": "explicit"
+    }
+  },
+  "version": "3.0.0"
+}
