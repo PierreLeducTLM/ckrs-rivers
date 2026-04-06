@@ -1,6 +1,3 @@
-import { readdir, readFile, writeFile, mkdir, rename } from "node:fs/promises";
-import { join } from "node:path";
-
 import { z } from "zod";
 
 import {
@@ -18,22 +15,14 @@ export type DateRange = { startDate: string; endDate: string };
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Return the absolute path to the on-disk weather cache directory. */
-export function getCacheDir(): string {
-  return join(process.cwd(), ".data", "weather-cache");
-}
-
-/**
- * Sanitize a single coordinate value for use in a filename.
- * Negative values get an `n` prefix instead of a `-` character.
- */
+/** Sanitize a coordinate value for use in a cache key. */
 function sanitizeCoord(value: number): string {
   const rounded = Math.abs(value).toFixed(2);
   return value < 0 ? `n${rounded}` : rounded;
 }
 
 /**
- * Build a deterministic, filesystem-safe cache key from query parameters.
+ * Build a deterministic cache key from query parameters.
  *
  * @example getCacheKey(46.5, -74, "2024-01-01", "2024-12-31")
  *          // => "46.50_n74.00_2024-01-01_2024-12-31.json"
@@ -47,10 +36,7 @@ export function getCacheKey(
   return `${sanitizeCoord(lat)}_${sanitizeCoord(lon)}_${startDate}_${endDate}.json`;
 }
 
-/**
- * Iterate every calendar date between `start` and `end` (inclusive).
- * Returns an array of `"YYYY-MM-DD"` strings.
- */
+/** Iterate every calendar date between `start` and `end` (inclusive). */
 function eachDate(start: string, end: string): string[] {
   const dates: string[] = [];
   const current = new Date(`${start}T00:00:00`);
@@ -65,55 +51,125 @@ function eachDate(start: string, end: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Read / Write
+// Redis backend (Upstash — used on Vercel)
 // ---------------------------------------------------------------------------
 
-/**
- * Read and validate a cached file.
- *
- * Returns `null` when the file is missing, contains invalid JSON, or fails
- * schema validation — the caller never needs to handle those cases.
- */
-export async function readCache(key: string): Promise<WeatherWindow[] | null> {
+const KV_PREFIX = "weather:";
+const CACHE_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days
+
+type RedisClient = import("@upstash/redis").Redis;
+
+let _redis: RedisClient | null | undefined;
+
+function getRedis(): RedisClient | null {
+  if (_redis !== undefined) return _redis;
+
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    _redis = null;
+    return null;
+  }
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Redis } = require("@upstash/redis") as typeof import("@upstash/redis");
+    _redis = Redis.fromEnv();
+    return _redis;
+  } catch {
+    _redis = null;
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// File-based fallback (local development)
+// ---------------------------------------------------------------------------
+
+function getCacheDir(): string {
+  const { join } = require("node:path") as typeof import("node:path");
+  return join(process.cwd(), ".data", "weather-cache");
+}
+
+async function fileRead(key: string): Promise<WeatherWindow[] | null> {
+  const { readFile } = await import("node:fs/promises");
+  const { join } = await import("node:path");
   try {
     const raw = await readFile(join(getCacheDir(), key), "utf-8");
-    const json: unknown = JSON.parse(raw);
-    return z.array(WeatherWindowSchema).parse(json);
+    return z.array(WeatherWindowSchema).parse(JSON.parse(raw));
   } catch {
     return null;
   }
 }
 
+async function fileWrite(key: string, windows: WeatherWindow[]): Promise<void> {
+  const { writeFile, mkdir, rename } = await import("node:fs/promises");
+  const { join } = await import("node:path");
+  const dir = getCacheDir();
+  await mkdir(dir, { recursive: true });
+  const target = join(dir, key);
+  const tmp = `${target}.tmp`;
+  await writeFile(tmp, JSON.stringify(windows, null, 2), "utf-8");
+  await rename(tmp, target);
+}
+
+async function fileKeys(prefix: string): Promise<string[]> {
+  const { readdir } = await import("node:fs/promises");
+  try {
+    const files = await readdir(getCacheDir());
+    return files.filter((f) => f.startsWith(prefix) && f.endsWith(".json"));
+  } catch {
+    return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public API
+// ---------------------------------------------------------------------------
+
 /**
- * Persist weather windows to the file cache.
- *
- * The write is atomic: data is first flushed to a `.tmp` file, then renamed
- * into place so a crash mid-write never leaves a corrupt cache entry.
+ * Read a cached entry. Returns `null` on miss or error.
+ */
+export async function readCache(key: string): Promise<WeatherWindow[] | null> {
+  const redis = getRedis();
+
+  if (redis) {
+    try {
+      const data = await redis.get<WeatherWindow[]>(`${KV_PREFIX}${key}`);
+      if (!data) return null;
+      return z.array(WeatherWindowSchema).parse(data);
+    } catch {
+      return null;
+    }
+  }
+
+  return fileRead(key);
+}
+
+/**
+ * Persist weather windows to cache. Non-fatal on failure.
  */
 export async function writeCache(
   key: string,
   windows: WeatherWindow[],
 ): Promise<void> {
-  const dir = getCacheDir();
-  await mkdir(dir, { recursive: true });
+  const redis = getRedis();
 
-  const target = join(dir, key);
-  const tmp = join(dir, `${key}.tmp`);
+  if (redis) {
+    try {
+      await redis.set(`${KV_PREFIX}${key}`, windows, { ex: CACHE_TTL_SECONDS });
+    } catch {
+      // Cache write failure is non-fatal
+    }
+    return;
+  }
 
-  await writeFile(tmp, JSON.stringify(windows, null, 2), "utf-8");
-  await rename(tmp, target);
+  await fileWrite(key, windows);
 }
-
-// ---------------------------------------------------------------------------
-// Smart range lookup
-// ---------------------------------------------------------------------------
 
 /**
  * Scan the cache for data that overlaps the requested coordinate + date range.
  *
  * Returns:
- * - `cached`  — all `WeatherWindow` objects already on disk for the region
- *   that fall within `[startDate, endDate]`.
+ * - `cached`  — WeatherWindow objects already stored for the region.
  * - `missingRanges` — consecutive date spans that still need to be fetched.
  */
 export async function findCachedRange(
@@ -125,23 +181,25 @@ export async function findCachedRange(
   const prefix = `${sanitizeCoord(lat)}_${sanitizeCoord(lon)}_`;
 
   // ---- Collect every cached window for this coordinate ----
-  let files: string[];
-  try {
-    files = (await readdir(getCacheDir())).filter(
-      (f) => f.startsWith(prefix) && f.endsWith(".json"),
-    );
-  } catch {
-    // Cache directory does not exist yet — everything is missing.
-    return { cached: [], missingRanges: [{ startDate, endDate }] };
+  let keys: string[];
+  const redis = getRedis();
+
+  if (redis) {
+    try {
+      const raw = await redis.keys(`${KV_PREFIX}${prefix}*`);
+      keys = raw.map((k) => String(k).slice(KV_PREFIX.length));
+    } catch {
+      return { cached: [], missingRanges: [{ startDate, endDate }] };
+    }
+  } else {
+    keys = await fileKeys(prefix);
   }
 
   const allWindows: WeatherWindow[] = [];
 
-  for (const file of files) {
-    const windows = await readCache(file);
-    if (windows) {
-      allWindows.push(...windows);
-    }
+  for (const key of keys) {
+    const windows = await readCache(key);
+    if (windows) allWindows.push(...windows);
   }
 
   // ---- Keep only the windows inside the requested range ----
@@ -162,7 +220,6 @@ export async function findCachedRange(
         rangeStart = date;
       }
     } else if (rangeStart !== null) {
-      // End the current missing range on the day before this cached date.
       const prev = new Date(`${date}T00:00:00`);
       prev.setDate(prev.getDate() - 1);
       missingRanges.push({
@@ -173,7 +230,6 @@ export async function findCachedRange(
     }
   }
 
-  // Close a trailing open range.
   if (rangeStart !== null) {
     missingRanges.push({ startDate: rangeStart, endDate });
   }

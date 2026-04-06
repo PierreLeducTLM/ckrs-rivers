@@ -70,16 +70,23 @@ export async function generateForecast(
   const forecastDays = input.forecastDays ?? 7;
   const today = new Date().toISOString().slice(0, 10);
   const historicalStart = addDays(today, -14);
+  const t0 = Date.now();
+
+  console.log(`[forecast] ── Starting forecast for station ${input.station.id} (${input.station.name})`);
+  console.log(`[forecast]    today=${today}, forecastDays=${forecastDays}, weatherLookback=${historicalStart}`);
 
   // 1. Hydrate model into live tree structures
   const predictor: GBMPredictor = hydrateModel(input.model);
+  console.log(`[forecast]    Model hydrated: ${input.model.trees.length} trees, lr=${input.model.learningRate}`);
 
   // 2. Fetch weather timeline (historical lookback + forecast window)
+  const t1 = Date.now();
   const weatherTimeline = await getWeatherTimeline(
     input.station,
     historicalStart,
     forecastDays,
   );
+  console.log(`[forecast]    Weather fetched: ${weatherTimeline.length} days (${Date.now() - t1}ms)`);
 
   // 3. Build flow lookup from recent observed readings (average per day)
   const flowByDate = new Map<string, number>();
@@ -97,6 +104,7 @@ export async function generateForecast(
       flowByDate.set(date, total / count);
     }
   }
+  console.log(`[forecast]    Flow readings: ${flowByDate.size} days of observed data`);
 
   // 4. Build forecast lookup — keep the forecast with smallest horizonDays
   //    per target date.
@@ -146,6 +154,9 @@ export async function generateForecast(
     // d. Predict flow (real-space, m^3/s)
     const predictedFlow = predictFlow(predictor, features);
 
+    const lagFlow = flowByDate.get(addDays(targetDate, -1));
+    console.log(`[forecast]    Day+${dayOffset} ${targetDate}: predicted=${predictedFlow.toFixed(2)} m³/s (lag=${lagFlow?.toFixed(2) ?? "none"})`);
+
     // e. Inject the prediction into flowByDate for cascading lag features,
     //    but only if we don't already have actual observed flow for this date.
     if (!flowByDate.has(targetDate)) {
@@ -187,6 +198,8 @@ export async function generateForecast(
 
   // 8. Find next optimal window — longest consecutive run of "optimal" days
   const nextOptimalWindow = findOptimalWindow(classifiedForecasts);
+
+  console.log(`[forecast] ── Forecast complete for ${input.station.id} in ${Date.now() - t0}ms (${classifiedForecasts.length} days)`);
 
   return {
     stationId: input.station.id,

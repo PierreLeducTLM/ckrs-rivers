@@ -61,11 +61,13 @@ export async function getHistoricalWeather(
     startDate,
     endDate,
   );
+  console.log(`[weather] Historical ${startDate}→${endDate}: ${cached.length} cached days, ${missingRanges.length} missing ranges`);
 
   // 2. Fetch missing ranges
   const fetched: WeatherWindow[] = [];
 
   for (const range of missingRanges) {
+    console.log(`[weather]   Fetching from Open-Meteo archive: ${range.startDate}→${range.endDate}`);
     const response = await fetchHistoricalWeather({
       coordinates: station.coordinates,
       startDate: range.startDate,
@@ -104,12 +106,15 @@ export async function getForecastWeather(
   station: RiverStation,
   forecastDays?: number,
 ): Promise<WeatherWindow[]> {
+  console.log(`[weather] Fetching forecast from Open-Meteo: ${forecastDays ?? 16} days`);
+  const t0 = Date.now();
   const response = await fetchForecastWeather({
     coordinates: station.coordinates,
     forecastDays,
   });
 
   const { windows } = mapResponseToWeatherWindows(response, station.id);
+  console.log(`[weather] Forecast fetched: ${windows.length} days (${Date.now() - t0}ms)`);
 
   return adjustForElevation(
     windows,

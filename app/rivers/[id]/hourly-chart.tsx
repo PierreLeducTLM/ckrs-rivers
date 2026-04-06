@@ -19,6 +19,7 @@ export interface HourlyChartPoint {
   predicted: number | null;
   confidenceLow: number | null;
   confidenceHigh: number | null;
+  cehqForecast: number | null;
 }
 
 export interface PaddlingLevels {
@@ -36,7 +37,7 @@ interface HourlyChartProps {
 export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChartProps) {
   // Compute tight Y bounds from actual flow data
   const flowValues = data.flatMap((d) =>
-    [d.observed, d.predicted, d.confidenceLow, d.confidenceHigh].filter(
+    [d.observed, d.predicted, d.confidenceLow, d.confidenceHigh, d.cehqForecast].filter(
       (v): v is number => v !== null && v !== undefined,
     ),
   );
@@ -180,6 +181,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
                       Predicted: <span className="font-semibold">{d.predicted.toFixed(1)} m&sup3;/s</span>
                     </p>
                   )}
+                  {d.cehqForecast !== null && (
+                    <p className="mt-0.5 text-purple-500">
+                      CEHQ: <span className="font-semibold">{d.cehqForecast.toFixed(1)} m&sup3;/s</span>
+                    </p>
+                  )}
                   {d.confidenceLow !== null && d.confidenceHigh !== null && d.predicted !== null && (
                     <p className="mt-0.5 text-zinc-500">
                       Range: {d.confidenceLow.toFixed(1)} &ndash; {d.confidenceHigh.toFixed(1)}
@@ -232,7 +238,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
             isAnimationActive={false}
           />
 
-          {/* Predicted flow */}
+          {/* Predicted flow (our model) */}
           <Line
             dataKey="predicted"
             stroke="#f97316"
@@ -242,27 +248,54 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
             connectNulls={false}
             isAnimationActive={false}
           />
+
+          {/* CEHQ official forecast */}
+          <Line
+            dataKey="cehqForecast"
+            stroke="#a855f7"
+            strokeWidth={2}
+            strokeDasharray="4 2"
+            dot={false}
+            connectNulls
+            isAnimationActive={false}
+          />
         </ComposedChart>
       </ResponsiveContainer>
 
-      {/* Legend with all thresholds */}
-      {thresholds.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          {thresholds.map((t) => (
-            <span key={t.label} className="flex items-center gap-1.5">
-              <svg width="20" height="2">
-                <line x1="0" y1="1" x2="20" y2="1" stroke={t.color} strokeWidth="2" strokeDasharray="4 3" />
-              </svg>
-              <span style={{ color: t.color }}>
-                {t.label} m&sup3;/s
-                {t.position === "above" && (
-                  <span className="ml-1 text-zinc-400">&uarr;</span>
-                )}
-              </span>
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block h-0.5 w-5 rounded bg-blue-600" />
+          Observed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <svg width="20" height="3" className="text-orange-500">
+            <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2.5" strokeDasharray="5 3" />
+          </svg>
+          My model
+        </span>
+        {data.some((d) => d.cehqForecast !== null) && (
+          <span className="flex items-center gap-1.5">
+            <svg width="20" height="3" className="text-purple-500">
+              <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+            </svg>
+            CEHQ forecast
+          </span>
+        )}
+        {thresholds.map((t) => (
+          <span key={t.label} className="flex items-center gap-1.5">
+            <svg width="20" height="2">
+              <line x1="0" y1="1" x2="20" y2="1" stroke={t.color} strokeWidth="2" strokeDasharray="4 3" />
+            </svg>
+            <span style={{ color: t.color }}>
+              {t.label} m&sup3;/s
+              {t.position === "above" && (
+                <span className="ml-1 text-zinc-400">&uarr;</span>
+              )}
             </span>
-          ))}
-        </div>
-      )}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

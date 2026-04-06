@@ -43,7 +43,9 @@ function parseFrenchNumber(raw: string): number | null {
 export async function fetchRealtimeData(
   stationId: string,
 ): Promise<RealtimeResult> {
+  const t0 = Date.now();
   const url = `${CEHQ_BASE_URL}?NoStation=${stationId}`;
+  console.log(`[cehq] Fetching real-time data for station ${stationId}...`);
   const response = await fetch(url);
 
   if (!response.ok) {
@@ -111,6 +113,8 @@ export async function fetchRealtimeData(
 
   // Latest reading
   const latest = readings.length > 0 ? readings[readings.length - 1] : null;
+
+  console.log(`[cehq] Station ${stationId}: ${readings.length} readings, ${dailyAverages.size} daily averages, latest=${latest?.flow?.toFixed(1) ?? "none"} m³/s (${Date.now() - t0}ms)`);
 
   return {
     stationId,

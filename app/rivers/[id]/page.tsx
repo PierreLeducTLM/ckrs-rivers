@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import type { DailyForecast, ConfidenceLevel } from "@/lib/prediction/types";
 import HourlyChart, { type HourlyChartPoint } from "./hourly-chart";
 import { computeDiurnalProfile, expandToHourly, observedToHourly } from "@/lib/realtime/diurnal-profile";
+import { fetchCehqForecast } from "@/lib/realtime/cehq-forecast";
+import RefreshButton from "./refresh-button";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -164,6 +166,7 @@ export default async function RiverPage({
             predicted: null,
             confidenceLow: null,
             confidenceHigh: null,
+            cehqForecast: null,
           });
         }
       }
@@ -190,9 +193,42 @@ export default async function RiverPage({
             predicted: p.flow,
             confidenceLow: p.flowLow,
             confidenceHigh: p.flowHigh,
+            cehqForecast: null,
             confidenceRange: [p.flowLow, p.flowHigh],
           });
         }
+      }
+
+      // Fetch and merge CEHQ official forecast (3-hourly points)
+      try {
+        const cehqForecast = await fetchCehqForecast(id);
+        for (const p of cehqForecast.points) {
+          // CEHQ gives 3-hourly; find the nearest hour slot
+          const tsHour = p.timestamp.slice(0, 13) + ":00:00Z";
+          const label = new Date(tsHour).toLocaleString("en-CA", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            hour12: false,
+            timeZone: "UTC",
+          });
+          const existing = hourlyByTs.get(tsHour);
+          if (existing) {
+            existing.cehqForecast = p.flow;
+          } else {
+            hourlyByTs.set(tsHour, {
+              timestamp: tsHour,
+              label,
+              observed: null,
+              predicted: null,
+              confidenceLow: null,
+              confidenceHigh: null,
+              cehqForecast: p.flow,
+            });
+          }
+        }
+      } catch {
+        // CEHQ forecast endpoint unavailable — skip
       }
 
       // Sort by timestamp
@@ -286,6 +322,7 @@ export default async function RiverPage({
             </svg>
             View Historical Data
           </Link>
+          <RefreshButton />
         </header>
 
         {/* Last observed flow */}
