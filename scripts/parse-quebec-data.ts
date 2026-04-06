@@ -101,7 +101,8 @@ function parseFile(filename: string): { meta: StationMeta; records: FlowRecord[]
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
 
-const files = ["060601_Q.txt", "061029_Q.txt", "061502_Q.txt"];
+// 061029 excluded: dam-controlled river (Régime: Influencé)
+const files = ["060601_Q.txt", "060704_Q.txt", "061502_Q.txt"];
 const allStations: StationMeta[] = [];
 
 for (const file of files) {

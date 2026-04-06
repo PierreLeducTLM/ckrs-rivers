@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { getStationById, getRecentReadings, getModel } from "@/lib/data/rivers";
+import { getStationById, getRecentReadings, getModel, getRealtimeData, getPaddlingLevels } from "@/lib/data/rivers";
 import { generateForecast } from "@/lib/prediction/forecast";
 import { notFound } from "next/navigation";
 import type { DailyForecast, ConfidenceLevel } from "@/lib/prediction/types";
+import HourlyChart, { type HourlyChartPoint } from "./hourly-chart";
+import { computeDiurnalProfile, expandToHourly, observedToHourly } from "@/lib/realtime/diurnal-profile";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,7 +86,8 @@ export default async function RiverPage({
   if (!station) notFound();
 
   const model = getModel();
-  const recentReadings = getRecentReadings(id);
+  const paddling = getPaddlingLevels().get(id);
+  const recentReadings = await getRecentReadings(id);
 
   // Last observed flow (most recent reading)
   const lastReading = recentReadings.at(-1);
@@ -116,6 +119,94 @@ export default async function RiverPage({
   const maxFlow = forecasts.length > 0
     ? Math.max(...forecasts.map((f) => f.flowHigh))
     : 1;
+
+  // Build hourly chart data from diurnal profile + forecast
+  const hourlyChartData: (HourlyChartPoint & { confidenceRange?: [number, number] })[] = [];
+  try {
+    const realtimeData = await getRealtimeData(id);
+    const profile = computeDiurnalProfile(realtimeData.readings);
+
+    if (profile && forecasts.length > 0) {
+      // Observed hourly points (from CEHQ 15-min data)
+      const observedHourly = observedToHourly(realtimeData.readings);
+
+      // Predicted hourly points (daily forecast × diurnal profile)
+      const predictedHourly = expandToHourly(
+        forecasts.map((f) => ({
+          date: f.date,
+          flow: f.flow,
+          flowLow: f.flowLow,
+          flowHigh: f.flowHigh,
+        })),
+        profile,
+      );
+
+      // Merge into chart format, keyed by timestamp so overlapping
+      // hours (today) have both observed and predicted values.
+      const hourlyByTs = new Map<string, (typeof hourlyChartData)[0]>();
+
+      for (const p of observedHourly) {
+        const label = new Date(p.timestamp).toLocaleString("en-CA", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          hour12: false,
+          timeZone: "UTC",
+        });
+        const existing = hourlyByTs.get(p.timestamp);
+        if (existing) {
+          existing.observed = p.flow;
+        } else {
+          hourlyByTs.set(p.timestamp, {
+            timestamp: p.timestamp,
+            label,
+            observed: p.flow,
+            predicted: null,
+            confidenceLow: null,
+            confidenceHigh: null,
+          });
+        }
+      }
+
+      for (const p of predictedHourly) {
+        const label = new Date(p.timestamp).toLocaleString("en-CA", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          hour12: false,
+          timeZone: "UTC",
+        });
+        const existing = hourlyByTs.get(p.timestamp);
+        if (existing) {
+          existing.predicted = p.flow;
+          existing.confidenceLow = p.flowLow;
+          existing.confidenceHigh = p.flowHigh;
+          (existing as typeof existing & { confidenceRange?: [number, number] }).confidenceRange = [p.flowLow, p.flowHigh];
+        } else {
+          hourlyByTs.set(p.timestamp, {
+            timestamp: p.timestamp,
+            label,
+            observed: null,
+            predicted: p.flow,
+            confidenceLow: p.flowLow,
+            confidenceHigh: p.flowHigh,
+            confidenceRange: [p.flowLow, p.flowHigh],
+          });
+        }
+      }
+
+      // Sort by timestamp
+      hourlyChartData.push(
+        ...[...hourlyByTs.values()].sort((a, b) =>
+          a.timestamp.localeCompare(b.timestamp),
+        ),
+      );
+    }
+  } catch {
+    // If CEHQ fetch fails, hourly chart just won't render
+  }
+
+  const nowTimestamp = new Date().toISOString();
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
@@ -174,6 +265,27 @@ export default async function RiverPage({
               </>
             )}
           </div>
+
+          {/* History link */}
+          <Link
+            href={`/rivers/${id}/history`}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+            View Historical Data
+          </Link>
         </header>
 
         {/* Last observed flow */}
@@ -193,6 +305,13 @@ export default async function RiverPage({
                 {formatDate(lastObservedDate)}
               </span>
             </div>
+          </section>
+        )}
+
+        {/* Hourly flow chart */}
+        {hourlyChartData.length > 0 && (
+          <section className="mt-6">
+            <HourlyChart data={hourlyChartData} nowTimestamp={nowTimestamp} paddling={paddling} />
           </section>
         )}
 

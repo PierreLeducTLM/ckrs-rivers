@@ -5,15 +5,21 @@
     "catchmentArea": 564,
     "regime": "Non influencé",
     "lat": 48.277499999999996,
-    "lon": -70.87222222222222
+    "lon": -70.87222222222222,
+    "paddling": {}
   },
   {
-    "id": "061029",
-    "name": "Aux Sables - à 75 m en amont du pont suspendu de Cépal",
-    "catchmentArea": 3400,
-    "regime": "Influencé",
-    "lat": 48.3725,
-    "lon": -71.28611111111111
+    "id": "060704",
+    "name": "À Mars - à la fosse 80 dans la zec de la rivière à Mars",
+    "catchmentArea": 446,
+    "regime": "Non influencé",
+    "lat": 48.205000000000005,
+    "lon": -70.99805555555555,
+    "paddling": {
+      "min": 15,
+      "ideal": 25, 
+      "max": 60
+    }
   },
   {
     "id": "061502",
@@ -21,6 +27,11 @@
     "catchmentArea": 2212,
     "regime": "Non influencé",
     "lat": 48.37555555555556,
-    "lon": -71.99666666666667
+    "lon": -71.99666666666667,
+    "paddling": {
+      "min": 18,
+      "ideal": 40, 
+      "max": 80
+    }
   }
 ]

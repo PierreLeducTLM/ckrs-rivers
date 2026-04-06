@@ -113,12 +113,17 @@ export async function generateForecast(
     }
   }
 
-  // 5. Cascading prediction loop — one day at a time so each day's
-  //    predicted flow feeds into subsequent lag features.
+  // 5. Cascading prediction loop — starts from today (dayOffset=0) so the
+  //    forecast overlaps with the last observed data point, preventing a
+  //    visual gap caused by UTC vs local timezone differences.
   const forecasts: DailyForecast[] = [];
 
-  for (let horizon = 1; horizon <= forecastDays; horizon++) {
-    const targetDate = addDays(today, horizon);
+  for (let dayOffset = 0; dayOffset <= forecastDays; dayOffset++) {
+    const targetDate = addDays(today, dayOffset);
+
+    // Model horizon (1-based): today uses horizon=1, tomorrow=2, etc.
+    // The model was trained with horizon 1-7; clamp to 1 for today.
+    const horizon = Math.max(1, dayOffset);
 
     // a. Build the feature compute context for this single day
     const ctx: FeatureComputeContext = {
@@ -141,8 +146,11 @@ export async function generateForecast(
     // d. Predict flow (real-space, m^3/s)
     const predictedFlow = predictFlow(predictor, features);
 
-    // e. Inject the prediction into flowByDate for cascading lag features
-    flowByDate.set(targetDate, predictedFlow);
+    // e. Inject the prediction into flowByDate for cascading lag features,
+    //    but only if we don't already have actual observed flow for this date.
+    if (!flowByDate.has(targetDate)) {
+      flowByDate.set(targetDate, predictedFlow);
+    }
 
     // f. Compute confidence bands and threshold classification
     const { low, high } = computeConfidenceBands(predictedFlow, horizon);

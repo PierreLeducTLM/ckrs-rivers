@@ -15,7 +15,7 @@ export async function GET(
     }
 
     const model = getModel();
-    const recentFlowReadings = getRecentReadings(id);
+    const recentFlowReadings = await getRecentReadings(id);
 
     const result = await generateForecast({
       station,

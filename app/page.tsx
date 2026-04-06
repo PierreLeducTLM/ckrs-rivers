@@ -6,7 +6,7 @@ export default async function Home() {
 
   const stationsWithReadings = await Promise.all(
     stations.map(async (station) => {
-      const readings = getRecentReadings(station.id, 1);
+      const readings = await getRecentReadings(station.id, 1);
       const lastReading = readings.at(-1);
       return { station, lastReading };
     }),
