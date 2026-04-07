@@ -12,9 +12,10 @@ interface SparklinePoint {
 interface SparklineChartProps {
   data: SparklinePoint[];
   nowTs: number;
+  paddling?: { min?: number; ideal?: number; max?: number } | null;
 }
 
-export default function SparklineChart({ data, nowTs }: SparklineChartProps) {
+export default function SparklineChart({ data, nowTs, paddling }: SparklineChartProps) {
   if (data.length < 2) return null;
 
   const allValues = data.flatMap((d) => {
@@ -24,6 +25,7 @@ export default function SparklineChart({ data, nowTs }: SparklineChartProps) {
     if (d.cehqRange) vals.push(d.cehqRange[0], d.cehqRange[1]);
     return vals;
   });
+  if (paddling?.min != null) allValues.push(paddling.min);
   if (allValues.length === 0) return null;
 
   const yMin = Math.max(0, Math.min(...allValues) * 0.9);
@@ -42,6 +44,10 @@ export default function SparklineChart({ data, nowTs }: SparklineChartProps) {
         <YAxis domain={[yMin, yMax]} hide />
 
         <ReferenceLine x={nowTs} stroke="#f59e0b" strokeDasharray="2 2" strokeWidth={1} />
+
+        {paddling?.min != null && (
+          <ReferenceLine y={paddling.min} stroke="#eab308" strokeDasharray="3 3" strokeWidth={1} strokeOpacity={0.6} />
+        )}
 
         <Area
           dataKey="cehqRange"

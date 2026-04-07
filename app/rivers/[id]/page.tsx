@@ -1,9 +1,12 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
+import StationMetaEditor from "./station-meta-editor";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -154,9 +157,15 @@ export default async function RiverPage({
 
         {/* River header */}
         <header className="mt-6">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {station.name}
-          </h1>
+          <StationMetaEditor
+            stationId={id}
+            initialName={station.name}
+            initialPaddling={{
+              min: paddling?.min ?? null,
+              ideal: paddling?.ideal ?? null,
+              max: paddling?.max ?? null,
+            }}
+          />
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
             <span>
               Station{" "}

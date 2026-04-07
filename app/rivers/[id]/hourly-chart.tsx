@@ -73,7 +73,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
   if (paddling?.min !== undefined) {
     const v = paddling.min;
     thresholds.push({
-      value: v, label: `Min ${v}`, color: "#22c55e",
+      value: v, label: `Min ${v}`, color: "#eab308",
       inRange: v >= yMin && v <= yMax,
       position: v > yMax ? "above" : v < yMin ? "below" : "in",
     });
@@ -81,7 +81,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
   if (paddling?.ideal !== undefined) {
     const v = paddling.ideal;
     thresholds.push({
-      value: v, label: `Ideal ${v}`, color: "#eab308",
+      value: v, label: `Ideal ${v}`, color: "#22c55e",
       inRange: v >= yMin && v <= yMax,
       position: v > yMax ? "above" : v < yMin ? "below" : "in",
     });
@@ -168,7 +168,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
             tickLine={false}
             axisLine={{ stroke: "currentColor", opacity: 0.15 }}
             label={{
-              value: "m\u00B3/s",
+              value: "m³/s",
               angle: -90,
               position: "insideLeft",
               offset: 10,
