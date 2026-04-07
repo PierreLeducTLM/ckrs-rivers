@@ -30,6 +30,15 @@ function timeAgo(isoDate: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
+  if (w.snowfall > 0.5) return "\u2744\uFE0F";
+  if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F";
+  if (w.precipitation > 0.5) return "\uD83C\uDF26\uFE0F";
+  if (w.tempMax != null && w.tempMax > 15) return "\u2600\uFE0F";
+  if (w.tempMax != null && w.tempMax > 5) return "\u26C5";
+  return "\u2601\uFE0F";
+}
+
 function statusLabel(status: string): string {
   switch (status) {
     case "too-low": return "Too Low";
@@ -62,6 +71,13 @@ export interface StationCard {
   position: number;
   color: string;
   isGoodRange: boolean;
+  weatherDays: Array<{
+    date: string;
+    tempMin: number | null;
+    tempMax: number | null;
+    precipitation: number;
+    snowfall: number;
+  }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -72,6 +88,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const refreshFavorites = useCallback(() => {
     setFavorites(getFavorites());
@@ -184,7 +201,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 Station {card.id}
                 {card.catchmentArea !== undefined && (
                   <span>
-                    {" "}&middot; {Number(card.catchmentArea).toLocaleString()} km&sup2;
+                    {" "}&middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;
                   </span>
                 )}
               </p>
@@ -195,6 +212,77 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                   <SparklineChart data={card.sparkData} nowTs={card.nowTs} paddling={card.paddling} />
                 </div>
               )}
+
+              {/* Weather pictograms aligned to chart days */}
+              {card.weatherDays.length > 0 && card.sparkData.length > 2 && (() => {
+                const total = card.sparkData.length;
+                const icons = card.weatherDays
+                  .map((w) => {
+                    const dayMid = new Date(w.date + "T12:00:00Z").getTime();
+                    let closestIdx = 0;
+                    let closestDiff = Infinity;
+                    for (let i = 0; i < total; i++) {
+                      const diff = Math.abs(card.sparkData[i].ts - dayMid);
+                      if (diff < closestDiff) {
+                        closestDiff = diff;
+                        closestIdx = i;
+                      }
+                    }
+                    const pct = (closestIdx / (total - 1)) * 100;
+                    return { ...w, pct };
+                  })
+                  .filter((w) => w.pct >= 0 && w.pct <= 100);
+
+                const tipKey = (date: string) => `${card.id}:${date}`;
+
+                return icons.length > 0 ? (
+                  <div className="relative -mx-1 h-5">
+                    {icons.map((w) => {
+                      const key = tipKey(w.date);
+                      const isOpen = activeTooltip === key;
+                      const dateLabel = new Date(w.date + "T00:00:00Z").toLocaleDateString("en-CA", { weekday: "short", month: "short", day: "numeric" });
+                      return (
+                        <span
+                          key={w.date}
+                          className="absolute text-sm leading-none -translate-x-1/2"
+                          style={{ left: `${w.pct}%` }}
+                          onPointerEnter={() => setActiveTooltip(key)}
+                          onPointerLeave={() => setActiveTooltip((v) => v === key ? null : v)}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setActiveTooltip((v) => v === key ? null : key); }}
+                        >
+                          {weatherIcon(w)}
+                          {isOpen && (
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 z-20 rounded-lg bg-zinc-900 dark:bg-zinc-800 px-2.5 py-1.5 text-[11px] text-white shadow-lg whitespace-nowrap">
+                              <span className="font-medium">{dateLabel}</span>
+                              <br />
+                              {(w.tempMin != null || w.tempMax != null) && (
+                                <>
+                                  {w.tempMin != null && <span className="text-blue-300">{w.tempMin.toFixed(0)}&deg;</span>}
+                                  {w.tempMin != null && w.tempMax != null && <span className="text-zinc-400"> / </span>}
+                                  {w.tempMax != null && <span className="text-red-300">{w.tempMax.toFixed(0)}&deg;</span>}
+                                </>
+                              )}
+                              {w.precipitation > 0.1 && (
+                                <>
+                                  <br />
+                                  <span className="text-blue-300">{w.precipitation.toFixed(1)} mm rain</span>
+                                </>
+                              )}
+                              {w.snowfall > 0.1 && (
+                                <>
+                                  <br />
+                                  <span className="text-sky-200">{w.snowfall.toFixed(1)} cm snow</span>
+                                </>
+                              )}
+                              <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-800" />
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null;
+              })()}
 
               {card.lastFlow != null ? (
                 <div className="mt-2 flex items-baseline justify-between">
@@ -285,7 +373,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <p className="text-xs text-foreground/50">
                   {card.id}
                   {card.catchmentArea !== undefined && (
-                    <span> &middot; {Number(card.catchmentArea).toLocaleString()} km&sup2;</span>
+                    <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
                   )}
                 </p>
               </div>

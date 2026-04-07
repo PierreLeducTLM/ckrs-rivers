@@ -78,7 +78,8 @@ export default async function Home() {
        generated_at::text as forecast_at,
        (forecast_json->'lastFlow'->>'flow')::double precision as last_flow,
        forecast_json->'lastFlow'->>'date' as last_date,
-       hourly_json
+       hourly_json,
+       weather_json
      FROM forecast_cache`,
   ) as Array<{
     station_id: string;
@@ -86,11 +87,19 @@ export default async function Home() {
     last_flow: number | null;
     last_date: string | null;
     hourly_json: HourlyPoint[] | null;
+    weather_json: Array<{
+      date: string;
+      tempMin?: number;
+      tempMax?: number;
+      precipitation?: number;
+      snowfall?: number;
+    }> | null;
   }>;
   const dataMap = new Map(rows.map((r) => [r.station_id, r]));
 
   const nowTs = Date.now();
   const cutoffTs = nowTs - 2 * 24 * 60 * 60 * 1000;
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   // Pre-compute all card data on the server
   const cards: StationCard[] = stations.map((station) => {
@@ -115,6 +124,18 @@ export default async function Home() {
       })
       .filter((p) => p.ts >= cutoffTs);
 
+    // Extract upcoming weather days for card pictograms
+    const weatherDays = (data?.weather_json ?? [])
+      .filter((w) => w.date >= todayStr)
+      .slice(0, 7)
+      .map((w) => ({
+        date: w.date,
+        tempMin: w.tempMin ?? null,
+        tempMax: w.tempMax ?? null,
+        precipitation: w.precipitation ?? 0,
+        snowfall: w.snowfall ?? 0,
+      }));
+
     return {
       id: station.id,
       name: station.name,
@@ -130,6 +151,7 @@ export default async function Home() {
       position,
       color,
       isGoodRange,
+      weatherDays,
     };
   });
 

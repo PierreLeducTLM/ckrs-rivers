@@ -41,7 +41,7 @@ export default function SparklineChart({ data, nowTs, paddling }: SparklineChart
           </linearGradient>
         </defs>
 
-        <YAxis domain={[yMin, yMax]} hide />
+        <YAxis domain={[yMin, yMax]} hide width={0} />
 
         <ReferenceLine x={nowTs} stroke="#f59e0b" strokeDasharray="2 2" strokeWidth={1} />
 
