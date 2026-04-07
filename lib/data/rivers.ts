@@ -25,6 +25,9 @@ interface StationRow {
   paddling_max: number | null;
   status: string;
   error_message: string | null;
+  weather_city: string | null;
+  weather_lat: number | null;
+  weather_lon: number | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -33,6 +36,11 @@ function rowToStation(row: StationRow): RiverStation {
     name: row.name,
     coordinates: { lat: row.lat, lon: row.lon },
     catchmentArea: row.catchment_area_km2 ?? undefined,
+    weatherCity: row.weather_city ?? undefined,
+    weatherCoordinates:
+      row.weather_lat != null && row.weather_lon != null
+        ? { lat: row.weather_lat, lon: row.weather_lon }
+        : undefined,
   });
 }
 

@@ -269,6 +269,7 @@ interface StationMetaEditorProps {
     ideal: number | null;
     max: number | null;
   };
+  initialWeatherCity?: string | null;
   isAdmin?: boolean;
 }
 
@@ -276,17 +277,21 @@ export default function StationMetaEditor({
   stationId,
   initialName,
   initialPaddling,
+  initialWeatherCity = null,
   isAdmin = false,
 }: StationMetaEditorProps) {
   const [name, setName] = useState(initialName);
   const [paddling, setPaddling] = useState(initialPaddling);
+  const [weatherCity, setWeatherCity] = useState(initialWeatherCity ?? "");
+  const [weatherError, setWeatherError] = useState<string | null>(null);
 
   const patch = async (fields: Record<string, string | number | null>) => {
-    await fetch(`/api/stations/${stationId}`, {
+    const res = await fetch(`/api/stations/${stationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(fields),
     });
+    return res;
   };
 
   // Read-only mode for non-admin users
@@ -322,6 +327,11 @@ export default function StationMetaEditor({
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
               </div>
             )}
+          </div>
+        )}
+        {weatherCity && (
+          <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            Weather: {weatherCity}
           </div>
         )}
       </div>
@@ -385,6 +395,34 @@ export default function StationMetaEditor({
             }}
           />
         </div>
+      </div>
+
+      {/* Weather location override */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Weather Location
+        </span>
+        <EditableText
+          value={weatherCity || ""}
+          label="weather city"
+          onSave={async (v) => {
+            setWeatherError(null);
+            const cityValue = v.trim() === "" ? null : v.trim();
+            const res = await patch({ weather_city: cityValue });
+            if (!res.ok) {
+              const data = await res.json();
+              setWeatherError(data.error ?? "Failed to save");
+              return;
+            }
+            setWeatherCity(v.trim());
+          }}
+        />
+        <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          {weatherCity ? "" : "(using station coordinates)"}
+        </span>
+        {weatherError && (
+          <span className="text-xs text-red-500">{weatherError}</span>
+        )}
       </div>
     </div>
   );

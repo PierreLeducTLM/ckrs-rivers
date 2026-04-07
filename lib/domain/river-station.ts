@@ -38,6 +38,8 @@ export const RiverStationSchema = z.object({
   baseFlow: CubicMetersPerSecondSchema.optional(),
   riverBedType: RiverBedTypeSchema.optional(),
   orientation: OrientationSchema.optional(),
+  weatherCity: z.string().optional(),
+  weatherCoordinates: CoordinatesSchema.optional(),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;

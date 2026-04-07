@@ -165,6 +165,7 @@ export default async function RiverPage({
               ideal: paddling?.ideal ?? null,
               max: paddling?.max ?? null,
             }}
+            initialWeatherCity={(station.weatherCity as string | undefined) ?? null}
           />
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
             <span>

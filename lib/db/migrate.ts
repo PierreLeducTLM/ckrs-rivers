@@ -35,6 +35,9 @@ async function migrate() {
   // Run ALTER TABLE statements for adding columns to existing tables
   const alterStatements = [
     `ALTER TABLE forecast_cache ADD COLUMN IF NOT EXISTS weather_json JSONB`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_city TEXT`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_lat DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_lon DOUBLE PRECISION`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

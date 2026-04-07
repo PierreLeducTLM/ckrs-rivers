@@ -11,12 +11,14 @@ interface RiverHeaderProps {
     ideal: number | null;
     max: number | null;
   };
+  initialWeatherCity: string | null;
 }
 
 export default function RiverHeader({
   stationId,
   initialName,
   initialPaddling,
+  initialWeatherCity,
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
 
@@ -25,6 +27,7 @@ export default function RiverHeader({
       stationId={stationId}
       initialName={initialName}
       initialPaddling={initialPaddling}
+      initialWeatherCity={initialWeatherCity}
       isAdmin={isAdmin}
     />
   );

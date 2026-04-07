@@ -78,7 +78,11 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
       (a as { timestamp: string }).timestamp.localeCompare((b as { timestamp: string }).timestamp),
     );
 
-    // 4. Fetch weather
+    // 4. Fetch weather (use override coordinates if set)
+    const weatherStation = station.weatherCoordinates
+      ? { ...station, coordinates: station.weatherCoordinates }
+      : station;
+
     const lookbackDate = new Date();
     lookbackDate.setUTCDate(lookbackDate.getUTCDate() - 3);
     const lookback = lookbackDate.toISOString().slice(0, 10);
@@ -94,7 +98,7 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
     }> = [];
 
     try {
-      const weather = await getWeatherTimeline(station, lookback, 10);
+      const weather = await getWeatherTimeline(weatherStation, lookback, 10);
       weatherSummary = weather
         .filter((w) => w.date >= lookback)
         .map((w) => ({
