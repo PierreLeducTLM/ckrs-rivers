@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getStations } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import AddStation from "./add-station";
+import SparklineChart from "./sparkline-chart";
 
 function timeAgo(isoDate: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
@@ -13,24 +14,38 @@ function timeAgo(isoDate: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+interface HourlyPoint {
+  timestamp: string;
+  observed: number | null;
+  cehqForecast: number | null;
+  cehqLow: number | null;
+  cehqHigh: number | null;
+}
+
 export default async function Home() {
   const stations = await getStations();
 
-  // Single query: cached forecast data for all stations
+  // Fetch cached data for all stations — including hourly for sparklines
   const rows = await sql(
     `SELECT
        station_id,
        generated_at::text as forecast_at,
        (forecast_json->'lastFlow'->>'flow')::double precision as last_flow,
-       forecast_json->'lastFlow'->>'date' as last_date
+       forecast_json->'lastFlow'->>'date' as last_date,
+       hourly_json
      FROM forecast_cache`,
   ) as Array<{
     station_id: string;
     forecast_at: string | null;
     last_flow: number | null;
     last_date: string | null;
+    hourly_json: HourlyPoint[] | null;
   }>;
   const dataMap = new Map(rows.map((r) => [r.station_id, r]));
+
+  const nowTs = Date.now();
+  // For sparkline: only keep 2 days before today onward
+  const cutoffTs = nowTs - 2 * 24 * 60 * 60 * 1000;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,29 +63,49 @@ export default async function Home() {
           {stations.map((station) => {
             const data = dataMap.get(station.id);
 
+            // Build sparkline data from cached hourly points
+            const sparkData = (data?.hourly_json ?? [])
+              .map((p) => {
+                const ts = new Date(p.timestamp).getTime();
+                return {
+                  ts,
+                  observed: p.observed,
+                  cehqForecast: p.cehqForecast,
+                  cehqRange: p.cehqLow != null && p.cehqHigh != null
+                    ? [p.cehqLow, p.cehqHigh] as [number, number]
+                    : undefined,
+                };
+              })
+              .filter((p) => p.ts >= cutoffTs);
+
             return (
               <Link
                 key={station.id}
                 href={`/rivers/${station.id}`}
                 className="group rounded-xl border border-foreground/10 bg-background p-6 shadow transition-shadow hover:shadow-lg"
               >
-                <h2 className="text-xl font-semibold group-hover:underline">
+                <h2 className="text-lg font-semibold group-hover:underline leading-tight">
                   {station.name}
                 </h2>
 
                 <p className="mt-1 text-sm text-foreground/50">
                   Station {station.id}
+                  {station.catchmentArea !== undefined && (
+                    <span>
+                      {" "}&middot; {Number(station.catchmentArea).toLocaleString()} km&sup2;
+                    </span>
+                  )}
                 </p>
 
-                {station.catchmentArea !== undefined && (
-                  <p className="mt-2 text-sm text-foreground/70">
-                    Catchment: {Number(station.catchmentArea).toLocaleString()}{" "}
-                    km&sup2;
-                  </p>
+                {/* Sparkline chart */}
+                {sparkData.length > 2 && (
+                  <div className="mt-3 -mx-1">
+                    <SparklineChart data={sparkData} nowTs={nowTs} />
+                  </div>
                 )}
 
                 {data?.last_flow != null ? (
-                  <div className="mt-4 rounded-lg bg-foreground/5 px-4 py-3">
+                  <div className="mt-2 flex items-baseline justify-between">
                     <p className="text-2xl font-bold tabular-nums">
                       {data.last_flow.toFixed(1)}{" "}
                       <span className="text-sm font-normal text-foreground/60">
@@ -78,8 +113,8 @@ export default async function Home() {
                       </span>
                     </p>
                     {data.forecast_at && (
-                      <p className="mt-1 text-xs text-foreground/50">
-                        Updated {timeAgo(data.forecast_at)}
+                      <p className="text-xs text-foreground/40">
+                        {timeAgo(data.forecast_at)}
                       </p>
                     )}
                   </div>

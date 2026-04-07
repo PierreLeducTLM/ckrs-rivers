@@ -45,9 +45,13 @@ function formatTick(epoch: number): string {
 
 export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChartProps) {
   // Add numeric timestamp for proportional x-axis spacing
+  // and a [low, high] tuple for the CEHQ confidence band
   const chartData = data.map((d) => ({
     ...d,
     ts: new Date(d.timestamp).getTime(),
+    cehqRange: d.confidenceLow != null && d.confidenceHigh != null
+      ? [d.confidenceLow, d.confidenceHigh]
+      : undefined,
   }));
 
   // Compute tight Y bounds from actual flow data
@@ -232,14 +236,15 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
               />
             ))}
 
-          {/* CEHQ confidence band */}
+          {/* CEHQ confidence band (q25–q75) */}
           <Area
-            dataKey="confidenceRange"
+            dataKey="cehqRange"
             fill="url(#cehqConfFill)"
             stroke="#a855f7"
             strokeOpacity={0.2}
             strokeWidth={1}
             isAnimationActive={false}
+            connectNulls={false}
           />
 
           {/* Observed flow */}
@@ -272,12 +277,18 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
           Observed
         </span>
         {data.some((d) => d.cehqForecast !== null) && (
-          <span className="flex items-center gap-1.5">
-            <svg width="20" height="3" className="text-purple-500">
-              <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
-            </svg>
-            CEHQ forecast
-          </span>
+          <>
+            <span className="flex items-center gap-1.5">
+              <svg width="20" height="3" className="text-purple-500">
+                <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+              </svg>
+              CEHQ forecast
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="inline-block h-3 w-5 rounded bg-purple-500/20" />
+              Q25–Q75
+            </span>
+          </>
         )}
         {thresholds.map((t) => (
           <span key={t.label} className="flex items-center gap-1.5">
