@@ -269,12 +269,14 @@ interface StationMetaEditorProps {
     ideal: number | null;
     max: number | null;
   };
+  isAdmin?: boolean;
 }
 
 export default function StationMetaEditor({
   stationId,
   initialName,
   initialPaddling,
+  isAdmin = false,
 }: StationMetaEditorProps) {
   const [name, setName] = useState(initialName);
   const [paddling, setPaddling] = useState(initialPaddling);
@@ -286,6 +288,45 @@ export default function StationMetaEditor({
       body: JSON.stringify(fields),
     });
   };
+
+  // Read-only mode for non-admin users
+  if (!isAdmin) {
+    return (
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          {name}
+        </h1>
+        {(paddling.min != null || paddling.ideal != null || paddling.max != null) && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Paddling Levels
+            </span>
+            {paddling.min != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-500 dark:text-zinc-400">Min:</span>
+                <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.min}</span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
+              </div>
+            )}
+            {paddling.ideal != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-500 dark:text-zinc-400">Ideal:</span>
+                <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.ideal}</span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
+              </div>
+            )}
+            {paddling.max != null && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-500 dark:text-zinc-400">Max:</span>
+                <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.max}</span>
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>

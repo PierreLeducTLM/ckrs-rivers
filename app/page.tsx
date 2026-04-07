@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { getStations, getPaddlingLevels } from "@/lib/data/rivers";
 import type { PaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
-import AddStation from "./add-station";
+import { AdminAddStation, AdminBadge } from "./admin-wrapper";
 import StationGrid from "./station-grid";
 import type { StationCard } from "./station-grid";
 
@@ -137,7 +137,10 @@ export default async function Home() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="border-b border-foreground/10 px-6 py-10 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">WaterFlow</h1>
+        <h1 className="text-4xl font-bold tracking-tight inline-flex items-center">
+          WaterFlow
+          <AdminBadge />
+        </h1>
         <p className="mt-2 text-lg text-foreground/60">
           Quebec River Flow Monitoring
         </p>
@@ -147,7 +150,7 @@ export default async function Home() {
       <main className="mx-auto max-w-6xl px-6 py-10">
         <StationGrid cards={cards} />
 
-        <AddStation />
+        <AdminAddStation />
 
         {stations.length === 0 && (
           <p className="py-20 text-center text-foreground/40">

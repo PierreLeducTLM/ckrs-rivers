@@ -149,65 +149,36 @@ function observedToHourly(readings: RealtimeReading[]) {
 // ---------------------------------------------------------------------------
 
 async function fetchWeatherSummary(lat: number, lon: number, lookbackDays: number, forecastDays: number) {
-  const end = new Date();
-  const start = new Date();
-  start.setUTCDate(start.getUTCDate() - lookbackDays);
+  // Single call — forecast endpoint supports past_days to cover lookback + forecast
+  // Note: snow_depth is not available on the forecast endpoint (only archive), so we omit it
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,snowfall_sum&past_days=${lookbackDays}&forecast_days=${forecastDays}&timezone=UTC`;
 
-  const startDate = start.toISOString().slice(0, 10);
-  const endDate = end.toISOString().slice(0, 10);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Open-Meteo forecast failed: ${res.status}`);
 
-  // Historical
-  const histUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,snowfall_sum,snow_depth&timezone=UTC`;
-  // Forecast
-  const fcstUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,snowfall_sum,snow_depth&forecast_days=${forecastDays}&timezone=UTC`;
+  const data = (await res.json()) as {
+    daily?: {
+      time?: string[];
+      temperature_2m_max?: number[];
+      temperature_2m_min?: number[];
+      temperature_2m_mean?: number[];
+      precipitation_sum?: number[];
+      snowfall_sum?: number[];
+    };
+  };
 
-  const results: Array<{
-    date: string;
-    tempMin: number;
-    tempMax: number;
-    tempMean: number;
-    precipitation: number;
-    snowfall: number;
-    snowDepth: number;
-  }> = [];
+  const d = data.daily;
+  if (!d?.time) return [];
 
-  const byDate = new Map<string, typeof results[0]>();
-
-  for (const url of [histUrl, fcstUrl]) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = (await res.json()) as {
-        daily?: {
-          time?: string[];
-          temperature_2m_max?: number[];
-          temperature_2m_min?: number[];
-          temperature_2m_mean?: number[];
-          precipitation_sum?: number[];
-          snowfall_sum?: number[];
-          snow_depth?: number[];
-        };
-      };
-      const d = data.daily;
-      if (!d?.time) continue;
-      for (let i = 0; i < d.time.length; i++) {
-        byDate.set(d.time[i], {
-          date: d.time[i],
-          tempMin: d.temperature_2m_min?.[i] ?? 0,
-          tempMax: d.temperature_2m_max?.[i] ?? 0,
-          tempMean: d.temperature_2m_mean?.[i] ?? 0,
-          precipitation: d.precipitation_sum?.[i] ?? 0,
-          snowfall: d.snowfall_sum?.[i] ?? 0,
-          snowDepth: d.snow_depth?.[i] ?? 0,
-        });
-      }
-    } catch {
-      // Weather source unavailable
-    }
-  }
-
-  for (const entry of byDate.values()) results.push(entry);
-  return results.sort((a, b) => a.date.localeCompare(b.date));
+  return d.time.map((date, i) => ({
+    date,
+    tempMin: d.temperature_2m_min?.[i] ?? 0,
+    tempMax: d.temperature_2m_max?.[i] ?? 0,
+    tempMean: d.temperature_2m_mean?.[i] ?? 0,
+    precipitation: d.precipitation_sum?.[i] ?? 0,
+    snowfall: d.snowfall_sum?.[i] ?? 0,
+    snowDepth: 0,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -274,7 +245,10 @@ async function refreshStation(
     let weatherSummary: Awaited<ReturnType<typeof fetchWeatherSummary>> = [];
     try {
       weatherSummary = await fetchWeatherSummary(lat, lon, 3, 10);
-    } catch { /* weather unavailable */ }
+      logger.info(`Station ${stationId} weather: ${weatherSummary.length} days fetched`);
+    } catch (err) {
+      logger.warn(`Station ${stationId} weather fetch failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
 
     // 5. Daily forecast aggregates
     const dailyForecast = new Map<string, { flows: number[]; lows: number[]; highs: number[] }>();

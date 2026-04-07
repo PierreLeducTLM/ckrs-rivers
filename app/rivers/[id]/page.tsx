@@ -6,7 +6,7 @@ import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
-import StationMetaEditor from "./station-meta-editor";
+import RiverHeader from "./river-header";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -157,7 +157,7 @@ export default async function RiverPage({
 
         {/* River header */}
         <header className="mt-6">
-          <StationMetaEditor
+          <RiverHeader
             stationId={id}
             initialName={station.name}
             initialPaddling={{
