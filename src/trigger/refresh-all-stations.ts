@@ -1,4 +1,4 @@
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, schedules, tasks } from "@trigger.dev/sdk/v3";
 import { neon } from "@neondatabase/serverless";
 
 /**
@@ -332,6 +332,16 @@ export const refreshAllStations = schedules.task({
     const failed = results.filter((r) => !r.success).length;
 
     logger.info(`Refresh complete: ${succeeded} succeeded, ${failed} failed`, { results });
+
+    // Chain alert evaluation after refresh completes
+    try {
+      await tasks.trigger("evaluate-alerts", { triggeredBy: "refresh" });
+      logger.info("Triggered evaluate-alerts task");
+    } catch (err) {
+      logger.warn("Failed to trigger evaluate-alerts", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
 
     return { total: stations.length, succeeded, failed, results };
   },

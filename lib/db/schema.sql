@@ -78,3 +78,66 @@ CREATE TABLE IF NOT EXISTS forecast_cache (
   weather_json  JSONB,
   generated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- 6. Subscribers (email-based, no passwords)
+CREATE TABLE IF NOT EXISTS subscribers (
+  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  email         TEXT NOT NULL UNIQUE,
+  token         TEXT NOT NULL UNIQUE DEFAULT gen_random_uuid()::text,
+  confirmed     BOOLEAN NOT NULL DEFAULT false,
+  confirmed_at  TIMESTAMPTZ,
+  preferences   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscribers_email ON subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_subscribers_token ON subscribers(token);
+
+-- 7. Subscriptions (subscriber × station)
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  subscriber_id   TEXT NOT NULL REFERENCES subscribers(id) ON DELETE CASCADE,
+  station_id      TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  active          BOOLEAN NOT NULL DEFAULT true,
+  preferences     JSONB,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(subscriber_id, station_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_station ON subscriptions(station_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_subscriber ON subscriptions(subscriber_id);
+
+-- 8. Alert state (prevents duplicate notifications)
+CREATE TABLE IF NOT EXISTS alert_state (
+  subscription_id TEXT NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  alert_type      TEXT NOT NULL,
+  state           TEXT NOT NULL DEFAULT 'idle',
+  context_json    JSONB NOT NULL DEFAULT '{}'::jsonb,
+  last_triggered  TIMESTAMPTZ,
+  last_evaluated  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (subscription_id, alert_type)
+);
+
+-- 9. Alert snapshots (previous evaluation for diff comparison)
+CREATE TABLE IF NOT EXISTS alert_snapshots (
+  station_id    TEXT PRIMARY KEY REFERENCES stations(id) ON DELETE CASCADE,
+  snapshot_json JSONB NOT NULL,
+  evaluated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 10. Notification log (delivery tracking)
+CREATE TABLE IF NOT EXISTS notification_log (
+  id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  subscriber_id   TEXT NOT NULL REFERENCES subscribers(id) ON DELETE CASCADE,
+  station_id      TEXT REFERENCES stations(id) ON DELETE SET NULL,
+  alert_type      TEXT NOT NULL,
+  priority        TEXT NOT NULL DEFAULT 'normal',
+  subject         TEXT NOT NULL,
+  sent_at         TIMESTAMPTZ,
+  delivered       BOOLEAN,
+  error           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notif_log_subscriber ON notification_log(subscriber_id, created_at DESC);

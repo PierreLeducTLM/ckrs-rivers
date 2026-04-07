@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
+import SubscribeButton from "./subscribe-button";
+import SubscribeModal from "./subscribe-modal";
 
 const STORAGE_KEY = "waterflow-favorites";
 const VIEW_MODE_KEY = "waterflow-view-mode";
@@ -89,6 +91,11 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [subscribeTarget, setSubscribeTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const handleSubscribeClick = useCallback((stationId: string, stationName: string) => {
+    setSubscribeTarget({ id: stationId, name: stationName });
+  }, []);
 
   const refreshFavorites = useCallback(() => {
     setFavorites(getFavorites());
@@ -194,6 +201,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <h2 className="text-lg font-semibold group-hover:underline leading-tight flex-1">
                   {card.name}
                 </h2>
+                <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
                 <FavoriteButton stationId={card.id} />
               </div>
 
@@ -335,6 +343,15 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
         </div>
       )}
 
+      {/* Subscribe modal */}
+      {subscribeTarget && (
+        <SubscribeModal
+          stationId={subscribeTarget.id}
+          stationName={subscribeTarget.name}
+          onClose={() => setSubscribeTarget(null)}
+        />
+      )}
+
       {/* List view */}
       {viewMode === "list" && (
         <div className="flex flex-col gap-2">
@@ -413,8 +430,9 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 )}
               </div>
 
-              {/* Favorite */}
-              <div className="flex-shrink-0">
+              {/* Subscribe + Favorite */}
+              <div className="flex flex-shrink-0 gap-0.5">
+                <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
                 <FavoriteButton stationId={card.id} />
               </div>
             </Link>
