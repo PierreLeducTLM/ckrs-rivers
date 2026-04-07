@@ -23,9 +23,6 @@ function sanitizeCoord(value: number): string {
 
 /**
  * Build a deterministic cache key from query parameters.
- *
- * @example getCacheKey(46.5, -74, "2024-01-01", "2024-12-31")
- *          // => "46.50_n74.00_2024-01-01_2024-12-31.json"
  */
 export function getCacheKey(
   lat: number,
@@ -51,7 +48,7 @@ function eachDate(start: string, end: string): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Redis backend (Upstash — used on Vercel)
+// Redis backend (Upstash — used on Vercel and local with env vars)
 // ---------------------------------------------------------------------------
 
 const KV_PREFIX = "weather:";
@@ -81,67 +78,23 @@ function getRedis(): RedisClient | null {
 }
 
 // ---------------------------------------------------------------------------
-// File-based fallback (local development)
-// ---------------------------------------------------------------------------
-
-function getCacheDir(): string {
-  const { join } = require("node:path") as typeof import("node:path");
-  return join(process.cwd(), ".data", "weather-cache");
-}
-
-async function fileRead(key: string): Promise<WeatherWindow[] | null> {
-  const { readFile } = await import("node:fs/promises");
-  const { join } = await import("node:path");
-  try {
-    const raw = await readFile(join(getCacheDir(), key), "utf-8");
-    return z.array(WeatherWindowSchema).parse(JSON.parse(raw));
-  } catch {
-    return null;
-  }
-}
-
-async function fileWrite(key: string, windows: WeatherWindow[]): Promise<void> {
-  const { writeFile, mkdir, rename } = await import("node:fs/promises");
-  const { join } = await import("node:path");
-  const dir = getCacheDir();
-  await mkdir(dir, { recursive: true });
-  const target = join(dir, key);
-  const tmp = `${target}.tmp`;
-  await writeFile(tmp, JSON.stringify(windows, null, 2), "utf-8");
-  await rename(tmp, target);
-}
-
-async function fileKeys(prefix: string): Promise<string[]> {
-  const { readdir } = await import("node:fs/promises");
-  try {
-    const files = await readdir(getCacheDir());
-    return files.filter((f) => f.startsWith(prefix) && f.endsWith(".json"));
-  } catch {
-    return [];
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Read a cached entry. Returns `null` on miss or error.
+ * Read a cached entry. Returns `null` on miss or if Redis is not configured.
  */
 export async function readCache(key: string): Promise<WeatherWindow[] | null> {
   const redis = getRedis();
+  if (!redis) return null;
 
-  if (redis) {
-    try {
-      const data = await redis.get<WeatherWindow[]>(`${KV_PREFIX}${key}`);
-      if (!data) return null;
-      return z.array(WeatherWindowSchema).parse(data);
-    } catch {
-      return null;
-    }
+  try {
+    const data = await redis.get<WeatherWindow[]>(`${KV_PREFIX}${key}`);
+    if (!data) return null;
+    return z.array(WeatherWindowSchema).parse(data);
+  } catch {
+    return null;
   }
-
-  return fileRead(key);
 }
 
 /**
@@ -152,17 +105,13 @@ export async function writeCache(
   windows: WeatherWindow[],
 ): Promise<void> {
   const redis = getRedis();
+  if (!redis) return;
 
-  if (redis) {
-    try {
-      await redis.set(`${KV_PREFIX}${key}`, windows, { ex: CACHE_TTL_SECONDS });
-    } catch {
-      // Cache write failure is non-fatal
-    }
-    return;
+  try {
+    await redis.set(`${KV_PREFIX}${key}`, windows, { ex: CACHE_TTL_SECONDS });
+  } catch {
+    // Cache write failure is non-fatal
   }
-
-  await fileWrite(key, windows);
 }
 
 /**
@@ -180,19 +129,17 @@ export async function findCachedRange(
 ): Promise<{ cached: WeatherWindow[]; missingRanges: DateRange[] }> {
   const prefix = `${sanitizeCoord(lat)}_${sanitizeCoord(lon)}_`;
 
-  // ---- Collect every cached window for this coordinate ----
-  let keys: string[];
   const redis = getRedis();
+  if (!redis) {
+    return { cached: [], missingRanges: [{ startDate, endDate }] };
+  }
 
-  if (redis) {
-    try {
-      const raw = await redis.keys(`${KV_PREFIX}${prefix}*`);
-      keys = raw.map((k) => String(k).slice(KV_PREFIX.length));
-    } catch {
-      return { cached: [], missingRanges: [{ startDate, endDate }] };
-    }
-  } else {
-    keys = await fileKeys(prefix);
+  let keys: string[];
+  try {
+    const raw = await redis.keys(`${KV_PREFIX}${prefix}*`);
+    keys = raw.map((k) => String(k).slice(KV_PREFIX.length));
+  } catch {
+    return { cached: [], missingRanges: [{ startDate, endDate }] };
   }
 
   const allWindows: WeatherWindow[] = [];
@@ -202,12 +149,12 @@ export async function findCachedRange(
     if (windows) allWindows.push(...windows);
   }
 
-  // ---- Keep only the windows inside the requested range ----
+  // Keep only the windows inside the requested range
   const cached = allWindows.filter(
     (w) => w.date >= startDate && w.date <= endDate,
   );
 
-  // ---- Determine which dates are still missing ----
+  // Determine which dates are still missing
   const cachedDates = new Set(cached.map((w) => w.date));
   const requested = eachDate(startDate, endDate);
 

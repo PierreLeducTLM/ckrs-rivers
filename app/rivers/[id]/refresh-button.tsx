@@ -3,15 +3,25 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function RefreshButton() {
+export default function RefreshButton({ stationId }: { stationId: string }) {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
+    try {
+      const res = await fetch(`/api/rivers/${stationId}/refresh`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.error("Refresh failed:", data.error ?? res.status);
+      }
+    } catch (err) {
+      console.error("Refresh failed:", err);
+    }
     router.refresh();
-    // Reset spinner after a short delay (server re-render completes)
-    setTimeout(() => setRefreshing(false), 3000);
+    setRefreshing(false);
   };
 
   return (
