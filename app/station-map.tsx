@@ -248,7 +248,7 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
   const isSatellite = savedLayer === "Satellite";
 
   return (
-    <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-foreground/10">
+    <div className="h-full w-full overflow-hidden rounded-xl border border-foreground/10 sm:rounded-xl sm:border md:h-[70vh]">
       <MapContainer
         center={QUEBEC_CENTER}
         zoom={DEFAULT_ZOOM}

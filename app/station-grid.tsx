@@ -150,9 +150,10 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
 
   return (
     <div>
-      {/* View toggle */}
-      {mounted && (
-        <div className="mb-6 flex justify-end">
+      {/* Header + View toggle */}
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-bold tracking-tight">WaterFlow</h1>
+        {mounted && (
           <div className="inline-flex rounded-lg border border-foreground/10 p-0.5">
             <button
               onClick={() => toggleView("card")}
@@ -200,8 +201,8 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               </svg>
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Card view */}
       {viewMode === "card" && (
@@ -377,7 +378,11 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       )}
 
       {/* Map view */}
-      {viewMode === "map" && <StationMap cards={sorted} isAdmin={isAdmin} />}
+      {viewMode === "map" && (
+        <div className="-mx-6 -mb-4 h-[calc(100vh-60px)] sm:mx-0 sm:mb-0 sm:h-auto">
+          <StationMap cards={sorted} isAdmin={isAdmin} />
+        </div>
+      )}
 
       {/* Subscribe modal */}
       {subscribeTarget && (
