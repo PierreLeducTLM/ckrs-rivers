@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, 
 import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import SparklineChart from "./sparkline-chart";
 import type { StationCard } from "./station-grid";
 
 const MAP_LAYER_KEY = "waterflow-map-layer";
@@ -38,6 +39,25 @@ function statusLabel(status: string): string {
     case "too-high": return "Too High";
     default: return "";
   }
+}
+
+function timeAgo(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
+  if (w.snowfall > 0.5) return "\u2744\uFE0F";
+  if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F";
+  if (w.precipitation > 0.5) return "\uD83C\uDF26\uFE0F";
+  if (w.tempMax != null && w.tempMax > 15) return "\u2600\uFE0F";
+  if (w.tempMax != null && w.tempMax > 5) return "\u26C5";
+  return "\u2601\uFE0F";
 }
 
 function PersistMapState() {
@@ -98,25 +118,120 @@ function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
 
 function StationPopup({ card }: { card: StationCard }) {
   return (
-    <Popup>
-      <div className="min-w-[180px]">
-        <p className="text-sm font-semibold">{card.name}</p>
+    <Popup maxWidth={280} minWidth={220}>
+      <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: 1.4 }}>
+        {/* Status badge */}
         {card.status !== "unknown" && (
-          <p className="text-xs font-medium" style={{ color: card.color }}>
-            {statusLabel(card.status)}
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                backgroundColor: card.color,
+                display: "inline-block",
+              }}
+            />
+            <span style={{ fontSize: 12, fontWeight: 600, color: card.color }}>
+              {statusLabel(card.status)}
+            </span>
+          </div>
         )}
-        {card.lastFlow != null && (
-          <p className="text-lg font-bold tabular-nums">
-            {card.lastFlow.toFixed(1)}{" "}
-            <span className="text-xs font-normal text-gray-500">m&sup3;/s</span>
-          </p>
+
+        {/* Name */}
+        <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 2px" }}>{card.name}</p>
+
+        {/* Station ID + catchment */}
+        <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 6px" }}>
+          Station {card.id}
+          {card.catchmentArea !== undefined && (
+            <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
+          )}
+        </p>
+
+        {/* Flow value + time ago */}
+        {card.lastFlow != null ? (
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <p style={{ fontSize: 20, fontWeight: 700, margin: 0, fontVariantNumeric: "tabular-nums" }}>
+              {card.lastFlow.toFixed(1)}{" "}
+              <span style={{ fontSize: 12, fontWeight: 400, color: "#6b7280" }}>m&sup3;/s</span>
+            </p>
+            {card.forecastAt && (
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>{timeAgo(card.forecastAt)}</span>
+            )}
+          </div>
+        ) : (
+          <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0" }}>No data</p>
         )}
+
+        {/* Sparkline chart */}
+        {card.sparkData.length > 2 && (
+          <div style={{ width: "100%", height: 60, marginTop: 6 }}>
+            <SparklineChart data={card.sparkData} nowTs={card.nowTs} paddling={card.paddling} />
+          </div>
+        )}
+
+        {/* Gradient bar */}
+        {card.status !== "unknown" && card.lastFlow != null && (
+          <div style={{ marginTop: 6 }}>
+            <div
+              style={{
+                position: "relative",
+                height: 6,
+                width: "100%",
+                borderRadius: 3,
+                background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  backgroundColor: card.color,
+                  border: "2px solid white",
+                  transform: "translate(-50%, -50%)",
+                  boxShadow: "0 1px 2px rgba(0,0,0,.3)",
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#9ca3af", marginTop: 2 }}>
+              <span>{card.paddling?.min != null ? card.paddling.min : ""}</span>
+              <span>{card.paddling?.ideal != null ? card.paddling.ideal : ""}</span>
+              <span>{card.paddling?.max != null ? card.paddling.max : ""}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Weather pictograms */}
+        {card.weatherDays.length > 0 && (
+          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+            {card.weatherDays.slice(0, 5).map((w) => (
+              <div key={w.date} style={{ textAlign: "center", fontSize: 10, lineHeight: 1.2 }}>
+                <div style={{ fontSize: 14 }}>{weatherIcon(w)}</div>
+                <div style={{ color: "#6b7280" }}>
+                  {new Date(w.date + "T00:00:00Z").toLocaleDateString("en-CA", { weekday: "narrow" })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* View details link */}
         <Link
           href={`/rivers/${card.id}`}
-          className="mt-1 inline-block text-sm text-blue-600 underline hover:text-blue-800"
+          style={{
+            display: "inline-block",
+            marginTop: 8,
+            fontSize: 12,
+            color: "#2563eb",
+            textDecoration: "underline",
+          }}
         >
-          View details
+          View details &rarr;
         </Link>
       </div>
     </Popup>

@@ -56,7 +56,7 @@ export default async function Home() {
     const data = dataMap.get(station.id);
     const paddling = paddlingMap.get(station.id);
     const { status, position } = getPaddlingStatus(data?.last_flow, paddling);
-    const color = statusColor(position);
+    const color = status === "too-low" ? "#3b82f6" : statusColor(position);
     const isGoodRange = status === "ideal" || status === "runnable";
 
     const sparkData = (data?.hourly_json ?? [])
