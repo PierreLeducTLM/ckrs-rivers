@@ -22,6 +22,7 @@ interface RiverHeaderProps {
   initialWeatherCity: string | null;
   stationLat: number;
   stationLon: number;
+  catchmentArea?: number;
   initialPutIn?: [number, number] | null;
   initialTakeOut?: [number, number] | null;
   initialRiverPath?: [number, number][] | null;
@@ -34,6 +35,7 @@ export default function RiverHeader({
   initialWeatherCity,
   stationLat,
   stationLon,
+  catchmentArea,
   initialPutIn = null,
   initialTakeOut = null,
   initialRiverPath = null,
@@ -49,6 +51,29 @@ export default function RiverHeader({
         initialWeatherCity={initialWeatherCity}
         isAdmin={isAdmin}
       />
+      {isAdmin && (
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <span>
+            Station{" "}
+            <span className="font-mono text-zinc-700 dark:text-zinc-300">{stationId}</span>
+          </span>
+          <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
+          <span>
+            {stationLat.toFixed(4)}N, {stationLon.toFixed(4)}W
+          </span>
+          {catchmentArea !== undefined && (
+            <>
+              <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
+              <span>
+                Catchment{" "}
+                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                  {Number(catchmentArea).toLocaleString()} km&sup2;
+                </span>
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {isAdmin && (
         <RiverPathEditor
           stationId={stationId}

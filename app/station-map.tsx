@@ -116,7 +116,7 @@ function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
   return null;
 }
 
-function StationPopup({ card }: { card: StationCard }) {
+function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }) {
   return (
     <Popup maxWidth={280} minWidth={220}>
       <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: 1.4 }}>
@@ -141,13 +141,15 @@ function StationPopup({ card }: { card: StationCard }) {
         {/* Name */}
         <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 2px" }}>{card.name}</p>
 
-        {/* Station ID + catchment */}
-        <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 6px" }}>
-          Station {card.id}
-          {card.catchmentArea !== undefined && (
-            <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
-          )}
-        </p>
+        {/* Station ID + catchment (admin only) */}
+        {isAdmin && (
+          <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 6px" }}>
+            Station {card.id}
+            {card.catchmentArea !== undefined && (
+              <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
+            )}
+          </p>
+        )}
 
         {/* Flow value + time ago */}
         {card.lastFlow != null ? (
@@ -238,7 +240,7 @@ function StationPopup({ card }: { card: StationCard }) {
   );
 }
 
-export default function StationMap({ cards }: { cards: StationCard[] }) {
+export default function StationMap({ cards, isAdmin = false }: { cards: StationCard[]; isAdmin?: boolean }) {
   const [savedLayer] = useState(() => {
     if (typeof window === "undefined") return "Street";
     return localStorage.getItem(MAP_LAYER_KEY) ?? "Street";
@@ -290,7 +292,7 @@ export default function StationMap({ cards }: { cards: StationCard[] }) {
                     weight: 2,
                   }}
                 >
-                  <StationPopup card={card} />
+                  <StationPopup card={card} isAdmin={isAdmin} />
                 </CircleMarker>
               );
             }
@@ -305,7 +307,7 @@ export default function StationMap({ cards }: { cards: StationCard[] }) {
                   opacity: 0.8,
                 }}
               >
-                <StationPopup card={card} />
+                <StationPopup card={card} isAdmin={isAdmin} />
               </Polyline>
             );
           }
@@ -323,7 +325,7 @@ export default function StationMap({ cards }: { cards: StationCard[] }) {
                 weight: 2,
               }}
             >
-              <StationPopup card={card} />
+              <StationPopup card={card} isAdmin={isAdmin} />
             </CircleMarker>
           );
         })}

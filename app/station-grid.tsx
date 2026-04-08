@@ -7,6 +7,7 @@ import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
 import SubscribeButton from "./subscribe-button";
 import SubscribeModal from "./subscribe-modal";
+import { useAdmin } from "./use-admin";
 
 const StationMap = dynamic(() => import("./station-map"), {
   ssr: false,
@@ -102,6 +103,7 @@ export interface StationCard {
 // ---------------------------------------------------------------------------
 
 export default function StationGrid({ cards }: { cards: StationCard[] }) {
+  const isAdmin = useAdmin();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
@@ -234,14 +236,16 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <FavoriteButton stationId={card.id} />
               </div>
 
-              <p className="mt-1 text-sm text-foreground/50">
-                Station {card.id}
-                {card.catchmentArea !== undefined && (
-                  <span>
-                    {" "}&middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;
-                  </span>
-                )}
-              </p>
+              {isAdmin && (
+                <p className="mt-1 text-sm text-foreground/50">
+                  Station {card.id}
+                  {card.catchmentArea !== undefined && (
+                    <span>
+                      {" "}&middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;
+                    </span>
+                  )}
+                </p>
+              )}
 
               {/* Sparkline chart */}
               {card.sparkData.length > 2 && (
@@ -373,7 +377,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       )}
 
       {/* Map view */}
-      {viewMode === "map" && <StationMap cards={sorted} />}
+      {viewMode === "map" && <StationMap cards={sorted} isAdmin={isAdmin} />}
 
       {/* Subscribe modal */}
       {subscribeTarget && (
@@ -391,81 +395,82 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
             <Link
               key={card.id}
               href={`/rivers/${card.id}`}
-              className={`group flex items-center gap-4 rounded-lg bg-background px-4 py-3 shadow-sm transition-shadow hover:shadow-md ${
+              className={`group flex flex-col gap-1 rounded-lg bg-background px-4 py-3 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-4 ${
                 card.isGoodRange
                   ? "border-2 border-green-500 dark:border-green-400"
                   : "border border-foreground/10"
               }`}
               style={card.isGoodRange ? { boxShadow: `0 0 8px ${card.color}20` } : undefined}
             >
-              {/* Status dot */}
-              <span
-                className="h-3 w-3 flex-shrink-0 rounded-full"
-                style={{ backgroundColor: card.status !== "unknown" ? card.color : "transparent" }}
-              />
-
-              {/* Name & station info */}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h2 className="truncate text-sm font-semibold group-hover:underline">
-                    {card.name}
-                  </h2>
-                  {card.status !== "unknown" && (
-                    <span
-                      className="flex-shrink-0 text-xs font-medium"
-                      style={{ color: card.color }}
-                    >
-                      {statusLabel(card.status)}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-foreground/50">
-                  {card.id}
-                  {card.catchmentArea !== undefined && (
-                    <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
-                  )}
-                </p>
-              </div>
-
-              {/* Gradient bar (compact) */}
-              {card.status !== "unknown" && card.lastFlow != null && (
-                <div className="hidden w-24 flex-shrink-0 sm:block">
-                  <div
-                    className="relative h-1.5 w-full overflow-hidden rounded-full"
-                    style={{
-                      background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
-                    }}
+              {/* Row 1 on mobile: name + status label */}
+              <div className="flex items-center gap-2 min-w-0 sm:flex-1">
+                <span
+                  className="h-3 w-3 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: card.status !== "unknown" ? card.color : "transparent" }}
+                />
+                <h2 className="truncate text-sm font-semibold group-hover:underline">
+                  {card.name}
+                </h2>
+                {card.status !== "unknown" && (
+                  <span
+                    className="flex-shrink-0 text-xs font-medium"
+                    style={{ color: card.color }}
                   >
-                    <div
-                      className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
-                      style={{
-                        left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                        backgroundColor: card.color,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Flow value */}
-              <div className="flex-shrink-0 text-right">
-                {card.lastFlow != null ? (
-                  <p className="text-lg font-bold tabular-nums">
-                    {card.lastFlow.toFixed(1)}{" "}
-                    <span className="text-xs font-normal text-foreground/60">m&sup3;/s</span>
-                  </p>
-                ) : (
-                  <p className="text-xs text-foreground/40">No data</p>
-                )}
-                {card.forecastAt && (
-                  <p className="text-[10px] text-foreground/40">{timeAgo(card.forecastAt)}</p>
+                    {statusLabel(card.status)}
+                  </span>
                 )}
               </div>
 
-              {/* Subscribe + Favorite */}
-              <div className="flex flex-shrink-0 gap-0.5">
-                <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
-                <FavoriteButton stationId={card.id} />
+              {/* Row 2 on mobile: flow, gradient bar, buttons */}
+              <div className="flex items-center gap-3 pl-5 sm:pl-0">
+                {isAdmin && (
+                  <p className="hidden text-xs text-foreground/50 sm:block">
+                    {card.id}
+                    {card.catchmentArea !== undefined && (
+                      <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
+                    )}
+                  </p>
+                )}
+
+                {/* Gradient bar (compact) */}
+                {card.status !== "unknown" && card.lastFlow != null && (
+                  <div className="hidden w-24 flex-shrink-0 sm:block">
+                    <div
+                      className="relative h-1.5 w-full overflow-hidden rounded-full"
+                      style={{
+                        background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
+                      }}
+                    >
+                      <div
+                        className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
+                        style={{
+                          left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                          backgroundColor: card.color,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Flow value */}
+                <div className="flex-shrink-0">
+                  {card.lastFlow != null ? (
+                    <p className="text-base font-bold tabular-nums sm:text-lg">
+                      {card.lastFlow.toFixed(1)}{" "}
+                      <span className="text-xs font-normal text-foreground/60">m&sup3;/s</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs text-foreground/40">No data</p>
+                  )}
+                </div>
+                {card.forecastAt && (
+                  <span className="text-[10px] text-foreground/40">{timeAgo(card.forecastAt)}</span>
+                )}
+
+                <div className="ml-auto flex flex-shrink-0 gap-0.5">
+                  <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
+                  <FavoriteButton stationId={card.id} />
+                </div>
               </div>
             </Link>
           ))}

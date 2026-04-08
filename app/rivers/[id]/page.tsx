@@ -179,29 +179,8 @@ export default async function RiverPage({
                 : null
             }
             initialRiverPath={station.riverPath ?? null}
+            catchmentArea={station.catchmentArea as number | undefined}
           />
-          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-            <span>
-              Station{" "}
-              <span className="font-mono text-zinc-700 dark:text-zinc-300">{station.id}</span>
-            </span>
-            <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
-            <span>
-              {Number(station.coordinates.lat).toFixed(4)}N,{" "}
-              {Number(station.coordinates.lon).toFixed(4)}W
-            </span>
-            {station.catchmentArea !== undefined && (
-              <>
-                <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
-                <span>
-                  Catchment{" "}
-                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    {Number(station.catchmentArea).toLocaleString()} km&sup2;
-                  </span>
-                </span>
-              </>
-            )}
-          </div>
 
           <div className="mt-3 flex items-center gap-3">
             <RefreshButton stationId={id} />
