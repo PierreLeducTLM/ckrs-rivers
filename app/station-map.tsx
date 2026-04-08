@@ -275,7 +275,7 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
           const hasPath = card.riverPath && card.riverPath.length > 1;
 
           if (hasPath) {
-            const isShort = pathLengthMeters(card.riverPath!) < 500;
+            const isShort = pathLengthMeters(card.riverPath!) < 200;
 
             if (isShort) {
               // Show a dot at the midpoint for very short paths
