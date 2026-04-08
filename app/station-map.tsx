@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, useMap } from "react-leaflet";
 import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { StationCard } from "./station-grid";
+
+const MAP_LAYER_KEY = "waterflow-map-layer";
+const MAP_VIEW_KEY = "waterflow-map-view";
 
 const QUEBEC_CENTER: [number, number] = [47.0, -71.5];
 const DEFAULT_ZOOM = 6;
@@ -37,9 +40,48 @@ function statusLabel(status: string): string {
   }
 }
 
-function FitBounds({ cards }: { cards: StationCard[] }) {
+function PersistMapState() {
   const map = useMap();
   useEffect(() => {
+    const saveLayer = (e: L.LayersControlEvent) => {
+      localStorage.setItem(MAP_LAYER_KEY, e.name);
+    };
+    const saveView = () => {
+      const c = map.getCenter();
+      localStorage.setItem(MAP_VIEW_KEY, JSON.stringify({
+        lat: c.lat,
+        lon: c.lng,
+        zoom: map.getZoom(),
+      }));
+    };
+    map.on("baselayerchange", saveLayer);
+    map.on("moveend", saveView);
+    map.on("zoomend", saveView);
+    return () => {
+      map.off("baselayerchange", saveLayer);
+      map.off("moveend", saveView);
+      map.off("zoomend", saveView);
+    };
+  }, [map]);
+  return null;
+}
+
+function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
+  const map = useMap();
+  useEffect(() => {
+    // Try to restore saved view
+    try {
+      const raw = localStorage.getItem(MAP_VIEW_KEY);
+      if (raw) {
+        const { lat, lon, zoom } = JSON.parse(raw);
+        if (typeof lat === "number" && typeof lon === "number" && typeof zoom === "number") {
+          map.setView([lat, lon], zoom);
+          return;
+        }
+      }
+    } catch { /* fall through to fitBounds */ }
+
+    // Fallback: fit to all stations
     if (cards.length === 0) return;
     const allPoints: [number, number][] = [];
     for (const c of cards) {
@@ -49,8 +91,7 @@ function FitBounds({ cards }: { cards: StationCard[] }) {
         allPoints.push([c.lat, c.lon]);
       }
     }
-    const bounds = L.latLngBounds(allPoints);
-    map.fitBounds(bounds, { padding: [30, 30] });
+    map.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30] });
   }, [map, cards]);
   return null;
 }
@@ -83,6 +124,12 @@ function StationPopup({ card }: { card: StationCard }) {
 }
 
 export default function StationMap({ cards }: { cards: StationCard[] }) {
+  const [savedLayer] = useState(() => {
+    if (typeof window === "undefined") return "Street";
+    return localStorage.getItem(MAP_LAYER_KEY) ?? "Street";
+  });
+  const isSatellite = savedLayer === "Satellite";
+
   return (
     <div className="h-[70vh] w-full overflow-hidden rounded-xl border border-foreground/10">
       <MapContainer
@@ -91,21 +138,22 @@ export default function StationMap({ cards }: { cards: StationCard[] }) {
         className="h-full w-full"
         scrollWheelZoom={true}
       >
+        <PersistMapState />
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked name="Street">
+          <LayersControl.BaseLayer checked={!isSatellite} name="Street">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Satellite">
+          <LayersControl.BaseLayer checked={isSatellite} name="Satellite">
             <TileLayer
               attribution="Tiles &copy; Esri"
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
             />
           </LayersControl.BaseLayer>
         </LayersControl>
-        <FitBounds cards={cards} />
+        <RestoreOrFitBounds cards={cards} />
         {cards.map((card) => {
           const hasPath = card.riverPath && card.riverPath.length > 1;
 

@@ -14,6 +14,8 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+const MAP_LAYER_KEY = "waterflow-map-layer";
+
 type Step = "idle" | "placing-put-in" | "placing-take-out" | "editing-path";
 
 interface RiverPathEditorProps {
@@ -85,6 +87,18 @@ function DraggableMarker({
 // ---------------------------------------------------------------------------
 // Map sub-components
 // ---------------------------------------------------------------------------
+
+function PersistLayer() {
+  const map = useMap();
+  useEffect(() => {
+    const handler = (e: L.LayersControlEvent) => {
+      localStorage.setItem(MAP_LAYER_KEY, e.name);
+    };
+    map.on("baselayerchange", handler);
+    return () => { map.off("baselayerchange", handler); };
+  }, [map]);
+  return null;
+}
 
 function FitToPoints({ points }: { points: [number, number][] }) {
   const map = useMap();
@@ -295,6 +309,12 @@ export default function RiverPathEditor({
     }
   };
 
+  const [savedLayer] = useState(() => {
+    if (typeof window === "undefined") return "Street";
+    return localStorage.getItem(MAP_LAYER_KEY) ?? "Street";
+  });
+  const isSatellite = savedLayer === "Satellite";
+
   // Build the displayed polyline (put-in -> waypoints -> take-out)
   const displayPath: [number, number][] =
     putIn && takeOut ? [putIn, ...path, takeOut] : path.length > 0 ? path : [];
@@ -361,14 +381,15 @@ export default function RiverPathEditor({
           className="h-full w-full"
           scrollWheelZoom={true}
         >
+          <PersistLayer />
           <LayersControl position="topright">
-            <LayersControl.BaseLayer checked name="Street">
+            <LayersControl.BaseLayer checked={!isSatellite} name="Street">
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
             </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Satellite">
+            <LayersControl.BaseLayer checked={isSatellite} name="Satellite">
               <TileLayer
                 attribution="Tiles &copy; Esri"
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
