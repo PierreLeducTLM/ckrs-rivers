@@ -141,3 +141,17 @@ CREATE TABLE IF NOT EXISTS notification_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notif_log_subscriber ON notification_log(subscriber_id, created_at DESC);
+
+-- 11. Push device tokens (Capacitor native push notifications)
+CREATE TABLE IF NOT EXISTS push_devices (
+  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  token       TEXT NOT NULL UNIQUE,
+  platform    TEXT NOT NULL CHECK (platform IN ('ios', 'android', 'web')),
+  station_ids TEXT[] NOT NULL DEFAULT '{}',
+  active      BOOLEAN NOT NULL DEFAULT true,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_devices_token ON push_devices(token);
+CREATE INDEX IF NOT EXISTS idx_push_devices_active ON push_devices(active) WHERE active = true;
