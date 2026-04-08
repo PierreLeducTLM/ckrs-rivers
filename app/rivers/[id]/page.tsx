@@ -166,6 +166,19 @@ export default async function RiverPage({
               max: paddling?.max ?? null,
             }}
             initialWeatherCity={(station.weatherCity as string | undefined) ?? null}
+            stationLat={Number(station.coordinates.lat)}
+            stationLon={Number(station.coordinates.lon)}
+            initialPutIn={
+              station.putIn
+                ? [Number(station.putIn.lat), Number(station.putIn.lon)]
+                : null
+            }
+            initialTakeOut={
+              station.takeOut
+                ? [Number(station.takeOut.lat), Number(station.takeOut.lon)]
+                : null
+            }
+            initialRiverPath={station.riverPath ?? null}
           />
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
             <span>

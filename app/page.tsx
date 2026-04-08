@@ -89,6 +89,8 @@ export default async function Home() {
     return {
       id: station.id,
       name: station.name,
+      lat: Number(station.coordinates.lat),
+      lon: Number(station.coordinates.lon),
       catchmentArea: station.catchmentArea as number | undefined,
       lastFlow: data?.last_flow ?? null,
       forecastAt: data?.forecast_at ?? null,
@@ -102,6 +104,13 @@ export default async function Home() {
       color,
       isGoodRange,
       weatherDays,
+      putIn: station.putIn
+        ? [Number(station.putIn.lat), Number(station.putIn.lon)] as [number, number]
+        : undefined,
+      takeOut: station.takeOut
+        ? [Number(station.takeOut.lat), Number(station.takeOut.lon)] as [number, number]
+        : undefined,
+      riverPath: station.riverPath,
     };
   });
 

@@ -28,6 +28,11 @@ interface StationRow {
   weather_city: string | null;
   weather_lat: number | null;
   weather_lon: number | null;
+  put_in_lat: number | null;
+  put_in_lon: number | null;
+  take_out_lat: number | null;
+  take_out_lon: number | null;
+  river_path: [number, number][] | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -41,6 +46,15 @@ function rowToStation(row: StationRow): RiverStation {
       row.weather_lat != null && row.weather_lon != null
         ? { lat: row.weather_lat, lon: row.weather_lon }
         : undefined,
+    putIn:
+      row.put_in_lat != null && row.put_in_lon != null
+        ? { lat: row.put_in_lat, lon: row.put_in_lon }
+        : undefined,
+    takeOut:
+      row.take_out_lat != null && row.take_out_lon != null
+        ? { lat: row.take_out_lat, lon: row.take_out_lon }
+        : undefined,
+    riverPath: row.river_path ?? undefined,
   });
 }
 

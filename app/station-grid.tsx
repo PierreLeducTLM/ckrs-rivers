@@ -2,15 +2,25 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
 import SubscribeButton from "./subscribe-button";
 import SubscribeModal from "./subscribe-modal";
 
+const StationMap = dynamic(() => import("./station-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[70vh] w-full items-center justify-center rounded-xl border border-foreground/10 bg-foreground/5">
+      <p className="text-foreground/40">Loading map...</p>
+    </div>
+  ),
+});
+
 const STORAGE_KEY = "waterflow-favorites";
 const VIEW_MODE_KEY = "waterflow-view-mode";
 
-type ViewMode = "card" | "list";
+type ViewMode = "card" | "list" | "map";
 
 function getFavorites(): Set<string> {
   if (typeof window === "undefined") return new Set();
@@ -58,6 +68,8 @@ function statusLabel(status: string): string {
 export interface StationCard {
   id: string;
   name: string;
+  lat: number;
+  lon: number;
   catchmentArea?: number;
   lastFlow: number | null;
   forecastAt: string | null;
@@ -80,6 +92,9 @@ export interface StationCard {
     precipitation: number;
     snowfall: number;
   }>;
+  putIn?: [number, number];
+  takeOut?: [number, number];
+  riverPath?: [number, number][];
 }
 
 // ---------------------------------------------------------------------------
@@ -104,7 +119,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   useEffect(() => {
     refreshFavorites();
     const saved = localStorage.getItem(VIEW_MODE_KEY);
-    if (saved === "list" || saved === "card") setViewMode(saved);
+    if (saved === "list" || saved === "card" || saved === "map") setViewMode(saved);
     setMounted(true);
     window.addEventListener("favorites-changed", refreshFavorites);
     return () => window.removeEventListener("favorites-changed", refreshFavorites);
@@ -166,6 +181,20 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            <button
+              onClick={() => toggleView("map")}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                viewMode === "map"
+                  ? "bg-foreground/10 text-foreground"
+                  : "text-foreground/50 hover:text-foreground/70"
+              }`}
+              aria-label="Map view"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                <circle cx="12" cy="9" r="2.5" />
               </svg>
             </button>
           </div>
@@ -342,6 +371,9 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
           ))}
         </div>
       )}
+
+      {/* Map view */}
+      {viewMode === "map" && <StationMap cards={sorted} />}
 
       {/* Subscribe modal */}
       {subscribeTarget && (

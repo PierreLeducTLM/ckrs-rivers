@@ -40,6 +40,9 @@ export const RiverStationSchema = z.object({
   orientation: OrientationSchema.optional(),
   weatherCity: z.string().optional(),
   weatherCoordinates: CoordinatesSchema.optional(),
+  putIn: CoordinatesSchema.optional(),
+  takeOut: CoordinatesSchema.optional(),
+  riverPath: z.array(z.tuple([z.number(), z.number()])).optional(),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;

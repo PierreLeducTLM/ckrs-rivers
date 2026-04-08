@@ -37,6 +37,11 @@ export async function PATCH(
     paddling_ideal?: number | null;
     paddling_max?: number | null;
     weather_city?: string | null;
+    put_in_lat?: number | null;
+    put_in_lon?: number | null;
+    take_out_lat?: number | null;
+    take_out_lon?: number | null;
+    river_path?: [number, number][] | null;
   };
 
   const sets: string[] = [];
@@ -85,6 +90,27 @@ export async function PATCH(
       sets.push(`weather_lon = $${idx++}`);
       values.push(geo.lon);
     }
+  }
+
+  if (body.put_in_lat !== undefined) {
+    sets.push(`put_in_lat = $${idx++}`);
+    values.push(body.put_in_lat);
+  }
+  if (body.put_in_lon !== undefined) {
+    sets.push(`put_in_lon = $${idx++}`);
+    values.push(body.put_in_lon);
+  }
+  if (body.take_out_lat !== undefined) {
+    sets.push(`take_out_lat = $${idx++}`);
+    values.push(body.take_out_lat);
+  }
+  if (body.take_out_lon !== undefined) {
+    sets.push(`take_out_lon = $${idx++}`);
+    values.push(body.take_out_lon);
+  }
+  if (body.river_path !== undefined) {
+    sets.push(`river_path = $${idx++}`);
+    values.push(body.river_path ? JSON.stringify(body.river_path) : null);
   }
 
   if (sets.length === 0) {

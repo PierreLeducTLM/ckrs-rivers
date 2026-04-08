@@ -38,6 +38,11 @@ async function migrate() {
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_city TEXT`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_lat DOUBLE PRECISION`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_lon DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS put_in_lat DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS put_in_lon DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS take_out_lat DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS take_out_lon DOUBLE PRECISION`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS river_path JSONB`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

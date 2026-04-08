@@ -18,6 +18,16 @@ export async function initPushNotifications() {
   const { Capacitor } = await import("@capacitor/core");
   if (!Capacitor.isNativePlatform()) return;
 
+  // Android requires Firebase (google-services.json) to be configured before
+  // any push notification API call. The native plugin crashes the app on a
+  // background thread (not catchable from JS) if Firebase is missing.
+  // Skip push entirely on Android until Firebase is set up.
+  if (Capacitor.getPlatform() === "android") {
+    console.log("Push notifications skipped on Android — Firebase not configured yet");
+    initialized = true;
+    return;
+  }
+
   const { PushNotifications } = await import("@capacitor/push-notifications");
 
   // Check / request permission
@@ -64,7 +74,7 @@ export async function initPushNotifications() {
     }
   });
 
-  // Register with APNs/FCM
+  // Register with APNs (iOS only at this point — Android is skipped above)
   await PushNotifications.register();
   initialized = true;
 }
