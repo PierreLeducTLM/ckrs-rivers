@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import SparklineChart from "./sparkline-chart";
@@ -8,6 +9,7 @@ import FavoriteButton from "./favorite-button";
 import SubscribeButton from "./subscribe-button";
 import SubscribeModal from "./subscribe-modal";
 import { useAdmin } from "./use-admin";
+import ThemeToggle from "./theme-toggle";
 
 const StationMap = dynamic(() => import("./station-map"), {
   ssr: false,
@@ -152,56 +154,62 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
     <div>
       {/* Header + View toggle */}
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold tracking-tight sm:text-xl">Kayak Rivière aux Sables</h1>
-        {mounted && (
-          <div className="inline-flex rounded-lg border border-foreground/10 p-0.5">
-            <button
-              onClick={() => toggleView("card")}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === "card"
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-foreground/50 hover:text-foreground/70"
-              }`}
-              aria-label="Card view"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-            </button>
-            <button
-              onClick={() => toggleView("list")}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === "list"
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-foreground/50 hover:text-foreground/70"
-              }`}
-              aria-label="List view"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-            <button
-              onClick={() => toggleView("map")}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === "map"
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-foreground/50 hover:text-foreground/70"
-              }`}
-              aria-label="Map view"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                <circle cx="12" cy="9" r="2.5" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+          <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">Kayak Rivière aux Sables</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {mounted && (
+            <div className="inline-flex rounded-lg border border-brand/20 p-0.5">
+              <button
+                onClick={() => toggleView("card")}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "card"
+                    ? "bg-brand/10 text-brand"
+                    : "text-foreground/50 hover:text-brand"
+                }`}
+                aria-label="Card view"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              </button>
+              <button
+                onClick={() => toggleView("list")}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-brand/10 text-brand"
+                    : "text-foreground/50 hover:text-brand"
+                }`}
+                aria-label="List view"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <button
+                onClick={() => toggleView("map")}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  viewMode === "map"
+                    ? "bg-brand/10 text-brand"
+                    : "text-foreground/50 hover:text-brand"
+                }`}
+                aria-label="Map view"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                  <circle cx="12" cy="9" r="2.5" />
+                </svg>
+              </button>
+            </div>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Card view */}

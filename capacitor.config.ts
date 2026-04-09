@@ -16,12 +16,12 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 1500,
-      backgroundColor: "#0a0a0a",
+      backgroundColor: "#ffffff",
       showSpinner: false,
     },
     StatusBar: {
-      style: "DARK",
-      backgroundColor: "#0a0a0a",
+      style: "LIGHT",
+      backgroundColor: "#ffffff",
     },
   },
   ios: {
@@ -30,7 +30,7 @@ const config: CapacitorConfig = {
     scheme: "KRAS",
   },
   android: {
-    backgroundColor: "#0a0a0a",
+    backgroundColor: "#ffffff",
     // Exclude push-notifications until Firebase (google-services.json) is configured.
     // The native plugin crashes without Firebase — it's not catchable from JS.
     includePlugins: [
