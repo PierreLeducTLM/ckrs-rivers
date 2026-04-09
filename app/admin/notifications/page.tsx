@@ -231,7 +231,7 @@ export default function AdminNotificationsPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [expandedDoc, setExpandedDoc] = useState(false);
 
-  const fetchStatus = useCallback(async () => {
+  const fetchStatusRef = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/notifications");
       if (res.ok) {
@@ -247,8 +247,25 @@ export default function AdminNotificationsPage() {
   }, []);
 
   useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
+    let cancelled = false;
+    async function load() {
+      try {
+        const res = await fetch("/api/admin/notifications");
+        if (cancelled) return;
+        if (res.ok) {
+          const data = (await res.json()) as StatusData;
+          setStatus(data);
+          setSetupDone(!!data.testStation);
+          if (data.subscribers.length > 0) {
+            setEmail(data.subscribers[0].email);
+          }
+        }
+      } catch { /* ignore */ }
+      if (!cancelled) setLoading(false);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const showMessage = (type: "success" | "error", text: string) => {
     setMessage({ type, text });
@@ -268,7 +285,7 @@ export default function AdminNotificationsPage() {
       if (res.ok) {
         showMessage("success", "Test river created and subscription active!");
         setSetupDone(true);
-        fetchStatus();
+        fetchStatusRef();
       } else {
         showMessage("error", data.error ?? "Setup failed");
       }
@@ -289,7 +306,7 @@ export default function AdminNotificationsPage() {
       const data = await res.json();
       if (res.ok) {
         showMessage("success", `Scenario "${alertType}" injected and evaluate-alerts triggered!${data.triggerResult?.id ? ` Run: ${data.triggerResult.id}` : ""}`);
-        setTimeout(fetchStatus, 3000);
+        setTimeout(fetchStatusRef, 3000);
       } else if (data.directOnly) {
         showMessage("error", data.error);
       } else {
@@ -316,7 +333,7 @@ export default function AdminNotificationsPage() {
       const data = await res.json();
       if (data.success) {
         showMessage("success", `"${alertType}" email sent directly to ${email}`);
-        setTimeout(fetchStatus, 2000);
+        setTimeout(fetchStatusRef, 2000);
       } else {
         showMessage("error", "Failed to send email. Check RESEND_API_KEY.");
       }
@@ -335,7 +352,7 @@ export default function AdminNotificationsPage() {
         body: JSON.stringify({ action: "reset-cooldowns" }),
       });
       showMessage("success", "All cooldowns cleared");
-      fetchStatus();
+      fetchStatusRef();
     } catch {
       showMessage("error", "Failed to reset cooldowns");
     }
@@ -629,7 +646,7 @@ export default function AdminNotificationsPage() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Recent Notifications</h2>
             <button
-              onClick={fetchStatus}
+              onClick={fetchStatusRef}
               className="rounded-lg border border-foreground/15 px-3 py-1.5 text-xs text-foreground/60 transition-colors hover:bg-foreground/5"
             >
               Refresh
