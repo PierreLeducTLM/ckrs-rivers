@@ -13,8 +13,8 @@ function layout(title: string, body: string, unsubscribeUrl?: string): string {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
-    <div style="background:#0f172a;padding:20px 24px;">
-      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600;">WaterFlow</h1>
+    <div style="background:#2D8FCC;padding:20px 24px;">
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600;">Kayak Rivi&egrave;re aux Sables</h1>
     </div>
     <div style="padding:24px;">
       <h2 style="margin:0 0 16px;font-size:18px;color:#18181b;">${title}</h2>
@@ -22,7 +22,7 @@ function layout(title: string, body: string, unsubscribeUrl?: string): string {
     </div>
     <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">
       ${unsubscribeUrl ? `<a href="${unsubscribeUrl}" style="color:#71717a;">Unsubscribe</a> &middot; ` : ""}
-      <a href="${appUrl()}" style="color:#71717a;">WaterFlow</a>
+      <a href="${appUrl()}" style="color:#71717a;">Kayak Rivi&egrave;re aux Sables</a>
     </div>
   </div>
 </body>
@@ -43,17 +43,17 @@ export function confirmationEmail(
     : "";
 
   return {
-    subject: "Confirm your WaterFlow notifications",
+    subject: "Confirm your Kayak Rivière aux Sables notifications",
     html: layout(
       "Confirm your email",
       `<p style="color:#52525b;line-height:1.6;">Click the button below to start receiving river flow notifications.</p>
        ${stations}
        <div style="margin:24px 0;">
-         <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+         <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
            Confirm &amp; Subscribe
          </a>
        </div>
-       <p style="font-size:13px;color:#a1a1aa;">If you didn't sign up for WaterFlow, you can ignore this email.</p>`,
+       <p style="font-size:13px;color:#a1a1aa;">If you didn't sign up for Kayak Rivi&egrave;re aux Sables, you can ignore this email.</p>`,
     ),
   };
 }
@@ -123,7 +123,7 @@ export function alertEmail(params: AlertEmailParams): { subject: string; html: s
       `<p style="color:#18181b;font-size:16px;line-height:1.6;">${message}</p>
        ${flowLine}
        <div style="margin:24px 0;">
-         <a href="${appUrl()}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+         <a href="${appUrl()}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
            View River
          </a>
          <a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">
@@ -172,7 +172,7 @@ export function digestEmail(
   }).join("");
 
   return {
-    subject: `WaterFlow — ${period} forecast digest`,
+    subject: `Kayak Rivière aux Sables — ${period} forecast digest`,
     html: layout(
       `${period} River Forecast`,
       `<table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -186,7 +186,7 @@ export function digestEmail(
         <tbody>${rows}</tbody>
       </table>
       <div style="margin-top:20px;">
-        <a href="${appUrl()}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+        <a href="${appUrl()}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
           View All Rivers
         </a>
       </div>`,

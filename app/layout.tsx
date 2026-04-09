@@ -14,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "WaterFlow — River Flow Predictions",
-  description: "Whitewater river flow predictions for paddlers",
+  title: "Kayak Rivière aux Sables — Prévisions de débit",
+  description: "Prévisions de débit des rivières pour les pagayeurs",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "WaterFlow",
+    title: "KRAS",
   },
 };
 

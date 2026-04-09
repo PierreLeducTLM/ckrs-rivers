@@ -374,7 +374,7 @@ async function sendAlertEmail(
     return false;
   }
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "WaterFlow <onboarding@resend.dev>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <onboarding@resend.dev>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${manageToken}`;
   const manageUrl = `${appUrl}/notifications?token=${manageToken}`;
@@ -405,13 +405,13 @@ async function sendAlertEmail(
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;border:1px solid #e4e4e7;">
-<div style="background:#0f172a;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">WaterFlow</h1></div>
+<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">Kayak Rivi&egrave;re aux Sables</h1></div>
 <div style="padding:24px;">
 <h2 style="margin:0 0 16px;font-size:18px;">${emoji} ${stationName}</h2>
 <p style="color:#18181b;font-size:16px;line-height:1.6;">${message}</p>
 ${flowLine}
 <div style="margin:24px 0;">
-<a href="${appUrl}" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
+<a href="${appUrl}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
 <a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">Manage Alerts</a>
 </div></div>
 <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">

@@ -57,7 +57,7 @@ async function fetchHistoricalText(
     const url = urlFn(stationId);
     try {
       const res = await fetch(url, {
-        headers: { "User-Agent": "WaterFlow-App/1.0" },
+        headers: { "User-Agent": "KRAS-App/1.0" },
       });
       if (!res.ok) continue;
 

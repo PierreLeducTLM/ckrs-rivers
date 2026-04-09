@@ -22,7 +22,7 @@ async function geocodeMunicipality(
 
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "WaterFlow-App/1.0" },
+      headers: { "User-Agent": "KRAS-App/1.0" },
     });
     if (!res.ok) return null;
 

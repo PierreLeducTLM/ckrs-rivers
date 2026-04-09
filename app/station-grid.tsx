@@ -152,7 +152,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
     <div>
       {/* Header + View toggle */}
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold tracking-tight">WaterFlow</h1>
+        <h1 className="text-lg font-bold tracking-tight sm:text-xl">Kayak Rivière aux Sables</h1>
         {mounted && (
           <div className="inline-flex rounded-lg border border-foreground/10 p-0.5">
             <button

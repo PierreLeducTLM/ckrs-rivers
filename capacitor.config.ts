@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.waterflow.app",
-  appName: "WaterFlow",
+  appId: "com.kras.app",
+  appName: "Kayak Rivière aux Sables",
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
   server: {
@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "automatic",
     preferredContentMode: "mobile",
-    scheme: "WaterFlow",
+    scheme: "KRAS",
   },
   android: {
     backgroundColor: "#0a0a0a",
