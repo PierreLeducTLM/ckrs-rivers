@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const SUB_TOKEN_KEY = "waterflow-sub-token";
 
@@ -17,45 +17,75 @@ export function setSubToken(token: string) {
 
 export default function SubscribeButton({
   stationId,
-  stationName,
-  onSubscribeClick,
+  isSubscribed,
+  onNeedEmail,
+  onToggled,
 }: {
   stationId: string;
-  stationName: string;
-  onSubscribeClick: (stationId: string, stationName: string) => void;
+  isSubscribed: boolean;
+  onNeedEmail: () => void;
+  onToggled: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [hasToken, setHasToken] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
-    setHasToken(!!getSubToken());
     setMounted(true);
   }, []);
+
+  const handleClick = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const token = getSubToken();
+      if (!token) {
+        onNeedEmail();
+        return;
+      }
+
+      setToggling(true);
+      try {
+        if (isSubscribed) {
+          await fetch(
+            `/api/notifications/unsubscribe?token=${token}&stationId=${stationId}`,
+            { method: "DELETE" },
+          );
+        } else {
+          await fetch(`/api/notifications/subscribe-station?token=${token}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ stationId }),
+          });
+        }
+        onToggled();
+      } catch {
+        // Silently fail
+      }
+      setToggling(false);
+    },
+    [stationId, isSubscribed, onNeedEmail, onToggled],
+  );
 
   if (!mounted) {
     return <span className="inline-block h-5 w-5" />;
   }
 
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onSubscribeClick(stationId, stationName);
-  };
-
   return (
     <button
       onClick={handleClick}
-      className="rounded p-0.5 transition-colors hover:scale-110"
-      aria-label={hasToken ? "Manage notifications" : "Subscribe to notifications"}
+      disabled={toggling}
+      className={`rounded p-0.5 transition-colors hover:scale-110 ${toggling ? "opacity-50" : ""}`}
+      aria-label={isSubscribed ? "Unsubscribe from notifications" : "Subscribe to notifications"}
     >
       <svg
         className={`h-5 w-5 ${
-          hasToken
+          isSubscribed
             ? "text-blue-400"
             : "text-foreground/30 hover:text-foreground/50"
         }`}
         viewBox="0 0 24 24"
-        fill={hasToken ? "currentColor" : "none"}
+        fill={isSubscribed ? "currentColor" : "none"}
         stroke="currentColor"
         strokeWidth={1.5}
       >

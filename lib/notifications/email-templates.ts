@@ -35,22 +35,17 @@ function layout(title: string, body: string, unsubscribeUrl?: string): string {
 
 export function confirmationEmail(
   token: string,
-  stationNames: string[],
 ): { subject: string; html: string } {
   const confirmUrl = `${appUrl()}/api/notifications/confirm?token=${token}`;
-  const stations = stationNames.length > 0
-    ? `<p style="color:#52525b;">You'll receive alerts for: <strong>${stationNames.join(", ")}</strong></p>`
-    : "";
 
   return {
     subject: "Confirm your Kayak Rivière aux Sables notifications",
     html: layout(
       "Confirm your email",
-      `<p style="color:#52525b;line-height:1.6;">Click the button below to start receiving river flow notifications.</p>
-       ${stations}
+      `<p style="color:#52525b;line-height:1.6;">Click the button below to verify your email. Once confirmed, you'll be able to choose which rivers you want to receive notifications for.</p>
        <div style="margin:24px 0;">
          <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
-           Confirm &amp; Subscribe
+           Verify My Email
          </a>
        </div>
        <p style="font-size:13px;color:#a1a1aa;">If you didn't sign up for Kayak Rivi&egrave;re aux Sables, you can ignore this email.</p>`,

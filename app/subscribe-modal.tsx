@@ -3,16 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 
 interface SubscribeModalProps {
-  stationId: string;
-  stationName: string;
   onClose: () => void;
 }
 
-export default function SubscribeModal({
-  stationId,
-  stationName,
-  onClose,
-}: SubscribeModalProps) {
+export default function SubscribeModal({ onClose }: SubscribeModalProps) {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -33,7 +27,7 @@ export default function SubscribeModal({
       const res = await fetch("/api/notifications/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), stationIds: [stationId] }),
+        body: JSON.stringify({ email: email.trim() }),
       });
 
       if (!res.ok) {
@@ -58,15 +52,26 @@ export default function SubscribeModal({
       <div className="mx-4 w-full max-w-sm rounded-xl border border-foreground/10 bg-background p-6 shadow-2xl">
         {status === "success" ? (
           <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <svg
+                className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold">Check your email</h3>
             <p className="mt-2 text-sm text-foreground/60">
-              We sent a confirmation link to <strong>{email}</strong>.
-              Click it to start receiving alerts for {stationName}.
+              We sent a confirmation link to <strong>{email}</strong>. Click it
+              to verify your email, then come back and tap the bell on any river
+              to get notified.
             </p>
             <button
               onClick={onClose}
@@ -80,7 +85,7 @@ export default function SubscribeModal({
             <div className="mb-4">
               <h3 className="text-lg font-semibold">Get notified</h3>
               <p className="mt-1 text-sm text-foreground/60">
-                Receive alerts when <strong>{stationName}</strong> becomes runnable.
+                Enter your email to receive river flow notifications.
               </p>
             </div>
 
@@ -112,13 +117,13 @@ export default function SubscribeModal({
                   disabled={status === "loading"}
                   className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {status === "loading" ? "Subscribing..." : "Subscribe"}
+                  {status === "loading" ? "Sending..." : "Continue"}
                 </button>
               </div>
             </form>
 
             <p className="mt-3 text-center text-xs text-foreground/40">
-              You can unsubscribe anytime from the email.
+              You can unsubscribe anytime.
             </p>
           </>
         )}

@@ -7,21 +7,18 @@ import { sendEmail } from "@/lib/notifications/send-email";
 /**
  * POST /api/notifications/subscribe
  *
- * Body: { email: string, stationIds?: string[] }
- * Creates or finds subscriber, creates subscriptions, sends confirmation.
+ * Body: { email: string }
+ * Creates or finds subscriber and sends a confirmation email.
+ * No rivers are subscribed at this stage — the user selects rivers
+ * after confirming their email.
  */
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as {
-    email?: string;
-    stationIds?: string[];
-  };
+  const body = (await request.json()) as { email?: string };
 
   const email = body.email?.trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: "Valid email required" }, { status: 400 });
   }
-
-  const stationIds = body.stationIds ?? [];
 
   // Upsert subscriber
   const subscribers = (await sql(
@@ -34,29 +31,8 @@ export async function POST(request: NextRequest) {
 
   const subscriber = subscribers[0];
 
-  // Create subscriptions for requested stations
-  const stationNames: string[] = [];
-  for (const stationId of stationIds) {
-    // Verify station exists
-    const stations = (await sql(
-      `SELECT id, name FROM stations WHERE id = $1`,
-      [stationId],
-    )) as Array<{ id: string; name: string }>;
-
-    if (stations.length === 0) continue;
-
-    stationNames.push(stations[0].name);
-
-    await sql(
-      `INSERT INTO subscriptions (subscriber_id, station_id)
-       VALUES ($1, $2)
-       ON CONFLICT (subscriber_id, station_id) DO UPDATE SET active = true`,
-      [subscriber.id, stationId],
-    );
-  }
-
-  // Send confirmation email (even if already confirmed, re-send as a "manage" reminder)
-  const template = confirmationEmail(subscriber.token, stationNames);
+  // Send confirmation email
+  const template = confirmationEmail(subscriber.token);
   const result = await sendEmail({
     to: email,
     subject: template.subject,

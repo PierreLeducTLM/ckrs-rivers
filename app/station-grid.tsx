@@ -6,7 +6,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
-import SubscribeButton from "./subscribe-button";
+import SubscribeButton, { getSubToken } from "./subscribe-button";
 import SubscribeModal from "./subscribe-modal";
 import { useAdmin } from "./use-admin";
 import ThemeToggle from "./theme-toggle";
@@ -110,10 +110,31 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  const [subscribeTarget, setSubscribeTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
 
-  const handleSubscribeClick = useCallback((stationId: string, stationName: string) => {
-    setSubscribeTarget({ id: stationId, name: stationName });
+  const fetchSubscriptions = useCallback(() => {
+    const token = getSubToken();
+    if (!token) {
+      setSubscribedStationIds(new Set());
+      return;
+    }
+    fetch(`/api/notifications/manage?token=${token}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return;
+        const ids = new Set<string>(
+          (data.subscriptions as Array<{ stationId: string; active: boolean }>)
+            .filter((s) => s.active)
+            .map((s) => s.stationId),
+        );
+        setSubscribedStationIds(ids);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleNeedEmail = useCallback(() => {
+    setShowNotificationModal(true);
   }, []);
 
   const refreshFavorites = useCallback(() => {
@@ -122,12 +143,13 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
 
   useEffect(() => {
     refreshFavorites();
+    fetchSubscriptions();
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     if (saved === "list" || saved === "card" || saved === "map") setViewMode(saved);
     setMounted(true);
     window.addEventListener("favorites-changed", refreshFavorites);
     return () => window.removeEventListener("favorites-changed", refreshFavorites);
-  }, [refreshFavorites]);
+  }, [refreshFavorites, fetchSubscriptions]);
 
   const toggleView = (mode: ViewMode) => {
     setViewMode(mode);
@@ -241,7 +263,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <h2 className="text-lg font-semibold group-hover:underline leading-tight flex-1">
                   {card.name}
                 </h2>
-                <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
+                <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} />
                 <FavoriteButton stationId={card.id} />
               </div>
 
@@ -392,13 +414,9 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
         </div>
       )}
 
-      {/* Subscribe modal */}
-      {subscribeTarget && (
-        <SubscribeModal
-          stationId={subscribeTarget.id}
-          stationName={subscribeTarget.name}
-          onClose={() => setSubscribeTarget(null)}
-        />
+      {/* Email collection modal */}
+      {showNotificationModal && (
+        <SubscribeModal onClose={() => setShowNotificationModal(false)} />
       )}
 
       {/* List view */}
@@ -481,7 +499,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 )}
 
                 <div className="ml-auto flex flex-shrink-0 gap-0.5">
-                  <SubscribeButton stationId={card.id} stationName={card.name} onSubscribeClick={handleSubscribeClick} />
+                  <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} />
                   <FavoriteButton stationId={card.id} />
                 </div>
               </div>
