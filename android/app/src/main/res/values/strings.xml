@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">WaterFlow</string>
-    <string name="title_activity_main">WaterFlow</string>
-    <string name="package_name">com.waterflow.app</string>
-    <string name="custom_url_scheme">com.waterflow.app</string>
+    <string name="app_name">CKRS Rivers</string>
+    <string name="title_activity_main">CKRS Rivers</string>
+    <string name="package_name">com.ckrsrivers.com</string>
+    <string name="custom_url_scheme">com.ckrsrivers.com</string>
 </resources>

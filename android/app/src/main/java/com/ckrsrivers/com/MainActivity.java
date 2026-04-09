@@ -1,4 +1,4 @@
-package com.waterflow.app;
+package com.ckrsrivers.com;
 
 import com.getcapacitor.BridgeActivity;
 

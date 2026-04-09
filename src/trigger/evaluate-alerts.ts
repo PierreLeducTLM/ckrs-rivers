@@ -223,15 +223,31 @@ function computeSnapshot(
     }
   }
 
-  // Forecast exits range
+  // Forecast exits range (check hourly first for precision, fallback to daily)
   let forecastExitsRange = false;
   let forecastExitsRangeInHours: number | null = null;
   if (isGoodRange(paddlingStatus)) {
-    for (let i = 0; i < forecastDays.length; i++) {
-      if (!isGoodRange(getPaddlingStatus(forecastDays[i].flow, paddling))) {
+    // Hourly check for sub-24h precision
+    const nowMs = now.getTime();
+    for (const point of hourlyData) {
+      const flow = point.cehqForecast;
+      if (flow == null) continue;
+      const ts = new Date(point.timestamp).getTime();
+      if (ts <= nowMs) continue;
+      if (!isGoodRange(getPaddlingStatus(flow, paddling))) {
         forecastExitsRange = true;
-        forecastExitsRangeInHours = (i + 1) * 24;
+        forecastExitsRangeInHours = (ts - nowMs) / (1000 * 60 * 60);
         break;
+      }
+    }
+    // Daily fallback if hourly didn't find an exit
+    if (!forecastExitsRange) {
+      for (let i = 0; i < forecastDays.length; i++) {
+        if (!isGoodRange(getPaddlingStatus(forecastDays[i].flow, paddling))) {
+          forecastExitsRange = true;
+          forecastExitsRangeInHours = (i + 1) * 24;
+          break;
+        }
       }
     }
   }

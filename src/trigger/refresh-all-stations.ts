@@ -307,7 +307,7 @@ export const refreshAllStations = schedules.task({
 
     // Get all active stations
     const stations = (await dbSql(
-      `SELECT id, COALESCE(station_number, id) as station_number, lat, lon FROM stations WHERE status != 'error' ORDER BY id`,
+      `SELECT id, COALESCE(station_number, id) as station_number, lat, lon FROM stations WHERE status NOT IN ('error', 'test') ORDER BY id`,
     )) as Array<{ id: string; station_number: string; lat: number; lon: number }>;
 
     logger.info(`Refreshing ${stations.length} stations`, {

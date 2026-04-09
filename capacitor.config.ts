@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.kras.app",
-  appName: "Kayak Rivière aux Sables",
+  appId: "com.ckrsrivers.com",
+  appName: "CKRS Rivers",
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
   server: {
@@ -27,13 +27,14 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "automatic",
     preferredContentMode: "mobile",
-    scheme: "KRAS",
+    scheme: "CKRSRivers",
   },
   android: {
     backgroundColor: "#ffffff",
     // Exclude push-notifications until Firebase (google-services.json) is configured.
     // The native plugin crashes without Firebase — it's not catchable from JS.
     includePlugins: [
+      "@capacitor/app",
       "@capacitor/splash-screen",
       "@capacitor/status-bar",
     ],
