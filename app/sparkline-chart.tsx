@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, ComposedChart, Line, ReferenceLine, ResponsiveContainer, YAxis } from "recharts";
+import { Area, ComposedChart, Line, ReferenceLine, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 interface SparklinePoint {
   ts: number;
@@ -41,6 +41,7 @@ export default function SparklineChart({ data, nowTs, paddling }: SparklineChart
           </linearGradient>
         </defs>
 
+        <XAxis dataKey="ts" type="number" domain={["dataMin", "dataMax"]} hide />
         <YAxis domain={[yMin, yMax]} hide width={0} />
 
         <ReferenceLine x={nowTs} stroke="#f59e0b" strokeDasharray="2 2" strokeWidth={1} />
