@@ -59,7 +59,7 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <onboarding@resend.dev>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${digest.token}`;
 

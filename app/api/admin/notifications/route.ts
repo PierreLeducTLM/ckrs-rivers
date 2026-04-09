@@ -366,7 +366,7 @@ async function sendDirectEmail(
 
   const from =
     process.env.NOTIFICATION_FROM_EMAIL ??
-    "Kayak Rivière aux Sables <onboarding@resend.dev>";
+    "Kayak Rivière aux Sables <pierre@leduc.tech";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const EMOJI: Record<string, string> = {
@@ -540,6 +540,21 @@ export async function POST(request: NextRequest) {
       ],
     );
 
+    // Deactivate all existing subscriptions for the test station
+    await sql(
+      `UPDATE subscriptions SET active = false
+       WHERE station_id = $1`,
+      [TEST_STATION_ID],
+    );
+
+    // Also clean up alert_state for deactivated subscriptions
+    await sql(
+      `DELETE FROM alert_state WHERE subscription_id IN (
+        SELECT id FROM subscriptions WHERE station_id = $1 AND active = false
+      )`,
+      [TEST_STATION_ID],
+    );
+
     // Create subscriber (auto-confirmed)
     const subscribers = (await sql(
       `INSERT INTO subscribers (email, confirmed, confirmed_at)
@@ -552,7 +567,7 @@ export async function POST(request: NextRequest) {
       [email],
     )) as Array<{ id: string; token: string }>;
 
-    // Create subscription
+    // Create subscription (only one active at a time)
     await sql(
       `INSERT INTO subscriptions (subscriber_id, station_id, active)
        VALUES ($1, $2, true)

@@ -238,9 +238,6 @@ export default function AdminNotificationsPage() {
         const data = (await res.json()) as StatusData;
         setStatus(data);
         setSetupDone(!!data.testStation);
-        if (data.subscribers.length > 0) {
-          setEmail(data.subscribers[0].email);
-        }
       }
     } catch { /* ignore */ }
     setLoading(false);
@@ -256,6 +253,7 @@ export default function AdminNotificationsPage() {
           const data = (await res.json()) as StatusData;
           setStatus(data);
           setSetupDone(!!data.testStation);
+          // Only pre-fill email on initial load
           if (data.subscribers.length > 0) {
             setEmail(data.subscribers[0].email);
           }

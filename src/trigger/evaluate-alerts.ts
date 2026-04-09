@@ -390,7 +390,7 @@ async function sendAlertEmail(
     return false;
   }
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <onboarding@resend.dev>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${manageToken}`;
   const manageUrl = `${appUrl}/notifications?token=${manageToken}`;
@@ -439,8 +439,13 @@ ${flowLine}
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from, to, subject, html }),
     });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      logger.error(`Resend API error ${res.status}: ${body}`, { to, alertType, from });
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
+    logger.error("Resend API fetch failed", { error: err instanceof Error ? err.message : String(err) });
     return false;
   }
 }
