@@ -4,6 +4,7 @@
 -- 1. Stations
 CREATE TABLE IF NOT EXISTS stations (
   id                 TEXT PRIMARY KEY,
+  station_number     TEXT NOT NULL,
   name               TEXT NOT NULL,
   lat                DOUBLE PRECISION NOT NULL,
   lon                DOUBLE PRECISION NOT NULL,

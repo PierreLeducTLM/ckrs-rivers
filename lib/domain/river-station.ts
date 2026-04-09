@@ -29,6 +29,7 @@ export type LandCoverProfile = z.infer<typeof LandCoverProfileSchema>;
 
 export const RiverStationSchema = z.object({
   id: z.string().min(1),
+  stationNumber: z.string().optional(),
   name: z.string().min(1),
   coordinates: CoordinatesSchema,
   elevation: MetersSchema.optional(),

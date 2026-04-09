@@ -39,18 +39,24 @@ export function getPaddlingStatus(
 export function statusColor(position: number): string {
   if (position < 0) return "";
   const p = Math.max(0, Math.min(1, position));
-  if (p <= 0.5) {
-    const t = p / 0.5;
-    const r = Math.round(234 + (34 - 234) * t);
-    const g = Math.round(179 + (197 - 179) * t);
-    const b = Math.round(8 + (94 - 8) * t);
-    return `rgb(${r},${g},${b})`;
+  // Blue-to-red via violet: min(0) → ideal(0.5) → max(1)
+  const stops: [number, number, number, number][] = [
+    [0.0, 106, 159, 216], // #6A9FD8 — at min
+    [0.5, 59, 130, 246],  // #3B82F6 — ideal
+    [0.7, 58, 79, 191],   // #3A4FBF — above ideal (indigo)
+    [0.85, 92, 61, 175],  // #5C3DAF — approaching max (violet)
+    [1.0, 139, 46, 144],  // #8B2E90 — at max (magenta)
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (p <= stops[i + 1][0]) {
+      const t = (p - stops[i][0]) / (stops[i + 1][0] - stops[i][0]);
+      const r = Math.round(stops[i][1] + (stops[i + 1][1] - stops[i][1]) * t);
+      const g = Math.round(stops[i][2] + (stops[i + 1][2] - stops[i][2]) * t);
+      const b = Math.round(stops[i][3] + (stops[i + 1][3] - stops[i][3]) * t);
+      return `rgb(${r},${g},${b})`;
+    }
   }
-  const t = (p - 0.5) / 0.5;
-  const r = Math.round(34 + (239 - 34) * t);
-  const g = Math.round(197 + (68 - 197) * t);
-  const b = Math.round(94 + (68 - 94) * t);
-  return `rgb(${r},${g},${b})`;
+  return `rgb(139,46,144)`;
 }
 
 /** Check if a status is considered "good" for paddling */

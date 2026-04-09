@@ -14,6 +14,7 @@ import { fetchRealtimeData, type RealtimeResult } from "@/lib/realtime/cehq-clie
 
 interface StationRow {
   id: string;
+  station_number: string | null;
   name: string;
   lat: number;
   lon: number;
@@ -38,7 +39,8 @@ interface StationRow {
 function rowToStation(row: StationRow): RiverStation {
   return RiverStationSchema.parse({
     id: row.id,
-    name: row.name,
+    stationNumber: row.station_number ?? row.id,
+    name: row.name || `Station ${row.id}`,
     coordinates: { lat: row.lat, lon: row.lon },
     catchmentArea: row.catchment_area_km2 ?? undefined,
     weatherCity: row.weather_city ?? undefined,

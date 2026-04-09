@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
       stationId: string;
+      name?: string;
       lat?: number;
       lon?: number;
     };
@@ -61,17 +62,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if already exists in database
-    const existing = await sql(
-      `SELECT id FROM stations WHERE id = $1`,
+    // Find existing rows with the same CEHQ station number to generate a unique ID
+    const existing = (await sql(
+      `SELECT id FROM stations WHERE station_number = $1 OR id = $1 ORDER BY id`,
       [stationId],
-    );
+    )) as Array<{ id: string }>;
 
-    if (existing.length > 0) {
-      return Response.json(
-        { error: `Station ${stationId} already exists.` },
-        { status: 409 },
-      );
+    let internalId: string;
+    if (existing.length === 0) {
+      internalId = stationId;
+    } else {
+      let maxSuffix = 1;
+      for (const row of existing) {
+        const parts = row.id.split("_");
+        if (parts.length === 2) {
+          const n = parseInt(parts[1], 10);
+          if (n > maxSuffix) maxSuffix = n;
+        }
+      }
+      internalId = `${stationId}_${maxSuffix + 1}`;
     }
 
     // Fetch metadata from CEHQ JSON
@@ -95,10 +104,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Build station name
-    const name = cehqData.nomPlanEau
+    // Build station name (use custom name if provided)
+    const name = body.name?.trim() || (cehqData.nomPlanEau
       ? `${cehqData.nomPlanEau} - ${cehqData.descStation}`
-      : `${cehqData.nomStation} - ${cehqData.descStation}`;
+      : `${cehqData.nomStation} - ${cehqData.descStation}`);
 
     const catchmentArea = parseCatchmentArea(cehqData.bassin);
 
@@ -126,16 +135,16 @@ export async function POST(request: NextRequest) {
 
     // Insert into database — immediately ready (no model training needed)
     await sql(
-      `INSERT INTO stations (id, name, lat, lon, catchment_area_km2, regime, municipality, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'ready')`,
-      [stationId, name, lat, lon, catchmentArea, cehqData.regimeEcoulement, cehqData.municipalite],
+      `INSERT INTO stations (id, station_number, name, lat, lon, catchment_area_km2, regime, municipality, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ready')`,
+      [internalId, stationId, name, lat, lon, catchmentArea, cehqData.regimeEcoulement, cehqData.municipalite],
     );
 
-    console.log(`[add-station] Station ${stationId} added: ${name} (${lat}, ${lon})`);
+    console.log(`[add-station] Station ${internalId} (CEHQ ${stationId}) added: ${name} (${lat}, ${lon})`);
 
     return Response.json({
       success: true,
-      station: { id: stationId, name, lat, lon, catchmentArea },
+      station: { id: internalId, name, lat, lon, catchmentArea },
     });
   } catch (error) {
     const message =

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function AddStation() {
   const router = useRouter();
   const [stationId, setStationId] = useState("");
+  const [riverName, setRiverName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -20,7 +21,10 @@ export default function AddStation() {
       const res = await fetch("/api/stations/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stationId: stationId.trim() }),
+        body: JSON.stringify({
+          stationId: stationId.trim(),
+          name: riverName.trim() || undefined,
+        }),
       });
 
       const data = (await res.json()) as {
@@ -36,6 +40,7 @@ export default function AddStation() {
 
       setSuccess(`Added: ${data.station?.name ?? stationId}`);
       setStationId("");
+      setRiverName("");
       router.refresh();
     } catch {
       setError("Network error. Please try again.");
@@ -53,7 +58,7 @@ export default function AddStation() {
         Enter a CEHQ station ID to add it to your dashboard.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-3 flex gap-2">
+      <form onSubmit={handleSubmit} className="mt-3 flex flex-wrap gap-2">
         <input
           type="text"
           value={stationId}
@@ -62,6 +67,14 @@ export default function AddStation() {
           maxLength={6}
           pattern="\d{6}"
           className="w-32 rounded-lg border border-foreground/15 bg-transparent px-3 py-1.5 text-sm font-mono placeholder:text-foreground/30 focus:border-blue-500 focus:outline-none"
+          disabled={loading}
+        />
+        <input
+          type="text"
+          value={riverName}
+          onChange={(e) => setRiverName(e.target.value)}
+          placeholder="River name (optional)"
+          className="w-48 rounded-lg border border-foreground/15 bg-transparent px-3 py-1.5 text-sm placeholder:text-foreground/30 focus:border-blue-500 focus:outline-none"
           disabled={loading}
         />
         <button

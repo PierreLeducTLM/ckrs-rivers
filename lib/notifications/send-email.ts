@@ -23,7 +23,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   }
 
   const from =
-    process.env.NOTIFICATION_FROM_EMAIL ?? "WaterFlow <notifications@waterflow.app>";
+    process.env.NOTIFICATION_FROM_EMAIL ?? "WaterFlow <onboarding@resend.dev>";
 
   try {
     const res = await fetch(RESEND_API_URL, {

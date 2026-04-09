@@ -24,9 +24,11 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
     return { stationId, success: false, error: "Station not found" };
   }
 
+  const cehqNumber = station.stationNumber ?? stationId;
+
   try {
     // 1. Fetch CEHQ real-time readings
-    const realtimeData = await getRealtimeData(stationId);
+    const realtimeData = await getRealtimeData(cehqNumber);
     const observedHourly = observedToHourly(realtimeData.readings);
 
     // Last observed flow
@@ -37,7 +39,7 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
     // 2. Fetch CEHQ official forecast
     let cehqPoints: Array<{ timestamp: string; flow: number; flowLow: number; flowHigh: number }> = [];
     try {
-      const cehqForecast = await fetchCehqForecast(stationId);
+      const cehqForecast = await fetchCehqForecast(cehqNumber);
       cehqPoints = cehqForecast.points;
     } catch {
       // CEHQ forecast unavailable

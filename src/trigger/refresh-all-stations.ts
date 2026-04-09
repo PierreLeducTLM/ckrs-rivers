@@ -188,12 +188,13 @@ async function fetchWeatherSummary(lat: number, lon: number, lookbackDays: numbe
 async function refreshStation(
   dbSql: SqlFn,
   stationId: string,
+  stationNumber: string,
   lat: number,
   lon: number,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // 1. CEHQ real-time
-    const { readings, dailyAverages } = await fetchRealtimeData(stationId);
+    // 1. CEHQ real-time (use station_number for CEHQ API, not internal id)
+    const { readings, dailyAverages } = await fetchRealtimeData(stationNumber);
     const observedHourly = observedToHourly(readings);
 
     const lastDailyAvg = dailyAverages.size > 0
@@ -203,7 +204,7 @@ async function refreshStation(
     // 2. CEHQ forecast
     let cehqPoints: CehqForecastPoint[] = [];
     try {
-      cehqPoints = await fetchCehqForecast(stationId);
+      cehqPoints = await fetchCehqForecast(stationNumber);
     } catch { /* unavailable */ }
 
     // 3. Merge into hourly chart data
@@ -306,8 +307,8 @@ export const refreshAllStations = schedules.task({
 
     // Get all active stations
     const stations = (await dbSql(
-      `SELECT id, lat, lon FROM stations WHERE status != 'error' ORDER BY id`,
-    )) as Array<{ id: string; lat: number; lon: number }>;
+      `SELECT id, COALESCE(station_number, id) as station_number, lat, lon FROM stations WHERE status != 'error' ORDER BY id`,
+    )) as Array<{ id: string; station_number: string; lat: number; lon: number }>;
 
     logger.info(`Refreshing ${stations.length} stations`, {
       scheduledAt: payload.timestamp.toISOString(),
@@ -318,7 +319,7 @@ export const refreshAllStations = schedules.task({
     // Process stations sequentially to avoid overwhelming CEHQ / Open-Meteo
     for (const station of stations) {
       logger.info(`Refreshing station ${station.id}...`);
-      const result = await refreshStation(dbSql, station.id, station.lat, station.lon);
+      const result = await refreshStation(dbSql, station.id, station.station_number, station.lat, station.lon);
       results.push({ stationId: station.id, ...result });
 
       if (result.success) {

@@ -182,7 +182,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
                 height: 6,
                 width: "100%",
                 borderRadius: 3,
-                background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
+                background: "linear-gradient(to right, #6A9FD8, #3B82F6 45%, #3A4FBF 60%, #5C3DAF 75%, #8B2E90 88%, #D32F2F)",
               }}
             >
               <div
@@ -286,8 +286,8 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
                   center={mid}
                   radius={card.status === "unknown" ? 6 : 8}
                   pathOptions={{
-                    color: card.color || "#3b82f6",
-                    fillColor: card.color || "#3b82f6",
+                    color: card.color || "#E07020",
+                    fillColor: card.color || "#E07020",
                     fillOpacity: 0.8,
                     weight: 2,
                   }}
@@ -302,7 +302,7 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
                 key={card.id}
                 positions={card.riverPath!}
                 pathOptions={{
-                  color: card.color || "#3b82f6",
+                  color: card.color || "#E07020",
                   weight: 4,
                   opacity: 0.8,
                 }}
@@ -319,8 +319,8 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
               center={[card.lat, card.lon]}
               radius={card.status === "unknown" ? 6 : 8}
               pathOptions={{
-                color: card.color || "#9ca3af",
-                fillColor: card.color || "#9ca3af",
+                color: card.color || "#E07020",
+                fillColor: card.color || "#E07020",
                 fillOpacity: 0.8,
                 weight: 2,
               }}

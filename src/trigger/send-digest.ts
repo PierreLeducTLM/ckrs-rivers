@@ -59,8 +59,8 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "WaterFlow <notifications@waterflow.app>";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://waterflow.app";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "WaterFlow <onboarding@resend.dev>";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${digest.token}`;
 
   const DOT: Record<string, string> = {

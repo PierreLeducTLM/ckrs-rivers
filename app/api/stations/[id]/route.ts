@@ -49,8 +49,11 @@ export async function PATCH(
   let idx = 1;
 
   if (body.name !== undefined) {
+    if (!body.name || body.name.trim() === "") {
+      return Response.json({ error: "Station name cannot be empty" }, { status: 400 });
+    }
     sets.push(`name = $${idx++}`);
-    values.push(body.name);
+    values.push(body.name.trim());
   }
   if (body.paddling_min !== undefined) {
     sets.push(`paddling_min = $${idx++}`);

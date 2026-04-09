@@ -213,10 +213,10 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               href={`/rivers/${card.id}`}
               className={`group relative rounded-xl bg-background p-6 shadow transition-shadow hover:shadow-lg ${
                 card.isGoodRange
-                  ? "border-2 border-green-500 dark:border-green-400"
+                  ? "border-2"
                   : "border border-foreground/10"
               }`}
-              style={card.isGoodRange ? { boxShadow: `0 0 12px ${card.color}25` } : undefined}
+              style={card.isGoodRange ? { borderColor: card.color, boxShadow: `0 0 12px ${card.color}25` } : undefined}
             >
               {/* Paddling status badge */}
               {card.status !== "unknown" && (
@@ -354,7 +354,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                   <div
                     className="relative h-1.5 w-full overflow-hidden rounded-full"
                     style={{
-                      background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
+                      background: "linear-gradient(to right, #6A9FD8, #3B82F6 45%, #3A4FBF 60%, #5C3DAF 75%, #8B2E90 88%, #D32F2F)",
                     }}
                   >
                     <div
@@ -402,10 +402,10 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               href={`/rivers/${card.id}`}
               className={`group flex flex-col gap-1 rounded-lg bg-background px-4 py-3 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-4 ${
                 card.isGoodRange
-                  ? "border-2 border-green-500 dark:border-green-400"
+                  ? "border-2"
                   : "border border-foreground/10"
               }`}
-              style={card.isGoodRange ? { boxShadow: `0 0 8px ${card.color}20` } : undefined}
+              style={card.isGoodRange ? { borderColor: card.color, boxShadow: `0 0 8px ${card.color}20` } : undefined}
             >
               {/* Row 1 on mobile: name + status label */}
               <div className="flex items-center gap-2 min-w-0 sm:flex-1">
@@ -443,7 +443,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     <div
                       className="relative h-1.5 w-full overflow-hidden rounded-full"
                       style={{
-                        background: "linear-gradient(to right, #eab308, #22c55e 50%, #ef4444)",
+                        background: "linear-gradient(to right, #6A9FD8, #3B82F6 45%, #3A4FBF 60%, #5C3DAF 75%, #8B2E90 88%, #D32F2F)",
                       }}
                     >
                       <div

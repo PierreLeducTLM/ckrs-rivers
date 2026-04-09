@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
   const redirectUrl = `${appUrl}/notifications/confirmed?token=${token}`;
 
   return Response.redirect(redirectUrl, 302);

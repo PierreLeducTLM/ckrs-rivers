@@ -34,6 +34,9 @@ async function migrate() {
 
   // Run ALTER TABLE statements for adding columns to existing tables
   const alterStatements = [
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS station_number TEXT`,
+    `UPDATE stations SET station_number = id WHERE station_number IS NULL`,
+    `ALTER TABLE stations ALTER COLUMN station_number SET NOT NULL`,
     `ALTER TABLE forecast_cache ADD COLUMN IF NOT EXISTS weather_json JSONB`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_city TEXT`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS weather_lat DOUBLE PRECISION`,

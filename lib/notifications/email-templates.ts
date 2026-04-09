@@ -4,7 +4,7 @@
  */
 
 function appUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? "https://waterflow.app";
+  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 function layout(title: string, body: string, unsubscribeUrl?: string): string {
