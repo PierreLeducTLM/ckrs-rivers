@@ -49,12 +49,12 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const t = params.get("token");
-    setToken(t);
+    const tk = params.get("token");
+    setToken(tk);
 
-    if (t) {
-      setSubToken(t);
-      fetch(`/api/notifications/manage?token=${t}`)
+    if (tk) {
+      setSubToken(tk);
+      fetch(`/api/notifications/manage?token=${tk}`)
         .then((res) => {
           if (!res.ok) throw new Error(t("notifications.invalidLink"));
           return res.json();

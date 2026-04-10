@@ -111,6 +111,55 @@ const PULL_THRESHOLD = 60;
 const ICON_HIDDEN_Y = -40;
 
 // ---------------------------------------------------------------------------
+// 3-dot settings menu (language + theme)
+// ---------------------------------------------------------------------------
+
+function SettingsMenu() {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [open]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="rounded-md p-1.5 text-foreground/50 transition-colors hover:text-brand"
+        aria-label="Settings"
+        aria-expanded={open}
+      >
+        {/* 3-dot vertical icon */}
+        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 flex flex-col gap-1 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -132,7 +181,9 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   // ---------------------------------------------------------------------------
   const [isPending, startTransition] = useTransition();
   const spinnerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const touchStartY = useRef(0);
+  const touchStartedInHeader = useRef(false);
   const pulling = useRef(false);
   const pullY = useRef(0);
 
@@ -148,13 +199,18 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
 
   useEffect(() => {
     function onTouchStart(e: TouchEvent) {
-      if (isPending || window.scrollY > 0 || viewMode === "map") return;
+      if (isPending || window.scrollY > 0) return;
+      // In map view, only allow pull-to-refresh from the header
+      const inHeader = headerRef.current?.contains(e.target as Node) ?? false;
+      if (viewMode === "map" && !inHeader) return;
+      touchStartedInHeader.current = inHeader;
       touchStartY.current = e.touches[0].clientY;
       pulling.current = false;
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (isPending || viewMode === "map") return;
+      if (isPending) return;
+      if (viewMode === "map" && !touchStartedInHeader.current) return;
       if (window.scrollY > 0) {
         if (pulling.current) { pulling.current = false; applyPull(0); }
         return;
@@ -389,7 +445,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       </div>
 
       {/* Header + View toggle */}
-      <div className="mb-4 flex items-center justify-between">
+      <div ref={headerRef} className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
           <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">{t("app.title")}</h1>
@@ -444,8 +500,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               </button>
             </div>
           )}
-          <LanguageToggle />
-          <ThemeToggle />
+          <SettingsMenu />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, useMap } from "react-leaflet";
 import Link from "next/link";
 import L from "leaflet";
@@ -301,17 +301,29 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
             }
 
             return (
-              <Polyline
-                key={card.id}
-                positions={card.riverPath!}
-                pathOptions={{
-                  color: card.color || "#E07020",
-                  weight: 4,
-                  opacity: 0.8,
-                }}
-              >
-                <StationPopup card={card} isAdmin={isAdmin} />
-              </Polyline>
+              <React.Fragment key={card.id}>
+                {/* Invisible wider polyline for easier mobile tap target */}
+                <Polyline
+                  positions={card.riverPath!}
+                  pathOptions={{
+                    color: "transparent",
+                    weight: 30,
+                    opacity: 0,
+                  }}
+                >
+                  <StationPopup card={card} isAdmin={isAdmin} />
+                </Polyline>
+                {/* Visible river path */}
+                <Polyline
+                  positions={card.riverPath!}
+                  pathOptions={{
+                    color: card.color || "#E07020",
+                    weight: 4,
+                    opacity: 0.8,
+                  }}
+                  interactive={false}
+                />
+              </React.Fragment>
             );
           }
 
