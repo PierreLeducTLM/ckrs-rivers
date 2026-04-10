@@ -153,8 +153,6 @@ function meetsConfidenceThreshold(
   const forecastAlerts: AlertType[] = [
     "runnable-in-n-days",
     "confidence-upgraded",
-    "window-extended",
-    "window-shortened",
   ];
 
   if (!forecastAlerts.includes(candidate.alertType)) return true;

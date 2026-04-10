@@ -178,24 +178,6 @@ function buildScenario(alertType: string): ScenarioData {
         }),
       };
 
-    // ---- last-call: currently runnable, exits within 12h ----
-    case "last-call":
-      return {
-        forecastJson: {
-          lastFlow: { date: today(), flow: min + 3 },
-          forecastDays: [
-            { date: dayOffset(1), flow: min - 3, flowLow: min - 5, flowHigh: min - 1 },
-          ],
-        },
-        hourlyJson: makeHourly(min + 3, "falling", 8, 24, min - 5),
-        weatherJson: makeWeather(2),
-        previousSnapshot: makeSnapshot({
-          currentFlow: min + 5,
-          paddlingStatus: "runnable",
-          runnableWindowDays: 2,
-        }),
-      };
-
     // ---- dropping-out: currently runnable, exits in 12-24h ----
     case "dropping-out":
       return {
@@ -294,49 +276,7 @@ function buildScenario(alertType: string): ScenarioData {
         }),
       };
 
-    // ---- window-extended: runnable window grew by ≥1 day ----
-    case "window-extended":
-      return {
-        forecastJson: {
-          lastFlow: { date: today(), flow: min + 5 },
-          forecastDays: [
-            { date: dayOffset(1), flow: min + 6, flowLow: min + 3, flowHigh: min + 9 },
-            { date: dayOffset(2), flow: ideal, flowLow: min + 5, flowHigh: ideal + 5 },
-            { date: dayOffset(3), flow: ideal + 2, flowLow: ideal - 2, flowHigh: ideal + 6 },
-            { date: dayOffset(4), flow: ideal, flowLow: min + 5, flowHigh: ideal + 5 },
-          ],
-        },
-        hourlyJson: makeHourly(min + 5, "stable"),
-        weatherJson: makeWeather(8),
-        previousSnapshot: makeSnapshot({
-          currentFlow: min + 3,
-          paddlingStatus: "runnable",
-          runnableWindowDays: 2,
-        }),
-      };
-
-    // ---- window-shortened: runnable window shrank ----
-    case "window-shortened":
-      return {
-        forecastJson: {
-          lastFlow: { date: today(), flow: min + 5 },
-          forecastDays: [
-            { date: dayOffset(1), flow: min + 3, flowLow: min, flowHigh: min + 6 },
-            { date: dayOffset(2), flow: min - 2, flowLow: min - 5, flowHigh: min + 1 },
-          ],
-        },
-        hourlyJson: makeHourly(min + 5, "falling"),
-        weatherJson: makeWeather(3),
-        previousSnapshot: makeSnapshot({
-          currentFlow: min + 8,
-          paddlingStatus: "runnable",
-          runnableWindowDays: 5,
-        }),
-      };
-
-    // ---- season-opener / river-is-back / spring-melt / nearby / weekend-forecast ----
-    // These cannot be triggered via data injection alone.
-    // Use "direct-send" action instead.
+    // Fallback for unknown types
     default:
       return {
         forecastJson: {
@@ -371,41 +311,28 @@ async function sendDirectEmail(
     ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
   const EMOJI: Record<string, string> = {
-    "its-on": "\uD83D\uDFE2", "last-call": "\u23F0", "safety-warning": "\uD83D\uDD34",
+    "its-on": "\uD83D\uDFE2", "safety-warning": "\uD83D\uDD34",
     "runnable-in-n-days": "\uD83D\uDCC5", "rain-bump": "\uD83C\uDF27\uFE0F",
     "confidence-upgraded": "\u2705", "rising-into-range": "\uD83D\uDCC8",
-    "window-extended": "\u2795", "window-shortened": "\u2796",
-    "dropping-out": "\uD83D\uDCC9", "season-opener": "\uD83C\uDF89",
-    "river-is-back": "\uD83D\uDCA7", "nearby-alternative": "\uD83D\uDD04",
-    "spring-melt-update": "\uD83C\uDF0A", "weekend-forecast": "\uD83D\uDCC6",
+    "dropping-out": "\uD83D\uDCC9", "weekend-forecast": "\uD83D\uDCC6",
   };
 
   const MESSAGES: Record<string, string> = {
     "its-on": `${stationName} is now in runnable range at 15.0 m\u00b3/s. Time to paddle!`,
     "safety-warning": `${stationName} has exceeded safe levels at 45.0 m\u00b3/s. Exercise extreme caution.`,
-    "last-call": `${stationName} is still runnable but expected to leave range in ~10 hours. Last chance!`,
     "dropping-out": `${stationName} is expected to drop out of range in ~20 hours.`,
     "runnable-in-n-days": `${stationName} is predicted to become runnable in 2 days.`,
     "rain-bump": `30mm of rain expected in the next 48 hours for ${stationName}. Flow may rise significantly.`,
     "confidence-upgraded": `Forecast confidence for ${stationName} has been upgraded to high.`,
     "rising-into-range": `${stationName} is rising (8.5 m\u00b3/s) and approaching runnable range (10.0 m\u00b3/s).`,
-    "window-extended": `Good news! The runnable window for ${stationName} has extended to 5 days.`,
-    "window-shortened": `The runnable window for ${stationName} has shortened to 1 day.`,
-    "season-opener": `${stationName} is runnable for the first time this season! The wait is over.`,
-    "spring-melt-update": `Spring melt conditions are developing for ${stationName}. Expect rising flows in the coming days.`,
-    "river-is-back": `${stationName} is runnable again after a long dry spell! Don't miss it.`,
-    "nearby-alternative": `${stationName} isn't runnable, but a nearby river might be. Check the app for alternatives.`,
     "weekend-forecast": `Your weekend river forecast is ready. Check ${stationName} and your other subscribed rivers.`,
   };
 
   const PREFIX: Record<string, string> = {
-    "its-on": "Go paddle!", "last-call": "Last call", "safety-warning": "Safety warning",
+    "its-on": "Go paddle!", "safety-warning": "Safety warning",
     "runnable-in-n-days": "Coming soon", "rain-bump": "Rain incoming",
     "confidence-upgraded": "Forecast confirmed", "rising-into-range": "Rising into range",
-    "window-extended": "Window extended", "window-shortened": "Window shortened",
-    "dropping-out": "Dropping out", "season-opener": "Season opener!",
-    "spring-melt-update": "Spring melt update", "river-is-back": "River is back!",
-    "nearby-alternative": "Try another river", "weekend-forecast": "Weekend forecast",
+    "dropping-out": "Dropping out", "weekend-forecast": "Weekend forecast",
   };
 
   const emoji = EMOJI[alertType] ?? "\uD83D\uDCE2";
@@ -602,15 +529,10 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "alertType required" }, { status: 400 });
     }
 
-    // Types that can't be triggered via data injection
-    const directOnlyTypes = [
-      "season-opener", "spring-melt-update", "river-is-back",
-      "nearby-alternative", "weekend-forecast",
-    ];
-
-    if (directOnlyTypes.includes(alertType)) {
+    // Weekend-forecast uses a different task (send-digest), not data injection
+    if (alertType === "weekend-forecast") {
       return Response.json({
-        error: `"${alertType}" cannot be triggered via data injection. Use "direct-send" instead.`,
+        error: `"weekend-forecast" uses the send-digest task. Use "direct-send" instead.`,
         directOnly: true,
       }, { status: 400 });
     }

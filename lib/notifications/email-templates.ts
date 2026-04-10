@@ -70,36 +70,22 @@ interface AlertEmailParams {
 
 const ALERT_EMOJI: Record<string, string> = {
   "its-on": "🟢",
-  "last-call": "⏰",
   "safety-warning": "🔴",
   "runnable-in-n-days": "📅",
   "rain-bump": "🌧️",
   "confidence-upgraded": "✅",
   "rising-into-range": "📈",
-  "window-extended": "➕",
-  "window-shortened": "➖",
   "dropping-out": "📉",
-  "season-opener": "🎉",
-  "spring-melt-update": "❄️",
-  "river-is-back": "💧",
-  "nearby-alternative": "🔄",
 };
 
 const ALERT_SUBJECT_PREFIX: Record<string, string> = {
   "its-on": "Go paddle!",
-  "last-call": "Last call",
   "safety-warning": "Safety warning",
   "runnable-in-n-days": "Coming soon",
   "rain-bump": "Rain incoming",
   "confidence-upgraded": "Forecast confirmed",
   "rising-into-range": "Rising into range",
-  "window-extended": "Window extended",
-  "window-shortened": "Window shortened",
   "dropping-out": "Dropping out",
-  "season-opener": "Season opener!",
-  "spring-melt-update": "Spring melt update",
-  "river-is-back": "River is back!",
-  "nearby-alternative": "Try another river",
 };
 
 export function alertEmail(params: AlertEmailParams): { subject: string; html: string } {

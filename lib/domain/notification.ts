@@ -8,20 +8,13 @@ import { SkillLevelSchema } from "./enums";
 
 export const AlertTypeSchema = z.enum([
   "its-on",
-  "last-call",
   "safety-warning",
   "runnable-in-n-days",
   "weekend-forecast",
   "rain-bump",
   "confidence-upgraded",
   "rising-into-range",
-  "window-extended",
-  "window-shortened",
   "dropping-out",
-  "season-opener",
-  "spring-melt-update",
-  "river-is-back",
-  "nearby-alternative",
 ]);
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 
@@ -44,39 +37,25 @@ export type Channel = z.infer<typeof ChannelSchema>;
 
 export const ALERT_PRIORITY: Record<AlertType, Priority> = {
   "its-on": "critical",
-  "last-call": "high",
   "safety-warning": "critical",
   "runnable-in-n-days": "normal",
   "weekend-forecast": "normal",
   "rain-bump": "high",
   "confidence-upgraded": "high",
   "rising-into-range": "normal",
-  "window-extended": "normal",
-  "window-shortened": "normal",
   "dropping-out": "normal",
-  "season-opener": "high",
-  "spring-melt-update": "low",
-  "river-is-back": "normal",
-  "nearby-alternative": "low",
 };
 
 /** Cooldown in milliseconds before the same alert can fire again */
 export const ALERT_COOLDOWN_MS: Record<AlertType, number> = {
   "its-on": 6 * 60 * 60_000,
-  "last-call": 12 * 60 * 60_000,
   "safety-warning": 6 * 60 * 60_000,
   "runnable-in-n-days": 24 * 60 * 60_000,
   "weekend-forecast": 7 * 24 * 60 * 60_000,
   "rain-bump": 24 * 60 * 60_000,
   "confidence-upgraded": 24 * 60 * 60_000,
   "rising-into-range": 12 * 60 * 60_000,
-  "window-extended": 24 * 60 * 60_000,
-  "window-shortened": 24 * 60 * 60_000,
   "dropping-out": 12 * 60 * 60_000,
-  "season-opener": 365 * 24 * 60 * 60_000,
-  "spring-melt-update": 7 * 24 * 60 * 60_000,
-  "river-is-back": 14 * 24 * 60 * 60_000,
-  "nearby-alternative": 24 * 60 * 60_000,
 };
 
 // ---------------------------------------------------------------------------

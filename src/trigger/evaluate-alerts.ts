@@ -144,35 +144,32 @@ interface AlertStateRow {
 const ALERT_PRIORITY: Record<string, string> = {
   "its-on": "critical",
   "safety-warning": "critical",
-  "last-call": "high",
   "rain-bump": "high",
   "confidence-upgraded": "high",
-  "season-opener": "high",
   "runnable-in-n-days": "normal",
   "rising-into-range": "normal",
-  "window-extended": "normal",
-  "window-shortened": "normal",
   "dropping-out": "normal",
-  "river-is-back": "normal",
-  "spring-melt-update": "low",
-  "nearby-alternative": "low",
 };
 
 const ALERT_COOLDOWN_MS: Record<string, number> = {
   "its-on": 6 * 3600_000,
   "safety-warning": 6 * 3600_000,
-  "last-call": 12 * 3600_000,
   "dropping-out": 12 * 3600_000,
   "rising-into-range": 12 * 3600_000,
   "runnable-in-n-days": 24 * 3600_000,
   "rain-bump": 24 * 3600_000,
   "confidence-upgraded": 24 * 3600_000,
-  "window-extended": 24 * 3600_000,
-  "window-shortened": 24 * 3600_000,
-  "nearby-alternative": 24 * 3600_000,
-  "season-opener": 365 * 24 * 3600_000,
-  "spring-melt-update": 7 * 24 * 3600_000,
-  "river-is-back": 14 * 24 * 3600_000,
+};
+
+/** Lower = more important. Matches the admin notifications page order. */
+const ALERT_RANK: Record<string, number> = {
+  "its-on": 1,
+  "safety-warning": 2,
+  "dropping-out": 3,
+  "runnable-in-n-days": 4,
+  "rain-bump": 5,
+  "confidence-upgraded": 6,
+  "rising-into-range": 7,
 };
 
 // ---------------------------------------------------------------------------
@@ -328,11 +325,6 @@ function detectAlerts(
     add("safety-warning", `${stationName} has exceeded safe levels at ${flow} m\u00b3/s. Exercise extreme caution.`);
   }
 
-  // last-call
-  if (nowRunnable && curr.forecastExitsRange && curr.forecastExitsRangeInHours != null && curr.forecastExitsRangeInHours <= 12) {
-    add("last-call", `${stationName} is still runnable but leaving range in ~${Math.round(curr.forecastExitsRangeInHours)}h. Last chance!`);
-  }
-
   // dropping-out
   if (nowRunnable && curr.forecastExitsRange && curr.forecastExitsRangeInHours != null && curr.forecastExitsRangeInHours > 12 && curr.forecastExitsRangeInHours <= 24) {
     add("dropping-out", `${stationName} expected to drop out of range in ~${Math.round(curr.forecastExitsRangeInHours)}h.`);
@@ -359,16 +351,6 @@ function detectAlerts(
     add("rising-into-range", `${stationName} is rising (${flow} m\u00b3/s) and approaching runnable range.`);
   }
 
-  // window-extended
-  if (prev && curr.runnableWindowDays > prev.runnableWindowDays && curr.runnableWindowDays - prev.runnableWindowDays >= 1) {
-    add("window-extended", `Runnable window for ${stationName} extended to ${curr.runnableWindowDays} days.`);
-  }
-
-  // window-shortened
-  if (prev && prev.runnableWindowDays > 0 && curr.runnableWindowDays < prev.runnableWindowDays) {
-    add("window-shortened", `Runnable window for ${stationName} shortened to ${curr.runnableWindowDays} day${curr.runnableWindowDays === 1 ? "" : "s"}.`);
-  }
-
   return alerts;
 }
 
@@ -376,13 +358,37 @@ function detectAlerts(
 // Email sending (Resend API, no SDK)
 // ---------------------------------------------------------------------------
 
-async function sendAlertEmail(
+interface GroupedAlert {
+  alertType: string;
+  rank: number;
+  stationId: string;
+  stationName: string;
+  currentFlow: number | null;
+  message: string;
+  subscriptionId: string;
+}
+
+const EMOJI: Record<string, string> = {
+  "its-on": "\uD83D\uDFE2", "safety-warning": "\uD83D\uDD34",
+  "runnable-in-n-days": "\uD83D\uDCC5", "rain-bump": "\uD83C\uDF27\uFE0F",
+  "confidence-upgraded": "\u2705", "rising-into-range": "\uD83D\uDCC8",
+  "dropping-out": "\uD83D\uDCC9",
+};
+
+const PREFIX: Record<string, string> = {
+  "its-on": "Go paddle!", "safety-warning": "Safety warning",
+  "runnable-in-n-days": "Coming soon", "rain-bump": "Rain incoming",
+  "confidence-upgraded": "Forecast confirmed", "rising-into-range": "Rising into range",
+  "dropping-out": "Dropping out",
+};
+
+/**
+ * Send a single email containing one or more river alerts.
+ * Single alert → classic layout. Multiple alerts → card per river.
+ */
+async function sendGroupedAlertEmail(
   to: string,
-  stationId: string,
-  stationName: string,
-  alertType: string,
-  message: string,
-  currentFlow: number | null,
+  alerts: GroupedAlert[],
   manageToken: string,
 ): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -391,47 +397,61 @@ async function sendAlertEmail(
     return false;
   }
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivi\u00e8re aux Sables <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
     ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${manageToken}`;
   const manageUrl = `${appUrl}/notifications?token=${manageToken}`;
 
-  const EMOJI: Record<string, string> = {
-    "its-on": "\uD83D\uDFE2", "last-call": "\u23F0", "safety-warning": "\uD83D\uDD34",
-    "runnable-in-n-days": "\uD83D\uDCC5", "rain-bump": "\uD83C\uDF27\uFE0F",
-    "confidence-upgraded": "\u2705", "rising-into-range": "\uD83D\uDCC8",
-    "window-extended": "\u2795", "window-shortened": "\u2796",
-    "dropping-out": "\uD83D\uDCC9", "season-opener": "\uD83C\uDF89",
-    "river-is-back": "\uD83D\uDCA7", "nearby-alternative": "\uD83D\uDD04",
-  };
+  // Alerts arrive pre-sorted by rank (most important first)
+  const top = alerts[0];
+  const topEmoji = EMOJI[top.alertType] ?? "\uD83D\uDCE2";
+  const topPrefix = PREFIX[top.alertType] ?? "Alert";
 
-  const PREFIX: Record<string, string> = {
-    "its-on": "Go paddle!", "last-call": "Last call", "safety-warning": "Safety warning",
-    "runnable-in-n-days": "Coming soon", "rain-bump": "Rain incoming",
-    "confidence-upgraded": "Forecast confirmed", "rising-into-range": "Rising into range",
-    "window-extended": "Window extended", "window-shortened": "Window shortened",
-    "dropping-out": "Dropping out", "season-opener": "Season opener!",
-    "river-is-back": "River is back!", "nearby-alternative": "Try another river",
-  };
+  // Subject line
+  const subject = alerts.length === 1
+    ? `${topEmoji} ${topPrefix} \u2014 ${top.stationName}`
+    : `${topEmoji} ${topPrefix} \u2014 ${top.stationName} (+${alerts.length - 1} more)`;
 
-  const emoji = EMOJI[alertType] ?? "\uD83D\uDCE2";
-  const prefix = PREFIX[alertType] ?? "Alert";
-  const subject = `${emoji} ${prefix} \u2014 ${stationName}`;
-  const flowLine = currentFlow != null ? `<p style="color:#52525b;">Current flow: <strong>${currentFlow.toFixed(1)} m&sup3;/s</strong></p>` : "";
+  // Build body
+  let body: string;
+
+  if (alerts.length === 1) {
+    // Single alert — same layout as before
+    const flowLine = top.currentFlow != null
+      ? `<p style="color:#52525b;">Current flow: <strong>${top.currentFlow.toFixed(1)} m&sup3;/s</strong></p>`
+      : "";
+    body = `<h2 style="margin:0 0 16px;font-size:18px;">${topEmoji} ${top.stationName}</h2>
+<p style="color:#18181b;font-size:16px;line-height:1.6;">${top.message}</p>
+${flowLine}
+<div style="margin:24px 0;">
+<a href="${appUrl}/rivers/${encodeURIComponent(top.stationId)}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
+<a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">Manage Alerts</a>
+</div>`;
+  } else {
+    // Multiple alerts — one card per river
+    const cards = alerts.map((a) => {
+      const aEmoji = EMOJI[a.alertType] ?? "\uD83D\uDCE2";
+      const flowText = a.currentFlow != null ? ` &mdash; ${a.currentFlow.toFixed(1)} m&sup3;/s` : "";
+      return `<div style="margin-bottom:12px;padding:14px 16px;border:1px solid #e4e4e7;border-radius:8px;background:#fafafa;">
+<div style="font-size:15px;font-weight:600;color:#18181b;">${aEmoji} ${a.stationName}<span style="font-weight:400;color:#71717a;font-size:13px;">${flowText}</span></div>
+<p style="margin:6px 0 10px;color:#52525b;font-size:14px;line-height:1.5;">${a.message}</p>
+<a href="${appUrl}/rivers/${encodeURIComponent(a.stationId)}" style="display:inline-block;padding:6px 14px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600;">View River</a>
+</div>`;
+    }).join("");
+
+    body = `<h2 style="margin:0 0 16px;font-size:18px;">\uD83D\uDD14 ${alerts.length} River Updates</h2>
+${cards}
+<div style="margin-top:16px;">
+<a href="${manageUrl}" style="display:inline-block;padding:10px 20px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">Manage Alerts</a>
+</div>`;
+  }
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;border:1px solid #e4e4e7;">
 <div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">Kayak Rivi&egrave;re aux Sables</h1></div>
-<div style="padding:24px;">
-<h2 style="margin:0 0 16px;font-size:18px;">${emoji} ${stationName}</h2>
-<p style="color:#18181b;font-size:16px;line-height:1.6;">${message}</p>
-${flowLine}
-<div style="margin:24px 0;">
-<a href="${appUrl}/rivers/${encodeURIComponent(stationId)}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
-<a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">Manage Alerts</a>
-</div></div>
+<div style="padding:24px;">${body}</div>
 <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">
 <a href="${unsubUrl}" style="color:#71717a;">Unsubscribe</a></div></div></body></html>`;
 
@@ -442,8 +462,8 @@ ${flowLine}
       body: JSON.stringify({ from, to, subject, html }),
     });
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      logger.error(`Resend API error ${res.status}: ${body}`, { to, alertType, from });
+      const resBody = await res.text().catch(() => "");
+      logger.error(`Resend API error ${res.status}: ${resBody}`, { to, alertTypes: alerts.map((a) => a.alertType), from });
     }
     return res.ok;
   } catch (err) {
@@ -512,10 +532,14 @@ export const evaluateAlerts = task({
       subsByStation.set(sub.station_id, list);
     }
 
-    let totalAlerts = 0;
-    let totalEmails = 0;
+    // -----------------------------------------------------------------------
+    // Phase 1: Evaluate all stations, collect candidates, save snapshots
+    // -----------------------------------------------------------------------
 
-    // 5. Evaluate each station
+    const stationCandidates = new Map<string, AlertCandidate[]>();
+    const stationSnapshots = new Map<string, StationSnapshot>();
+    const stationPaddlings = new Map<string, PaddlingLevels>();
+
     for (const station of stations) {
       const cache = cacheMap.get(station.id);
       if (!cache) continue;
@@ -525,18 +549,19 @@ export const evaluateAlerts = task({
         ideal: station.paddling_ideal ?? undefined,
         max: station.paddling_max ?? undefined,
       };
+      stationPaddlings.set(station.id, paddling);
 
-      // Compute current snapshot
       const snapshot = computeSnapshot(station.id, cache, paddling, now);
+      stationSnapshots.set(station.id, snapshot);
       const prevSnapshot = prevSnapshots.get(station.id) ?? null;
 
-      // Detect alert candidates
       const candidates = detectAlerts(snapshot, prevSnapshot, station.name, paddling);
 
       if (candidates.length > 0) {
         logger.info(`Station ${station.id}: ${candidates.length} alert candidates`, {
           types: candidates.map((c) => c.alertType),
         });
+        stationCandidates.set(station.id, candidates);
       }
 
       // Save updated snapshot
@@ -548,82 +573,128 @@ export const evaluateAlerts = task({
            evaluated_at = now()`,
         [station.id, JSON.stringify(snapshot)],
       );
+    }
 
-      // Process alerts for each subscriber
+    // -----------------------------------------------------------------------
+    // Phase 2: Collect filtered alerts per subscriber (across all stations)
+    // -----------------------------------------------------------------------
+
+    const subscriberBucket = new Map<string, {
+      email: string;
+      token: string;
+      alerts: GroupedAlert[];
+    }>();
+
+    for (const station of stations) {
+      const candidates = stationCandidates.get(station.id);
+      if (!candidates || candidates.length === 0) continue;
+
+      const snapshot = stationSnapshots.get(station.id)!;
       const stationSubs = subsByStation.get(station.id) ?? [];
+
       for (const sub of stationSubs) {
-        // Load alert states for this subscription
         const alertStates = (await dbSql(
           `SELECT alert_type, last_triggered FROM alert_state
            WHERE subscription_id = $1`,
           [sub.id],
         )) as AlertStateRow[];
 
-        // Merge preferences
         const prefs = { ...sub.preferences, ...(sub.sub_preferences ?? {}) };
         const leadTimeDays = (prefs.leadTimeDays as number) ?? 2;
         const weekendOnly = (prefs.weekendOnly as boolean) ?? false;
         const digestMode = (prefs.digestMode as boolean) ?? false;
 
         for (const candidate of candidates) {
-          // Cooldown check
           if (isInCooldown(candidate.alertType, alertStates, now)) continue;
 
-          // Lead time check for runnable-in-n-days
           if (candidate.alertType === "runnable-in-n-days" && snapshot.forecastEntersRangeInDays != null) {
             if (snapshot.forecastEntersRangeInDays > leadTimeDays) continue;
           }
 
-          // Weekend-only check
           if (weekendOnly && candidate.priority !== "critical") {
             const day = now.getDay();
             if (day !== 0 && day !== 4 && day !== 5 && day !== 6) continue;
           }
 
-          // Digest mode: skip normal/low if digest mode (they'll go in the digest task)
           if (digestMode && (candidate.priority === "normal" || candidate.priority === "low")) continue;
 
-          // Send email
-          const sent = await sendAlertEmail(
-            sub.email,
-            candidate.stationId,
-            candidate.stationName,
-            candidate.alertType,
-            candidate.message,
-            candidate.currentFlow,
-            sub.token,
-          );
-
-          // Log notification
-          await dbSql(
-            `INSERT INTO notification_log (subscriber_id, station_id, alert_type, priority, subject, sent_at, delivered)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [
-              sub.subscriber_id,
-              station.id,
-              candidate.alertType,
-              candidate.priority,
-              `${candidate.alertType}: ${candidate.stationName}`,
-              sent ? now.toISOString() : null,
-              sent,
-            ],
-          );
-
-          // Update alert state
-          await dbSql(
-            `INSERT INTO alert_state (subscription_id, alert_type, state, last_triggered, last_evaluated)
-             VALUES ($1, $2, 'triggered', now(), now())
-             ON CONFLICT (subscription_id, alert_type) DO UPDATE SET
-               state = 'triggered',
-               last_triggered = now(),
-               last_evaluated = now()`,
-            [sub.id, candidate.alertType],
-          );
-
-          totalAlerts++;
-          if (sent) totalEmails++;
+          // Add to subscriber bucket
+          if (!subscriberBucket.has(sub.subscriber_id)) {
+            subscriberBucket.set(sub.subscriber_id, {
+              email: sub.email,
+              token: sub.token,
+              alerts: [],
+            });
+          }
+          subscriberBucket.get(sub.subscriber_id)!.alerts.push({
+            alertType: candidate.alertType,
+            rank: ALERT_RANK[candidate.alertType] ?? 99,
+            stationId: candidate.stationId,
+            stationName: candidate.stationName,
+            currentFlow: candidate.currentFlow,
+            message: candidate.message,
+            subscriptionId: sub.id,
+          });
         }
       }
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 3: Per subscriber — keep best alert per station, send ONE email
+    // -----------------------------------------------------------------------
+
+    let totalAlerts = 0;
+    let totalEmails = 0;
+
+    for (const [subscriberId, bucket] of Array.from(subscriberBucket.entries())) {
+      // Deduplicate: keep only the top-ranked alert per station
+      const bestByStation = new Map<string, GroupedAlert>();
+      for (const alert of bucket.alerts) {
+        const existing = bestByStation.get(alert.stationId);
+        if (!existing || alert.rank < existing.rank) {
+          bestByStation.set(alert.stationId, alert);
+        }
+      }
+
+      const finalAlerts = Array.from(bestByStation.values()).sort((a, b) => a.rank - b.rank);
+      if (finalAlerts.length === 0) continue;
+
+      logger.info(`Subscriber ${subscriberId}: sending 1 email with ${finalAlerts.length} river alert(s)`, {
+        types: finalAlerts.map((a) => `${a.stationId}:${a.alertType}`),
+      });
+
+      // Send ONE grouped email
+      const sent = await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token);
+
+      // Log + update state for each included alert
+      for (const alert of finalAlerts) {
+        await dbSql(
+          `INSERT INTO notification_log (subscriber_id, station_id, alert_type, priority, subject, sent_at, delivered)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            subscriberId,
+            alert.stationId,
+            alert.alertType,
+            ALERT_PRIORITY[alert.alertType] ?? "normal",
+            `${alert.alertType}: ${alert.stationName}`,
+            sent ? now.toISOString() : null,
+            sent,
+          ],
+        );
+
+        await dbSql(
+          `INSERT INTO alert_state (subscription_id, alert_type, state, last_triggered, last_evaluated)
+           VALUES ($1, $2, 'triggered', now(), now())
+           ON CONFLICT (subscription_id, alert_type) DO UPDATE SET
+             state = 'triggered',
+             last_triggered = now(),
+             last_evaluated = now()`,
+          [alert.subscriptionId, alert.alertType],
+        );
+
+        totalAlerts++;
+      }
+      if (sent) totalEmails++;
     }
 
     logger.info(`Alert evaluation complete: ${totalAlerts} alerts, ${totalEmails} emails sent`);

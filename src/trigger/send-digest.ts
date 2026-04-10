@@ -2,7 +2,7 @@ import { logger, schedules } from "@trigger.dev/sdk/v3";
 import { neon } from "@neondatabase/serverless";
 
 /**
- * Send weekly digest emails on Wednesday and Thursday at 6 PM ET.
+ * Send weekly digest emails on Wednesday, Thursday and Friday at 6 PM ET.
  * Includes weekend forecast for all subscribed rivers.
  *
  * Inlines all logic (no @/ aliases) per Trigger.dev bundling constraints.
@@ -112,18 +112,18 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
 }
 
 // ---------------------------------------------------------------------------
-// Scheduled task: Wednesday & Thursday 6 PM ET (22:00 UTC in summer)
+// Scheduled task: Wednesday, Thursday & Friday 6 PM ET (22:00 UTC in summer)
 // ---------------------------------------------------------------------------
 
 export const sendDigest = schedules.task({
   id: "send-digest",
-  cron: "0 22 * * 3,4",
+  cron: "0 18 * * 3,4,5",
   maxDuration: 120,
   run: async () => {
     const dbSql = createSql();
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 3=Wed, 4=Thu
-    const period = dayOfWeek === 3 ? "Weekend" : "Weekend (updated)";
+    const dayOfWeek = now.getDay(); // 3=Wed, 4=Thu, 5=Fri
+    const period = dayOfWeek === 5 ? "Weekend (final)" : dayOfWeek === 4 ? "Weekend (updated)" : "Weekend";
 
     logger.info(`Sending ${period} digest`);
 

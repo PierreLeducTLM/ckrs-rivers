@@ -148,16 +148,6 @@ export function detectAlerts(
     );
   }
 
-  // --- last-call: currently runnable but exiting within 12h ---
-  if (isRunnable && current.forecastExitsRange && current.forecastExitsRangeInHours != null && current.forecastExitsRangeInHours <= 12) {
-    const hours = Math.round(current.forecastExitsRangeInHours);
-    add(
-      "last-call",
-      `${stationName} is still runnable but expected to leave range in ~${hours} hours. Last chance!`,
-      { exitsInHours: hours },
-    );
-  }
-
   // --- dropping-out: currently runnable but exiting within 24h ---
   if (isRunnable && current.forecastExitsRange && current.forecastExitsRangeInHours != null && current.forecastExitsRangeInHours > 12 && current.forecastExitsRangeInHours <= 24) {
     const hours = Math.round(current.forecastExitsRangeInHours);
@@ -211,34 +201,6 @@ export function detectAlerts(
     );
   }
 
-  // --- window-extended: runnable window grew ---
-  if (prev && current.runnableWindowDays > prev.runnableWindowDays && current.runnableWindowDays - prev.runnableWindowDays >= 1) {
-    add(
-      "window-extended",
-      `Good news! The runnable window for ${stationName} has extended to ${current.runnableWindowDays} days.`,
-      { windowDays: current.runnableWindowDays },
-    );
-  }
-
-  // --- window-shortened: runnable window shrank ---
-  if (prev && prev.runnableWindowDays > 0 && current.runnableWindowDays < prev.runnableWindowDays) {
-    add(
-      "window-shortened",
-      `The runnable window for ${stationName} has shortened to ${current.runnableWindowDays} day${current.runnableWindowDays === 1 ? "" : "s"}.`,
-      { windowDays: current.runnableWindowDays },
-    );
-  }
-
-  // --- season-opener: checked externally, but we can produce candidate if isSeasonFirst ---
-  if (current.isSeasonFirst && isRunnable) {
-    add(
-      "season-opener",
-      `${stationName} is runnable for the first time this season! The wait is over.`,
-    );
-  }
-
-  // --- river-is-back: checked externally based on last "its-on" timestamp ---
-  // This is set by the task layer after checking alert_state, so we skip here.
 
   return candidates;
 }
