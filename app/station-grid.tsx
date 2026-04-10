@@ -111,6 +111,8 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const [mounted, setMounted] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
 
   const fetchSubscriptions = useCallback(() => {
@@ -134,8 +136,12 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   }, []);
 
   const handleNeedEmail = useCallback(() => {
+    if (isNative) {
+      setShowComingSoon(true);
+      return;
+    }
     setShowNotificationModal(true);
-  }, []);
+  }, [isNative]);
 
   const refreshFavorites = useCallback(() => {
     setFavorites(getFavorites());
@@ -148,6 +154,14 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
     if (saved === "list" || saved === "card" || saved === "map") setViewMode(saved);
     setMounted(true);
     window.addEventListener("favorites-changed", refreshFavorites);
+
+    // Detect Capacitor native platform
+    import("@capacitor/core")
+      .then(({ Capacitor }) => {
+        if (Capacitor.isNativePlatform()) setIsNative(true);
+      })
+      .catch(() => {});
+
     return () => window.removeEventListener("favorites-changed", refreshFavorites);
   }, [refreshFavorites, fetchSubscriptions]);
 
@@ -263,7 +277,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <h2 className="text-lg font-semibold group-hover:underline leading-tight flex-1">
                   {card.name}
                 </h2>
-                <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} />
+                <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} isNative={isNative} />
                 <FavoriteButton stationId={card.id} />
               </div>
 
@@ -419,6 +433,34 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
         <SubscribeModal onClose={() => setShowNotificationModal(false)} />
       )}
 
+      {/* Coming soon on mobile modal */}
+      {showComingSoon && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowComingSoon(false);
+          }}
+        >
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-foreground/10 bg-background p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold">Notifications</h3>
+            <p className="mt-2 text-sm text-foreground/60">
+              Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="mt-4 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium hover:bg-foreground/15"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* List view */}
       {viewMode === "list" && (
         <div className="flex flex-col gap-2">
@@ -499,7 +541,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 )}
 
                 <div className="ml-auto flex flex-shrink-0 gap-0.5">
-                  <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} />
+                  <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} isNative={isNative} />
                   <FavoriteButton stationId={card.id} />
                 </div>
               </div>

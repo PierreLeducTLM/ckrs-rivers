@@ -20,11 +20,13 @@ export default function SubscribeButton({
   isSubscribed,
   onNeedEmail,
   onToggled,
+  isNative,
 }: {
   stationId: string;
   isSubscribed: boolean;
   onNeedEmail: () => void;
   onToggled: () => void;
+  isNative?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
   const [toggling, setToggling] = useState(false);
@@ -37,6 +39,11 @@ export default function SubscribeButton({
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+
+      if (isNative) {
+        onNeedEmail();
+        return;
+      }
 
       const token = getSubToken();
       if (!token) {
@@ -64,7 +71,7 @@ export default function SubscribeButton({
       }
       setToggling(false);
     },
-    [stationId, isSubscribed, onNeedEmail, onToggled],
+    [stationId, isSubscribed, isNative, onNeedEmail, onToggled],
   );
 
   if (!mounted) {
