@@ -51,7 +51,7 @@
     "chooseRivers": "Choisir mes rivieres"
   },
   "notifications": {
-    "title": "Preferences de notification",
+    "title": "Preferences",
     "watchedRivers": "Rivieres suivies",
     "noRivers": "Aucune riviere abonnee. Appuyez sur l'icone de cloche sur une carte de riviere pour vous abonner.",
     "active": "Actif",
@@ -75,6 +75,8 @@
     "weekendOnly": "Fenetres de fin de semaine seulement (ven-dim)",
     "saving": "Enregistrement...",
     "savePreferences": "Enregistrer les preferences",
+    "changeEmail": "Modifier",
+    "emailLabel": "Courriel",
     "recentNotifications": "Notifications recentes",
     "pending": "En attente",
     "unsubscribeAll": "Se desabonner de toutes les notifications",

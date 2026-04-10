@@ -2,36 +2,30 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { setSubToken } from "../subscribe-button";
 import { useTranslation } from "@/lib/i18n/provider";
-
-interface Notification {
-  alert_type: string;
-  priority: string;
-  subject: string;
-  sent_at: string | null;
-  delivered: boolean | null;
-  station_name: string | null;
-}
 
 interface ManageData {
   email: string;
   confirmed: boolean;
   preferences: Record<string, unknown>;
   memberSince: string;
-  recentNotifications: Notification[];
 }
 
 export default function NotificationsPage() {
   const { t } = useTranslation();
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [data, setData] = useState<ManageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
   const [prefs, setPrefs] = useState({
     leadTimeDays: 2,
-    digestMode: false,
     weekendOnly: false,
   });
 
@@ -71,6 +65,27 @@ export default function NotificationsPage() {
       body: JSON.stringify({ global: prefs }),
     });
     setSaving(false);
+    router.back();
+  };
+
+  const changeEmail = async () => {
+    if (!token || !emailDraft.trim()) return;
+    setEmailSaving(true);
+    const res = await fetch(`/api/notifications/change-email?token=${token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailDraft.trim() }),
+    });
+    if (res.ok) {
+      const result = await res.json();
+      setData((d) => d ? { ...d, email: result.email } : d);
+      if (result.token !== token) {
+        setToken(result.token);
+        setSubToken(result.token);
+      }
+      setEditingEmail(false);
+    }
+    setEmailSaving(false);
   };
 
   if (loading) {
@@ -102,7 +117,51 @@ export default function NotificationsPage() {
         </Link>
 
         <h1 className="mt-4 text-2xl font-bold">{t("notifications.title")}</h1>
-        <p className="mt-1 text-sm text-foreground/50">{data.email}</p>
+
+        {/* Email */}
+        <div className="mt-2 flex items-center gap-2">
+          {editingEmail ? (
+            <>
+              <input
+                type="email"
+                value={emailDraft}
+                onChange={(e) => setEmailDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") changeEmail();
+                  if (e.key === "Escape") setEditingEmail(false);
+                }}
+                autoFocus
+                disabled={emailSaving}
+                className="rounded-lg border border-foreground/20 bg-transparent px-3 py-1.5 text-sm"
+                placeholder={data.email}
+              />
+              <button
+                onClick={changeEmail}
+                disabled={emailSaving}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {emailSaving ? "..." : "OK"}
+              </button>
+              <button
+                onClick={() => setEditingEmail(false)}
+                disabled={emailSaving}
+                className="text-xs text-foreground/50 hover:text-foreground/70"
+              >
+                &times;
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-foreground/50">{data.email}</p>
+              <button
+                onClick={() => { setEmailDraft(data.email); setEditingEmail(true); }}
+                className="text-xs text-blue-500 hover:underline"
+              >
+                {t("notifications.changeEmail")}
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Global preferences */}
         <section className="mt-8">
@@ -126,16 +185,6 @@ export default function NotificationsPage() {
               <label className="flex items-center gap-3">
                 <input
                   type="checkbox"
-                  checked={prefs.digestMode}
-                  onChange={(e) => setPrefs((p) => ({ ...p, digestMode: e.target.checked }))}
-                  className="h-4 w-4 rounded"
-                />
-                <span className="text-sm">{t("notifications.digestMode")}</span>
-              </label>
-
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
                   checked={prefs.weekendOnly}
                   onChange={(e) => setPrefs((p) => ({ ...p, weekendOnly: e.target.checked }))}
                   className="h-4 w-4 rounded"
@@ -153,34 +202,6 @@ export default function NotificationsPage() {
             </button>
           </div>
         </section>
-
-        {/* Recent notifications */}
-        {data.recentNotifications.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-lg font-semibold">{t("notifications.recentNotifications")}</h2>
-            <div className="mt-3 space-y-2">
-              {data.recentNotifications.map((n, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg border border-foreground/10 px-4 py-3"
-                >
-                  <p className="text-sm font-medium">{n.subject}</p>
-                  <p className="text-xs text-foreground/50">
-                    {n.station_name && `${n.station_name} · `}
-                    {n.sent_at
-                      ? new Date(n.sent_at).toLocaleDateString("en-CA", {
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : t("notifications.pending")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Unsubscribe */}
         <section className="mt-10 border-t border-foreground/10 pt-6">

@@ -51,7 +51,7 @@
     "chooseRivers": "Choose My Rivers"
   },
   "notifications": {
-    "title": "Notification Preferences",
+    "title": "Preferences",
     "watchedRivers": "Watched Rivers",
     "noRivers": "No rivers subscribed yet. Click the bell icon on a river card to subscribe.",
     "active": "Active",
@@ -75,6 +75,8 @@
     "weekendOnly": "Weekend windows only (Fri-Sun)",
     "saving": "Saving...",
     "savePreferences": "Save Preferences",
+    "changeEmail": "Change",
+    "emailLabel": "Email",
     "recentNotifications": "Recent Notifications",
     "pending": "Pending",
     "unsubscribeAll": "Unsubscribe from all notifications",

@@ -74,10 +74,9 @@ const I18nContext = createContext<I18nContextValue>({
 // ---------------------------------------------------------------------------
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window === "undefined") return "fr";
-    return getStored() ?? detectLocale();
-  });
+  // Always start with "fr" to match server-rendered HTML and avoid hydration mismatch.
+  // The real locale is resolved in the effect below after hydration.
+  const [locale, setLocaleState] = useState<Locale>("fr");
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
@@ -85,7 +84,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = l;
   }, []);
 
-  // Keep <html lang> in sync
+  // After hydration, switch to the stored/detected locale
+  useEffect(() => {
+    const resolved = getStored() ?? detectLocale();
+    setLocaleState(resolved);
+    document.documentElement.lang = resolved;
+  }, []);
+
+  // Keep <html lang> in sync on subsequent changes
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
