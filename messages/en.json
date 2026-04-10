@@ -93,6 +93,7 @@
     "remove": "Remove from favorites"
   },
   "theme": {
+    "label": "Theme",
     "system": "System",
     "light": "Light",
     "dark": "Dark",

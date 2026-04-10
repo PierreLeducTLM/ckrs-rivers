@@ -128,9 +128,9 @@ function NotificationsLink() {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
     >
-      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
         <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
         <path d="M13.73 21a2 2 0 01-3.46 0" />
       </svg>
@@ -175,7 +175,7 @@ function SettingsMenu() {
         </svg>
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 flex flex-col gap-1 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
+        <div className="absolute right-0 top-full z-[9999] mt-1 flex min-w-[160px] flex-col gap-0.5 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
           <NotificationsLink />
           <LanguageToggle />
           <ThemeToggle />
@@ -471,7 +471,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       </div>
 
       {/* Header + View toggle */}
-      <div ref={headerRef} className="mb-4 flex items-center justify-between">
+      <div ref={headerRef} className="relative z-20 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
           <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">{t("app.title")}</h1>
@@ -797,7 +797,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
 
       {/* Map view (outside swipe wrapper) */}
       {viewMode === "map" && (
-        <div className="-mx-6 -mb-4 h-[calc(100vh-60px)] sm:mx-0 sm:mb-0 sm:h-auto">
+        <div className="relative z-0 -mx-6 -mb-4 h-[calc(100vh-60px)] sm:mx-0 sm:mb-0 sm:h-auto">
           <StationMap cards={sorted} isAdmin={isAdmin} />
         </div>
       )}
