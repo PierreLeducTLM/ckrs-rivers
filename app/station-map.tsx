@@ -8,6 +8,7 @@ import "leaflet/dist/leaflet.css";
 import SparklineChart from "./sparkline-chart";
 import type { StationCard } from "./station-grid";
 import { useTranslation } from "@/lib/i18n/provider";
+import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 
 const MAP_LAYER_KEY = "waterflow-map-layer";
 const MAP_VIEW_KEY = "waterflow-map-view";
@@ -117,8 +118,69 @@ function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
   return null;
 }
 
+function computeCardStatusInfo(
+  card: StationCard,
+): { key: string; param?: number } | null {
+  const paddling = card.paddling;
+  if (!paddling || (paddling.min == null && paddling.ideal == null && paddling.max == null)) {
+    return null;
+  }
+  if (card.status === "unknown") return null;
+
+  if (card.status === "ideal") return { key: "detail.ideal" };
+  if (card.status === "runnable") return { key: "detail.goodToGo" };
+
+  // too-low or too-high: check hourly forecast for when it enters range
+  if (card.status === "too-low" || card.status === "too-high") {
+    const now = card.nowTs;
+    for (const point of card.sparkData) {
+      const flow = point.cehqForecast;
+      if (flow == null || point.ts <= now) continue;
+      const { status } = getPaddlingStatus(flow, paddling);
+      if (isGoodRange(status)) {
+        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
+        if (hoursAhead <= 24) {
+          return { key: "detail.runnableInHours", param: hoursAhead };
+        }
+        return { key: "detail.runnableInDays", param: Math.ceil(hoursAhead / 24) };
+      }
+    }
+    return { key: card.status === "too-low" ? "detail.tooLow" : "detail.tooHigh" };
+  }
+
+  // Currently runnable: check if dropping out
+  if (card.isGoodRange) {
+    const now = card.nowTs;
+    for (const point of card.sparkData) {
+      const flow = point.cehqForecast;
+      if (flow == null || point.ts <= now) continue;
+      const { status } = getPaddlingStatus(flow, paddling);
+      if (!isGoodRange(status)) {
+        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
+        if (hoursAhead <= 48) {
+          return { key: "detail.droppingOutHours", param: hoursAhead };
+        }
+        break;
+      }
+    }
+  }
+
+  return null;
+}
+
+const STATUS_PILL_STYLES: Record<string, { bg: string; text: string }> = {
+  "detail.ideal": { bg: "rgba(16,185,129,0.12)", text: "#059669" },
+  "detail.goodToGo": { bg: "rgba(59,130,246,0.12)", text: "#2563eb" },
+  "detail.tooLow": { bg: "rgba(113,113,122,0.12)", text: "#71717a" },
+  "detail.tooHigh": { bg: "rgba(239,68,68,0.12)", text: "#dc2626" },
+  "detail.runnableInHours": { bg: "rgba(245,158,11,0.12)", text: "#d97706" },
+  "detail.runnableInDays": { bg: "rgba(245,158,11,0.12)", text: "#d97706" },
+  "detail.droppingOutHours": { bg: "rgba(249,115,22,0.12)", text: "#ea580c" },
+};
+
 function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }) {
   const { t } = useTranslation();
+  const statusInfo = computeCardStatusInfo(card);
   return (
     <Popup maxWidth={280} minWidth={220}>
       <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: 1.4 }}>
@@ -167,6 +229,31 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
         ) : (
           <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0" }}>No data</p>
         )}
+
+        {/* Paddling status message */}
+        {statusInfo && (() => {
+          const style = STATUS_PILL_STYLES[statusInfo.key] ?? { bg: "rgba(113,113,122,0.12)", text: "#71717a" };
+          const text = statusInfo.param != null
+            ? t(statusInfo.key, { n: statusInfo.param })
+            : t(statusInfo.key);
+          return (
+            <div style={{ marginTop: 6 }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  padding: "2px 10px",
+                  borderRadius: 12,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  backgroundColor: style.bg,
+                  color: style.text,
+                }}
+              >
+                {text}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Sparkline chart */}
         {card.sparkData.length > 2 && (

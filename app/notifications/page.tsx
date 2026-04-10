@@ -5,14 +5,6 @@ import Link from "next/link";
 import { setSubToken } from "../subscribe-button";
 import { useTranslation } from "@/lib/i18n/provider";
 
-interface Subscription {
-  id: string;
-  stationId: string;
-  stationName: string;
-  active: boolean;
-  preferences: Record<string, unknown> | null;
-}
-
 interface Notification {
   alert_type: string;
   priority: string;
@@ -27,7 +19,6 @@ interface ManageData {
   confirmed: boolean;
   preferences: Record<string, unknown>;
   memberSince: string;
-  subscriptions: Subscription[];
   recentNotifications: Notification[];
 }
 
@@ -39,10 +30,7 @@ export default function NotificationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [prefs, setPrefs] = useState({
-    skillLevel: "intermediate",
     leadTimeDays: 2,
-    confidenceThreshold: "high",
-    acceptableRange: "runnable",
     digestMode: false,
     weekendOnly: false,
   });
@@ -73,24 +61,6 @@ export default function NotificationsPage() {
       setLoading(false);
     }
   }, []);
-
-  const toggleSubscription = async (stationId: string, active: boolean) => {
-    if (!token) return;
-    if (active) {
-      await fetch(`/api/notifications/subscribe-station?token=${token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stationId }),
-      });
-    } else {
-      await fetch(`/api/notifications/unsubscribe?token=${token}&stationId=${stationId}`, {
-        method: "DELETE",
-      });
-    }
-    // Refresh data
-    const res = await fetch(`/api/notifications/manage?token=${token}`);
-    if (res.ok) setData(await res.json());
-  };
 
   const savePreferences = async () => {
     if (!token) return;
@@ -134,58 +104,10 @@ export default function NotificationsPage() {
         <h1 className="mt-4 text-2xl font-bold">{t("notifications.title")}</h1>
         <p className="mt-1 text-sm text-foreground/50">{data.email}</p>
 
-        {/* Subscribed stations */}
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold">{t("notifications.watchedRivers")}</h2>
-          {data.subscriptions.length === 0 ? (
-            <p className="mt-2 text-sm text-foreground/50">
-              {t("notifications.noRivers")}
-            </p>
-          ) : (
-            <div className="mt-3 space-y-2">
-              {data.subscriptions.map((sub) => (
-                <div
-                  key={sub.id}
-                  className="flex items-center justify-between rounded-lg border border-foreground/10 px-4 py-3"
-                >
-                  <div>
-                    <p className="font-medium">{sub.stationName}</p>
-                    <p className="text-xs text-foreground/50">Station {sub.stationId}</p>
-                  </div>
-                  <button
-                    onClick={() => toggleSubscription(sub.stationId, !sub.active)}
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      sub.active
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-foreground/10 text-foreground/50"
-                    }`}
-                  >
-                    {sub.active ? t("notifications.active") : t("notifications.paused")}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
         {/* Global preferences */}
         <section className="mt-8">
           <h2 className="text-lg font-semibold">{t("notifications.alertSettings")}</h2>
           <div className="mt-4 space-y-4">
-            <div>
-              <label className="text-sm font-medium">{t("notifications.skillLevel")}</label>
-              <select
-                value={prefs.skillLevel}
-                onChange={(e) => setPrefs((p) => ({ ...p, skillLevel: e.target.value }))}
-                className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
-              >
-                <option value="beginner">{t("notifications.beginner")}</option>
-                <option value="intermediate">{t("notifications.intermediate")}</option>
-                <option value="advanced">{t("notifications.advanced")}</option>
-                <option value="expert">{t("notifications.expert")}</option>
-              </select>
-            </div>
-
             <div>
               <label className="text-sm font-medium">{t("notifications.advanceNotice")}</label>
               <select
@@ -197,30 +119,6 @@ export default function NotificationsPage() {
                 <option value={2}>{t("notifications.daysBeforePlural", { n: 2 })}</option>
                 <option value={3}>{t("notifications.daysBeforePlural", { n: 3 })}</option>
                 <option value={5}>{t("notifications.daysBeforePlural", { n: 5 })}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">{t("notifications.forecastConfidence")}</label>
-              <select
-                value={prefs.confidenceThreshold}
-                onChange={(e) => setPrefs((p) => ({ ...p, confidenceThreshold: e.target.value }))}
-                className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
-              >
-                <option value="high">{t("notifications.highOnly")}</option>
-                <option value="medium">{t("notifications.mediumAndHigh")}</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">{t("notifications.flowRange")}</label>
-              <select
-                value={prefs.acceptableRange}
-                onChange={(e) => setPrefs((p) => ({ ...p, acceptableRange: e.target.value }))}
-                className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
-              >
-                <option value="optimal-only">{t("notifications.optimalOnly")}</option>
-                <option value="runnable">{t("notifications.allRunnable")}</option>
               </select>
             </div>
 

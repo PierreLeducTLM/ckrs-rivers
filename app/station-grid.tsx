@@ -114,6 +114,31 @@ const ICON_HIDDEN_Y = -40;
 // 3-dot settings menu (language + theme)
 // ---------------------------------------------------------------------------
 
+function NotificationsLink() {
+  const { t } = useTranslation();
+  const [href, setHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = getSubToken();
+    if (token) setHref(`/notifications?token=${token}`);
+  }, []);
+
+  if (!href) return null;
+
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
+    >
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 01-3.46 0" />
+      </svg>
+      {t("notifications.title")}
+    </Link>
+  );
+}
+
 function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -151,6 +176,7 @@ function SettingsMenu() {
       </button>
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 flex flex-col gap-1 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
+          <NotificationsLink />
           <LanguageToggle />
           <ThemeToggle />
         </div>
