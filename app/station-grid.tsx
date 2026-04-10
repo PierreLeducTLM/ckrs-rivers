@@ -258,6 +258,102 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
     localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
+  // Swipe left/right to switch between card ↔ list (disabled on map)
+  const SWIPE_VIEWS: ViewMode[] = ["card", "list", "map"];
+  const swipeStartX = useRef(0);
+  const swipeStartY = useRef(0);
+  const swiping = useRef(false);
+  const swipeContentRef = useRef<HTMLDivElement>(null);
+  const SWIPE_THRESHOLD = 80;
+
+  useEffect(() => {
+    const el = swipeContentRef.current;
+
+    function onSwipeStart(e: TouchEvent) {
+      if (viewMode === "map") return;
+      swipeStartX.current = e.touches[0].clientX;
+      swipeStartY.current = e.touches[0].clientY;
+      swiping.current = false;
+    }
+
+    function onSwipeMove(e: TouchEvent) {
+      if (viewMode === "map" || !el) return;
+      const dx = e.touches[0].clientX - swipeStartX.current;
+      const dy = e.touches[0].clientY - swipeStartY.current;
+
+      // Lock into horizontal swipe once direction is clear
+      if (!swiping.current) {
+        if (Math.abs(dx) > 15 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          swiping.current = true;
+        } else if (Math.abs(dy) > 15) {
+          return; // vertical scroll wins — don't hijack
+        } else {
+          return; // too early to decide
+        }
+      }
+
+      // Clamp: don't allow swiping past the edges
+      const idx = SWIPE_VIEWS.indexOf(viewMode);
+      if ((dx > 0 && idx === 0) || (dx < 0 && idx >= SWIPE_VIEWS.length - 1)) {
+        el.style.transform = `translateX(${dx * 0.15}px)`;
+        el.style.opacity = "1";
+        return;
+      }
+
+      const clamped = Math.max(-150, Math.min(150, dx * 0.5));
+      el.style.transition = "none";
+      el.style.transform = `translateX(${clamped}px)`;
+      el.style.opacity = String(1 - Math.abs(clamped) / 300);
+    }
+
+    function onSwipeEnd(e: TouchEvent) {
+      if (viewMode === "map" || !el || !swiping.current) return;
+      swiping.current = false;
+      const dx = e.changedTouches[0].clientX - swipeStartX.current;
+
+      const idx = SWIPE_VIEWS.indexOf(viewMode);
+      let nextMode: ViewMode | null = null;
+      if (dx < -SWIPE_THRESHOLD && idx < SWIPE_VIEWS.length - 1) {
+        nextMode = SWIPE_VIEWS[idx + 1];
+      } else if (dx > SWIPE_THRESHOLD && idx > 0) {
+        nextMode = SWIPE_VIEWS[idx - 1];
+      }
+
+      if (nextMode) {
+        // Swipe left (dx<0): current exits left, new enters from right
+        // Swipe right (dx>0): current exits right, new enters from left
+        const exitX = dx < 0 ? -100 : 100;
+        el.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        el.style.transform = `translateX(${exitX}px)`;
+        el.style.opacity = "0";
+        setTimeout(() => {
+          toggleView(nextMode!);
+          el.style.transition = "none";
+          el.style.transform = `translateX(${-exitX}px)`; // enter from opposite side
+          el.style.opacity = "0";
+          void el.offsetWidth;
+          el.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+          el.style.transform = "translateX(0)";
+          el.style.opacity = "1";
+        }, 200);
+      } else {
+        // Snap back
+        el.style.transition = "transform 0.2s ease, opacity 0.2s ease";
+        el.style.transform = "translateX(0)";
+        el.style.opacity = "1";
+      }
+    }
+
+    window.addEventListener("touchstart", onSwipeStart, { passive: true });
+    window.addEventListener("touchmove", onSwipeMove, { passive: true });
+    window.addEventListener("touchend", onSwipeEnd);
+    return () => {
+      window.removeEventListener("touchstart", onSwipeStart);
+      window.removeEventListener("touchmove", onSwipeMove);
+      window.removeEventListener("touchend", onSwipeEnd);
+    };
+  }, [viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Sort: favorites first, then others. Within each group, runnable/ideal on top.
   const statusPriority = (s: string) => {
     switch (s) {
@@ -349,6 +445,8 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
         </div>
       </div>
 
+      {/* Swipeable content (card + list views) */}
+      <div ref={swipeContentRef} style={{ willChange: "transform" }}>
       {/* Card view */}
       {viewMode === "card" && (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -522,46 +620,6 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
         </div>
       )}
 
-      {/* Map view */}
-      {viewMode === "map" && (
-        <div className="-mx-6 -mb-4 h-[calc(100vh-60px)] sm:mx-0 sm:mb-0 sm:h-auto">
-          <StationMap cards={sorted} isAdmin={isAdmin} />
-        </div>
-      )}
-
-      {/* Email collection modal */}
-      {showNotificationModal && (
-        <SubscribeModal onClose={() => setShowNotificationModal(false)} />
-      )}
-
-      {/* Coming soon on mobile modal */}
-      {showComingSoon && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowComingSoon(false);
-          }}
-        >
-          <div className="mx-4 w-full max-w-sm rounded-xl border border-foreground/10 bg-background p-6 shadow-2xl text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-              <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold">Notifications</h3>
-            <p className="mt-2 text-sm text-foreground/60">
-              Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.
-            </p>
-            <button
-              onClick={() => setShowComingSoon(false)}
-              className="mt-4 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium hover:bg-foreground/15"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* List view */}
       {viewMode === "list" && (
         <div className="flex flex-col gap-2">
@@ -648,6 +706,45 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               </div>
             </Link>
           ))}
+        </div>
+      )}
+      </div>{/* end swipeContentRef */}
+
+      {/* Map view (outside swipe wrapper) */}
+      {viewMode === "map" && (
+        <div className="-mx-6 -mb-4 h-[calc(100vh-60px)] sm:mx-0 sm:mb-0 sm:h-auto">
+          <StationMap cards={sorted} isAdmin={isAdmin} />
+        </div>
+      )}
+
+      {/* Modals */}
+      {showNotificationModal && (
+        <SubscribeModal onClose={() => setShowNotificationModal(false)} />
+      )}
+      {showComingSoon && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowComingSoon(false);
+          }}
+        >
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-foreground/10 bg-background p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+              <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold">Notifications</h3>
+            <p className="mt-2 text-sm text-foreground/60">
+              Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.
+            </p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="mt-4 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium hover:bg-foreground/15"
+            >
+              Got it
+            </button>
+          </div>
         </div>
       )}
     </div>
