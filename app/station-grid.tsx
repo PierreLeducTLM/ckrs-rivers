@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
@@ -101,11 +102,19 @@ export interface StationCard {
 }
 
 // ---------------------------------------------------------------------------
+// Pull-to-refresh constants
+// ---------------------------------------------------------------------------
+
+const PULL_THRESHOLD = 60;
+const ICON_HIDDEN_Y = -40;
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const isAdmin = useAdmin();
+  const router = useRouter();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
@@ -114,6 +123,85 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
+
+  // ---------------------------------------------------------------------------
+  // Pull-to-refresh: floating icon slides down from top edge
+  // ---------------------------------------------------------------------------
+  const [isPending, startTransition] = useTransition();
+  const spinnerRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef(0);
+  const pulling = useRef(false);
+  const pullY = useRef(0);
+
+  const slideOut = useCallback(() => {
+    const el = spinnerRef.current;
+    if (!el) return;
+    el.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+    el.style.transform = `translate(-50%, ${ICON_HIDDEN_Y}px)`;
+    el.style.opacity = "0";
+    el.querySelector("svg")?.classList.remove("animate-spin");
+    pullY.current = 0;
+  }, []);
+
+  useEffect(() => {
+    function onTouchStart(e: TouchEvent) {
+      if (isPending || window.scrollY > 0 || viewMode === "map") return;
+      touchStartY.current = e.touches[0].clientY;
+      pulling.current = false;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (isPending || viewMode === "map") return;
+      if (window.scrollY > 0) {
+        if (pulling.current) { pulling.current = false; applyPull(0); }
+        return;
+      }
+      const delta = e.touches[0].clientY - touchStartY.current;
+      if (delta > 10) {
+        pulling.current = true;
+        applyPull(Math.min(delta * 0.4, 100));
+      }
+    }
+
+    function onTouchEnd() {
+      if (!pulling.current) return;
+      pulling.current = false;
+      if (pullY.current >= PULL_THRESHOLD) {
+        const el = spinnerRef.current;
+        if (el) {
+          el.style.transition = "none";
+          el.style.transform = `translate(-50%, ${pullY.current + ICON_HIDDEN_Y}px)`;
+          el.style.opacity = "1";
+          el.querySelector("svg")?.classList.add("animate-spin");
+        }
+        startTransition(() => { router.refresh(); });
+      } else {
+        slideOut();
+      }
+    }
+
+    function applyPull(y: number) {
+      pullY.current = y;
+      const el = spinnerRef.current;
+      if (!el) return;
+      el.style.transition = "none";
+      el.style.opacity = String(Math.min(y / PULL_THRESHOLD, 1));
+      el.style.transform = `translate(-50%, ${y + ICON_HIDDEN_Y}px) rotate(${y * 4}deg)`;
+    }
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [isPending, viewMode, router, startTransition, slideOut]);
+
+  useEffect(() => {
+    if (!isPending && pullY.current > 0) slideOut();
+  }, [isPending, slideOut]);
 
   const fetchSubscriptions = useCallback(() => {
     const token = getSubToken();
@@ -188,6 +276,19 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
 
   return (
     <div>
+      {/* Pull-to-refresh floating icon */}
+      <div
+        ref={spinnerRef}
+        className="pointer-events-none fixed left-1/2 top-0 z-40"
+        style={{ opacity: 0, transform: "translate(-50%, -40px)" }}
+      >
+        <div className="rounded-full bg-background p-2 shadow-lg border border-foreground/10">
+          <svg className="h-5 w-5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </div>
+      </div>
+
       {/* Header + View toggle */}
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
