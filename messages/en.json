@@ -108,7 +108,18 @@
     "station": "Station",
     "catchment": "Catchment",
     "refresh": "Refresh",
-    "refreshing": "Refreshing..."
+    "refreshing": "Refreshing...",
+    "goodToGo": "Good to go!",
+    "ideal": "Ideal conditions!",
+    "tooLow": "Too low for paddling",
+    "tooHigh": "Too high \u2014 exercise caution",
+    "runnableInHours": "Should be good in ~{n}h",
+    "runnableInDays": "Should be good in {n} day(s)",
+    "droppingOutHours": "Dropping out of range in ~{n}h",
+    "noForecast": "No forecast available",
+    "rising": "Rising",
+    "falling": "Falling",
+    "stable": "Stable"
   },
   "chart": {
     "title": "Flow & CEHQ Forecast",

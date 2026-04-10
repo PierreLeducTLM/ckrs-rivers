@@ -108,7 +108,18 @@
     "station": "Station",
     "catchment": "Bassin versant",
     "refresh": "Actualiser",
-    "refreshing": "Actualisation..."
+    "refreshing": "Actualisation...",
+    "goodToGo": "C'est bon, on y va!",
+    "ideal": "Conditions ideales!",
+    "tooLow": "Trop bas pour pagayer",
+    "tooHigh": "Trop haut \u2014 soyez prudent",
+    "runnableInHours": "Devrait etre bon dans ~{n}h",
+    "runnableInDays": "Devrait etre bon dans {n} jour(s)",
+    "droppingOutHours": "Sortira de la plage dans ~{n}h",
+    "noForecast": "Aucune prevision disponible",
+    "rising": "En hausse",
+    "falling": "En baisse",
+    "stable": "Stable"
   },
   "chart": {
     "title": "Debit et previsions CEHQ",

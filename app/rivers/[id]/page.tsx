@@ -7,7 +7,9 @@ import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
 import RiverHeader from "./river-header";
+import PaddlingStatusMessage from "./paddling-status-message";
 import T from "@/app/translated-text";
+import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -123,6 +125,79 @@ export default async function RiverPage({
   const lastFlow = cached?.lastFlow ?? null;
   const forecastDays = cached?.forecastDays ?? [];
 
+  // Find the timestamp of the last observed hourly point for display
+  const lastObservedTimestamp = hourlyData
+    .filter((p) => p.observed != null)
+    .at(-1)?.timestamp ?? null;
+
+  // Compute paddling status info for the "last observed flow" box
+  const currentFlow = lastFlow?.flow ?? null;
+  const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
+  let statusInfo: { key: string; param?: number } | null = null;
+
+  if (paddling && (paddling.min != null || paddling.ideal != null || paddling.max != null)) {
+    if (paddlingStatus === "ideal") {
+      statusInfo = { key: "detail.ideal" };
+    } else if (paddlingStatus === "runnable") {
+      statusInfo = { key: "detail.goodToGo" };
+    } else if (paddlingStatus === "too-low" || paddlingStatus === "too-high") {
+      // Check if forecast shows it entering runnable range
+      let entersInDays: number | null = null;
+      for (let i = 0; i < forecastDays.length; i++) {
+        const { status: fStatus } = getPaddlingStatus(forecastDays[i].flow, paddling);
+        if (isGoodRange(fStatus)) {
+          entersInDays = i + 1;
+          break;
+        }
+      }
+      // Also check hourly forecast for sub-day precision
+      if (entersInDays === null || entersInDays === 1) {
+        const now = Date.now();
+        for (const point of hourlyData) {
+          const flow = point.cehqForecast;
+          if (flow == null) continue;
+          const ts = new Date(point.timestamp).getTime();
+          if (ts <= now) continue;
+          const { status: fStatus } = getPaddlingStatus(flow, paddling);
+          if (isGoodRange(fStatus)) {
+            const hoursAhead = Math.round((ts - now) / (1000 * 60 * 60));
+            if (hoursAhead <= 24) {
+              statusInfo = { key: "detail.runnableInHours", param: hoursAhead };
+            } else {
+              statusInfo = { key: "detail.runnableInDays", param: Math.ceil(hoursAhead / 24) };
+            }
+            break;
+          }
+        }
+      }
+      if (statusInfo === null && entersInDays != null) {
+        statusInfo = { key: "detail.runnableInDays", param: entersInDays };
+      }
+      if (statusInfo === null) {
+        statusInfo = { key: paddlingStatus === "too-low" ? "detail.tooLow" : "detail.tooHigh" };
+      }
+    }
+
+    // For currently runnable: check if it's about to exit range
+    if (isGoodRange(paddlingStatus)) {
+      const now = Date.now();
+      for (const point of hourlyData) {
+        const flow = point.cehqForecast;
+        if (flow == null) continue;
+        const ts = new Date(point.timestamp).getTime();
+        if (ts <= now) continue;
+        const { status: fStatus } = getPaddlingStatus(flow, paddling);
+        if (!isGoodRange(fStatus)) {
+          const hoursAhead = Math.round((ts - now) / (1000 * 60 * 60));
+          if (hoursAhead <= 48) {
+            statusInfo = { key: "detail.droppingOutHours", param: hoursAhead };
+          }
+          break;
+        }
+      }
+    }
+  }
+
   // Convert hourly data for the chart — only keep 2 days before today onward
   const twoDaysAgo = new Date();
   twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
@@ -206,8 +281,16 @@ export default async function RiverPage({
               <span className="text-lg text-zinc-500 dark:text-zinc-400">m&sup3;/s</span>
               <span className="ml-auto text-sm text-zinc-400 dark:text-zinc-500">
                 {formatDate(lastFlow.date)}
+                {lastObservedTimestamp && (
+                  <> {new Date(lastObservedTimestamp).toLocaleTimeString("en-CA", { hour: "2-digit", minute: "2-digit", hour12: false })}</>
+                )}
               </span>
             </div>
+            {statusInfo && (
+              <div className="mt-3">
+                <PaddlingStatusMessage statusKey={statusInfo.key} param={statusInfo.param} />
+              </div>
+            )}
           </section>
         )}
 

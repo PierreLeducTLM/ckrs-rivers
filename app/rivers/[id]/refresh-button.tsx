@@ -3,11 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
+import { useAdmin } from "@/app/use-admin";
 
 export default function RefreshButton({ stationId }: { stationId: string }) {
   const router = useRouter();
   const { t } = useTranslation();
+  const isAdmin = useAdmin();
   const [refreshing, setRefreshing] = useState(false);
+
+  if (!isAdmin) return null;
 
   const handleRefresh = async () => {
     setRefreshing(true);
