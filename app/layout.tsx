@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CapacitorInit from "./capacitor-init";
+import { I18nProvider } from "@/lib/i18n/provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -50,8 +51,10 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <CapacitorInit />
-        {children}
+        <I18nProvider>
+          <CapacitorInit />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

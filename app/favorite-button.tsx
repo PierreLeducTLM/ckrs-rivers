@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 const STORAGE_KEY = "waterflow-favorites";
 
@@ -24,6 +25,7 @@ export function readFavorites(): Set<string> {
 }
 
 export default function FavoriteButton({ stationId }: { stationId: string }) {
+  const { t } = useTranslation();
   const [isFav, setIsFav] = useState(false);
   // Avoid hydration mismatch — read localStorage only after mount
   const [mounted, setMounted] = useState(false);
@@ -58,7 +60,7 @@ export default function FavoriteButton({ stationId }: { stationId: string }) {
     <button
       onClick={toggle}
       className="rounded p-0.5 transition-colors hover:scale-110"
-      aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+      aria-label={isFav ? t("favorites.remove") : t("favorites.add")}
     >
       <svg
         className={`h-5 w-5 ${isFav ? "text-amber-400" : "text-foreground/30 hover:text-foreground/50"}`}

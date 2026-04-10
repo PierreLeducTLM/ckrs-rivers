@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { useTranslation } from "@/lib/i18n/provider";
 
 export interface HourlyChartPoint {
   timestamp: string;
@@ -44,6 +45,7 @@ function formatTick(epoch: number): string {
 }
 
 export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChartProps) {
+  const { t } = useTranslation();
   // Add numeric timestamp for proportional x-axis spacing
   // and a [low, high] tuple for the CEHQ confidence band
   const chartData = data.map((d) => ({
@@ -111,7 +113,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-        Flow &amp; CEHQ Forecast
+        {t("chart.title")}
       </h2>
 
       {/* Out-of-range threshold markers */}
@@ -196,17 +198,17 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
                   </p>
                   {d.observed !== null && (
                     <p className="mt-0.5 text-blue-600">
-                      Observed: <span className="font-semibold">{d.observed.toFixed(1)} m&sup3;/s</span>
+                      {t("chart.observedLabel")}<span className="font-semibold">{d.observed.toFixed(1)} m&sup3;/s</span>
                     </p>
                   )}
                   {d.cehqForecast !== null && (
                     <p className="mt-0.5 text-purple-500">
-                      CEHQ: <span className="font-semibold">{d.cehqForecast.toFixed(1)} m&sup3;/s</span>
+                      {t("chart.cehqLabel")}<span className="font-semibold">{d.cehqForecast.toFixed(1)} m&sup3;/s</span>
                     </p>
                   )}
                   {d.confidenceLow !== null && d.confidenceHigh !== null && (
                     <p className="mt-0.5 text-zinc-500">
-                      Range: {d.confidenceLow.toFixed(1)} &ndash; {d.confidenceHigh.toFixed(1)}
+                      {t("chart.rangeLabel")}{d.confidenceLow.toFixed(1)} &ndash; {d.confidenceHigh.toFixed(1)}
                     </p>
                   )}
                 </div>
@@ -274,7 +276,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-0.5 w-5 rounded bg-blue-600" />
-          Observed
+          {t("chart.observed")}
         </span>
         {data.some((d) => d.cehqForecast !== null) && (
           <>
@@ -282,11 +284,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
               <svg width="20" height="3" className="text-purple-500">
                 <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
               </svg>
-              CEHQ forecast
+              {t("chart.cehqForecast")}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-5 rounded bg-purple-500/20" />
-              Q25–Q75
+              {t("chart.q25q75")}
             </span>
           </>
         )}

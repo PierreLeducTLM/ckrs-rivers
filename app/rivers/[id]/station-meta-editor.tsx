@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 // ---------------------------------------------------------------------------
 // Pencil icon
@@ -280,6 +281,7 @@ export default function StationMetaEditor({
   initialWeatherCity = null,
   isAdmin = false,
 }: StationMetaEditorProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialName);
   const [paddling, setPaddling] = useState(initialPaddling);
   const [weatherCity, setWeatherCity] = useState(initialWeatherCity ?? "");
@@ -304,25 +306,25 @@ export default function StationMetaEditor({
         {(paddling.min != null || paddling.ideal != null || paddling.max != null) && (
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Paddling Levels
+              {t("editor.paddlingLevels")}
             </span>
             {paddling.min != null && (
               <div className="flex items-center gap-1.5">
-                <span className="text-zinc-500 dark:text-zinc-400">Min:</span>
+                <span className="text-zinc-500 dark:text-zinc-400">{t("editor.min")}</span>
                 <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.min}</span>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
               </div>
             )}
             {paddling.ideal != null && (
               <div className="flex items-center gap-1.5">
-                <span className="text-zinc-500 dark:text-zinc-400">Ideal:</span>
+                <span className="text-zinc-500 dark:text-zinc-400">{t("editor.ideal")}</span>
                 <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.ideal}</span>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
               </div>
             )}
             {paddling.max != null && (
               <div className="flex items-center gap-1.5">
-                <span className="text-zinc-500 dark:text-zinc-400">Max:</span>
+                <span className="text-zinc-500 dark:text-zinc-400">{t("editor.max")}</span>
                 <span className="tabular-nums font-medium text-zinc-900 dark:text-zinc-100">{paddling.max}</span>
                 <span className="text-xs text-zinc-400 dark:text-zinc-500">m³/s</span>
               </div>
@@ -331,7 +333,7 @@ export default function StationMetaEditor({
         )}
         {weatherCity && (
           <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Weather: {weatherCity}
+            {t("editor.weather")} {weatherCity}
           </div>
         )}
       </div>
@@ -357,7 +359,7 @@ export default function StationMetaEditor({
           Paddling Levels
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="text-zinc-500 dark:text-zinc-400">Min:</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t("editor.min")}</span>
           <EditableNumber
             value={paddling.min}
             label="minimum paddling level"
@@ -370,7 +372,7 @@ export default function StationMetaEditor({
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-zinc-500 dark:text-zinc-400">Ideal:</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t("editor.ideal")}</span>
           <EditableNumber
             value={paddling.ideal}
             label="ideal paddling level"
@@ -383,7 +385,7 @@ export default function StationMetaEditor({
           />
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-zinc-500 dark:text-zinc-400">Max:</span>
+          <span className="text-zinc-500 dark:text-zinc-400">{t("editor.max")}</span>
           <EditableNumber
             value={paddling.max}
             label="maximum paddling level"
@@ -400,7 +402,7 @@ export default function StationMetaEditor({
       {/* Weather location override */}
       <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-          Weather Location
+          {t("editor.weatherLocation")}
         </span>
         <EditableText
           value={weatherCity || ""}
@@ -418,7 +420,7 @@ export default function StationMetaEditor({
           }}
         />
         <span className="text-xs text-zinc-400 dark:text-zinc-500">
-          {weatherCity ? "" : "(using station coordinates)"}
+          {weatherCity ? "" : t("editor.usingStationCoords")}
         </span>
         {weatherError && (
           <span className="text-xs text-red-500">{weatherError}</span>

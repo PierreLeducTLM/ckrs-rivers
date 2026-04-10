@@ -1,0 +1,143 @@
+{
+  "app": {
+    "title": "Kayak Riviere aux Sables",
+    "footer": "Donnees de CEHQ et Open-Meteo",
+    "noStations": "Aucune station trouvee. Ajoutez une station CEHQ pour commencer.",
+    "loading": "Chargement...",
+    "loadingMap": "Chargement de la carte...",
+    "noData": "Aucune donnee",
+    "pressRefresh": "Appuyez sur Actualiser pour charger les donnees",
+    "back": "Retour",
+    "backToRivers": "Retour aux rivieres"
+  },
+  "status": {
+    "tooLow": "Trop bas",
+    "runnable": "Navigable",
+    "ideal": "Conditions ideales",
+    "tooHigh": "Trop haut"
+  },
+  "views": {
+    "card": "Vue en cartes",
+    "list": "Vue en liste",
+    "map": "Vue carte"
+  },
+  "time": {
+    "justNow": "a l'instant",
+    "minutesAgo": "il y a {n}m",
+    "hoursAgo": "il y a {n}h",
+    "daysAgo": "il y a {n}j"
+  },
+  "weather": {
+    "rain": "mm pluie",
+    "snow": "cm neige"
+  },
+  "subscribe": {
+    "subscribe": "S'abonner aux notifications",
+    "unsubscribe": "Se desabonner des notifications",
+    "getNotified": "Recevoir des alertes",
+    "enterEmail": "Entrez votre courriel pour recevoir des notifications de debit.",
+    "emailPlaceholder": "votre@courriel.com",
+    "cancel": "Annuler",
+    "continue": "Continuer",
+    "sending": "Envoi...",
+    "unsubscribeAnytime": "Vous pouvez vous desabonner a tout moment.",
+    "checkEmail": "Verifiez votre courriel",
+    "confirmationSent": "Nous avons envoye un lien de confirmation a <strong>{email}</strong>. Cliquez dessus pour verifier votre courriel, puis revenez et appuyez sur la cloche d'une riviere pour etre notifie.",
+    "done": "Termine"
+  },
+  "confirmed": {
+    "title": "Courriel verifie!",
+    "message": "Votre courriel est confirme. Retournez a l'application et appuyez sur l'icone de cloche sur une carte de riviere pour choisir vos notifications.",
+    "chooseRivers": "Choisir mes rivieres"
+  },
+  "notifications": {
+    "title": "Preferences de notification",
+    "watchedRivers": "Rivieres suivies",
+    "noRivers": "Aucune riviere abonnee. Appuyez sur l'icone de cloche sur une carte de riviere pour vous abonner.",
+    "active": "Actif",
+    "paused": "En pause",
+    "alertSettings": "Parametres d'alerte",
+    "skillLevel": "Niveau d'experience",
+    "beginner": "Debutant",
+    "intermediate": "Intermediaire",
+    "advanced": "Avance",
+    "expert": "Expert",
+    "advanceNotice": "Preavis",
+    "daysBefore": "{n} jour avant",
+    "daysBeforePlural": "{n} jours avant",
+    "forecastConfidence": "Confiance des previsions",
+    "highOnly": "Haute confiance seulement",
+    "mediumAndHigh": "Moyenne et haute",
+    "flowRange": "Plage de debit",
+    "optimalOnly": "Optimal seulement (conditions ideales)",
+    "allRunnable": "Tout navigable (inclut bas/haut navigable)",
+    "digestMode": "Regrouper les alertes en un resume quotidien",
+    "weekendOnly": "Fenetres de fin de semaine seulement (ven-dim)",
+    "saving": "Enregistrement...",
+    "savePreferences": "Enregistrer les preferences",
+    "recentNotifications": "Notifications recentes",
+    "pending": "En attente",
+    "unsubscribeAll": "Se desabonner de toutes les notifications",
+    "unsubscribeConfirm": "Se desabonner de toutes les notifications de rivieres?",
+    "invalidLink": "Lien invalide ou expire",
+    "noToken": "Aucun jeton fourni. Utilisez le lien de votre courriel de confirmation.",
+    "somethingWrong": "Une erreur est survenue",
+    "comingSoon": "Notifications",
+    "comingSoonMessage": "Les notifications push arrivent bientot sur mobile. En attendant, vous pouvez vous abonner aux alertes par courriel depuis la version web.",
+    "gotIt": "Compris"
+  },
+  "favorites": {
+    "add": "Ajouter aux favoris",
+    "remove": "Retirer des favoris"
+  },
+  "theme": {
+    "system": "Systeme",
+    "light": "Clair",
+    "dark": "Sombre",
+    "ariaLabel": "Theme : {theme}. Cliquez pour changer."
+  },
+  "detail": {
+    "backToDashboard": "Retour au tableau de bord",
+    "lastObservedFlow": "Dernier debit observe",
+    "cehqForecast": "Previsions CEHQ",
+    "noDataYet": "Aucune donnee. Appuyez sur Actualiser pour obtenir les debits et previsions du CEHQ.",
+    "date": "Date",
+    "flow": "Debit (m\u00b3/s)",
+    "range": "Plage",
+    "today": "Aujourd'hui",
+    "station": "Station",
+    "catchment": "Bassin versant",
+    "refresh": "Actualiser",
+    "refreshing": "Actualisation..."
+  },
+  "chart": {
+    "title": "Debit et previsions CEHQ",
+    "observed": "Observe",
+    "cehqForecast": "Prevision CEHQ",
+    "q25q75": "Q25\u2013Q75",
+    "observedLabel": "Observe : ",
+    "cehqLabel": "CEHQ : ",
+    "rangeLabel": "Plage : "
+  },
+  "map": {
+    "station": "Station",
+    "viewDetails": "Voir les details \u2192",
+    "street": "Rue",
+    "satellite": "Satellite"
+  },
+  "editor": {
+    "paddlingLevels": "Niveaux de pagaie",
+    "min": "Min :",
+    "ideal": "Ideal :",
+    "max": "Max :",
+    "weather": "Meteo :",
+    "weatherLocation": "Emplacement meteo",
+    "usingStationCoords": "(coordonnees de la station)",
+    "edit": "Modifier"
+  },
+  "language": {
+    "label": "Langue",
+    "en": "English",
+    "fr": "Francais"
+  }
+}

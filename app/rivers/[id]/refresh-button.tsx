@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 export default function RefreshButton({ stationId }: { stationId: string }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -43,7 +45,7 @@ export default function RefreshButton({ stationId }: { stationId: string }) {
           d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"
         />
       </svg>
-      {refreshing ? "Refreshing..." : "Refresh"}
+      {refreshing ? t("detail.refreshing") : t("detail.refresh")}
     </button>
   );
 }

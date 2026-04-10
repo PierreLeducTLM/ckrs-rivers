@@ -5,6 +5,7 @@ import { sql } from "@/lib/db/client";
 import { getPaddlingStatus, statusColor } from "@/lib/notifications/paddling-status";
 import { AdminAddStation } from "./admin-wrapper";
 import StationGrid from "./station-grid";
+import T from "./translated-text";
 import type { StationCard } from "./station-grid";
 
 interface HourlyPoint {
@@ -127,14 +128,14 @@ export default async function Home() {
 
         {stations.length === 0 && (
           <p className="py-20 text-center text-foreground/40">
-            No stations found. Add a CEHQ station to get started.
+            <T k="app.noStations" />
           </p>
         )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-foreground/10 px-6 py-6 text-center text-sm text-foreground/40">
-        Data from CEHQ &amp; Open-Meteo
+        <T k="app.footer" />
       </footer>
     </div>
   );

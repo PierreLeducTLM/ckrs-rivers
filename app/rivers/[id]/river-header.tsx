@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useAdmin } from "@/app/use-admin";
+import { useTranslation } from "@/lib/i18n/provider";
 import StationMetaEditor from "./station-meta-editor";
 
 const RiverPathEditor = dynamic(() => import("./river-path-editor"), {
@@ -41,6 +42,7 @@ export default function RiverHeader({
   initialRiverPath = null,
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
+  const { t } = useTranslation();
 
   return (
     <>
@@ -54,7 +56,7 @@ export default function RiverHeader({
       {isAdmin && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
           <span>
-            Station{" "}
+            {t("detail.station")}{" "}
             <span className="font-mono text-zinc-700 dark:text-zinc-300">{stationId}</span>
           </span>
           <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
@@ -65,7 +67,7 @@ export default function RiverHeader({
             <>
               <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
               <span>
-                Catchment{" "}
+                {t("detail.catchment")}{" "}
                 <span className="font-medium text-zinc-700 dark:text-zinc-300">
                   {Number(catchmentArea).toLocaleString()} km&sup2;
                 </span>

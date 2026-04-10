@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 const SUB_TOKEN_KEY = "waterflow-sub-token";
 
@@ -28,6 +29,7 @@ export default function SubscribeButton({
   onToggled: () => void;
   isNative?: boolean;
 }) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [toggling, setToggling] = useState(false);
 
@@ -83,7 +85,7 @@ export default function SubscribeButton({
       onClick={handleClick}
       disabled={toggling}
       className={`rounded p-0.5 transition-colors hover:scale-110 ${toggling ? "opacity-50" : ""}`}
-      aria-label={isSubscribed ? "Unsubscribe from notifications" : "Subscribe to notifications"}
+      aria-label={isSubscribed ? t("subscribe.unsubscribe") : t("subscribe.subscribe")}
     >
       <svg
         className={`h-5 w-5 ${

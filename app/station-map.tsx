@@ -7,6 +7,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import SparklineChart from "./sparkline-chart";
 import type { StationCard } from "./station-grid";
+import { useTranslation } from "@/lib/i18n/provider";
 
 const MAP_LAYER_KEY = "waterflow-map-layer";
 const MAP_VIEW_KEY = "waterflow-map-view";
@@ -31,24 +32,24 @@ function pathLengthMeters(coords: [number, number][]): number {
   return total;
 }
 
-function statusLabel(status: string): string {
+function statusLabel(status: string, t: (key: string) => string): string {
   switch (status) {
-    case "too-low": return "Too Low";
-    case "runnable": return "Runnable";
-    case "ideal": return "Good to Go";
-    case "too-high": return "Too High";
+    case "too-low": return t("status.tooLow");
+    case "runnable": return t("status.runnable");
+    case "ideal": return t("status.ideal");
+    case "too-high": return t("status.tooHigh");
     default: return "";
   }
 }
 
-function timeAgo(isoDate: string): string {
+function timeAgo(isoDate: string, t: (key: string, params?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.justNow");
+  if (mins < 60) return t("time.minutesAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return t("time.hoursAgo", { n: hours });
+  return t("time.daysAgo", { n: Math.floor(hours / 24) });
 }
 
 function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
@@ -117,6 +118,7 @@ function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
 }
 
 function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }) {
+  const { t } = useTranslation();
   return (
     <Popup maxWidth={280} minWidth={220}>
       <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: 1.4 }}>
@@ -133,7 +135,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
               }}
             />
             <span style={{ fontSize: 12, fontWeight: 600, color: card.color }}>
-              {statusLabel(card.status)}
+              {statusLabel(card.status, t)}
             </span>
           </div>
         )}
@@ -144,7 +146,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
         {/* Station ID + catchment (admin only) */}
         {isAdmin && (
           <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 6px" }}>
-            Station {card.id}
+            {t("map.station")} {card.id}
             {card.catchmentArea !== undefined && (
               <span> &middot; {Number(card.catchmentArea).toLocaleString("en-US")} km&sup2;</span>
             )}
@@ -159,7 +161,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
               <span style={{ fontSize: 12, fontWeight: 400, color: "#6b7280" }}>m&sup3;/s</span>
             </p>
             {card.forecastAt && (
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>{timeAgo(card.forecastAt)}</span>
+              <span style={{ fontSize: 11, color: "#9ca3af" }}>{timeAgo(card.forecastAt, t)}</span>
             )}
           </div>
         ) : (
@@ -233,7 +235,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
             textDecoration: "underline",
           }}
         >
-          View details &rarr;
+          {t("map.viewDetails")}
         </Link>
       </div>
     </Popup>
@@ -241,9 +243,10 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
 }
 
 export default function StationMap({ cards, isAdmin = false }: { cards: StationCard[]; isAdmin?: boolean }) {
+  const { t } = useTranslation();
   const [savedLayer] = useState(() => {
-    if (typeof window === "undefined") return "Street";
-    return localStorage.getItem(MAP_LAYER_KEY) ?? "Street";
+    if (typeof window === "undefined") return t("map.street");
+    return localStorage.getItem(MAP_LAYER_KEY) ?? t("map.street");
   });
   const isSatellite = savedLayer === "Satellite";
 

@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
 import RiverHeader from "./river-header";
+import T from "@/app/translated-text";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -152,7 +153,7 @@ export default async function RiverPage({
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
-          Back to Dashboard
+          <T k="detail.backToDashboard" />
         </Link>
 
         {/* River header */}
@@ -196,7 +197,7 @@ export default async function RiverPage({
         {lastFlow && (
           <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-              Last Observed Flow
+              <T k="detail.lastObservedFlow" />
             </h2>
             <div className="mt-2 flex items-baseline gap-3">
               <span className="text-4xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
@@ -247,7 +248,7 @@ export default async function RiverPage({
                       }`}
                     >
                       <div className="font-medium text-zinc-500 dark:text-zinc-400">
-                        {isToday ? "Today" : new Date(w.date + "T00:00:00Z").toLocaleDateString("en-CA", { weekday: "short" })}
+                        {isToday ? <T k="detail.today" /> : new Date(w.date + "T00:00:00Z").toLocaleDateString("en-CA", { weekday: "short" })}
                         {" - "}
                         {new Date(w.date + "T00:00:00Z").toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
                       </div>
@@ -280,7 +281,7 @@ export default async function RiverPage({
         {!cached && (
           <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No data yet. Press Refresh to fetch flow data and forecast from CEHQ.
+              <T k="detail.noDataYet" />
             </p>
           </section>
         )}
@@ -289,16 +290,16 @@ export default async function RiverPage({
         {forecastDays.length > 0 && (
           <section className="mt-8">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              CEHQ Forecast
+              <T k="detail.cehqForecast" />
             </h2>
 
             <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3 text-right">Flow (m&sup3;/s)</th>
-                    <th className="px-4 py-3 text-right">Range</th>
+                    <th className="px-4 py-3"><T k="detail.date" /></th>
+                    <th className="px-4 py-3 text-right"><T k="detail.flow" /></th>
+                    <th className="px-4 py-3 text-right"><T k="detail.range" /></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">

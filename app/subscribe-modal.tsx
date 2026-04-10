@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 interface SubscribeModalProps {
   onClose: () => void;
 }
 
 export default function SubscribeModal({ onClose }: SubscribeModalProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -67,25 +69,21 @@ export default function SubscribeModal({ onClose }: SubscribeModalProps) {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold">Check your email</h3>
-            <p className="mt-2 text-sm text-foreground/60">
-              We sent a confirmation link to <strong>{email}</strong>. Click it
-              to verify your email, then come back and tap the bell on any river
-              to get notified.
-            </p>
+            <h3 className="text-lg font-semibold">{t("subscribe.checkEmail")}</h3>
+            <p className="mt-2 text-sm text-foreground/60" dangerouslySetInnerHTML={{ __html: t("subscribe.confirmationSent", { email }) }} />
             <button
               onClick={onClose}
               className="mt-4 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium hover:bg-foreground/15"
             >
-              Done
+              {t("subscribe.done")}
             </button>
           </div>
         ) : (
           <>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold">Get notified</h3>
+              <h3 className="text-lg font-semibold">{t("subscribe.getNotified")}</h3>
               <p className="mt-1 text-sm text-foreground/60">
-                Enter your email to receive river flow notifications.
+                {t("subscribe.enterEmail")}
               </p>
             </div>
 
@@ -95,7 +93,7 @@ export default function SubscribeModal({ onClose }: SubscribeModalProps) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t("subscribe.emailPlaceholder")}
                 className="w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2.5 text-sm placeholder:text-foreground/30 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 required
               />
@@ -110,20 +108,20 @@ export default function SubscribeModal({ onClose }: SubscribeModalProps) {
                   onClick={onClose}
                   className="flex-1 rounded-lg bg-foreground/10 px-4 py-2.5 text-sm font-medium hover:bg-foreground/15"
                 >
-                  Cancel
+                  {t("subscribe.cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={status === "loading"}
                   className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {status === "loading" ? "Sending..." : "Continue"}
+                  {status === "loading" ? t("subscribe.sending") : t("subscribe.continue")}
                 </button>
               </div>
             </form>
 
             <p className="mt-3 text-center text-xs text-foreground/40">
-              You can unsubscribe anytime.
+              {t("subscribe.unsubscribeAnytime")}
             </p>
           </>
         )}

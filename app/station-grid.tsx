@@ -11,6 +11,8 @@ import SubscribeButton, { getSubToken } from "./subscribe-button";
 import SubscribeModal from "./subscribe-modal";
 import { useAdmin } from "./use-admin";
 import ThemeToggle from "./theme-toggle";
+import LanguageToggle from "./language-toggle";
+import { useTranslation } from "@/lib/i18n/provider";
 
 const StationMap = dynamic(() => import("./station-map"), {
   ssr: false,
@@ -36,14 +38,14 @@ function getFavorites(): Set<string> {
   }
 }
 
-function timeAgo(isoDate: string): string {
+function timeAgo(isoDate: string, t: (key: string, params?: Record<string, string | number>) => string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("time.justNow");
+  if (mins < 60) return t("time.minutesAgo", { n: mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return t("time.hoursAgo", { n: hours });
+  return t("time.daysAgo", { n: Math.floor(hours / 24) });
 }
 
 function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
@@ -55,12 +57,12 @@ function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfal
   return "\u2601\uFE0F";
 }
 
-function statusLabel(status: string): string {
+function statusLabel(status: string, t: (key: string) => string): string {
   switch (status) {
-    case "too-low": return "Too Low";
-    case "runnable": return "Runnable";
-    case "ideal": return "Good to Go";
-    case "too-high": return "Too High";
+    case "too-low": return t("status.tooLow");
+    case "runnable": return t("status.runnable");
+    case "ideal": return t("status.ideal");
+    case "too-high": return t("status.tooHigh");
     default: return "";
   }
 }
@@ -115,6 +117,7 @@ const ICON_HIDDEN_Y = -40;
 export default function StationGrid({ cards }: { cards: StationCard[] }) {
   const isAdmin = useAdmin();
   const router = useRouter();
+  const { t } = useTranslation();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [mounted, setMounted] = useState(false);
@@ -389,7 +392,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
-          <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">Kayak Rivière aux Sables</h1>
+          <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">{t("app.title")}</h1>
         </div>
         <div className="flex items-center gap-2">
           {mounted && (
@@ -401,7 +404,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     ? "bg-brand/10 text-brand"
                     : "text-foreground/50 hover:text-brand"
                 }`}
-                aria-label="Card view"
+                aria-label={t("views.card")}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -417,7 +420,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     ? "bg-brand/10 text-brand"
                     : "text-foreground/50 hover:text-brand"
                 }`}
-                aria-label="List view"
+                aria-label={t("views.list")}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <line x1="3" y1="6" x2="21" y2="6" />
@@ -432,7 +435,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     ? "bg-brand/10 text-brand"
                     : "text-foreground/50 hover:text-brand"
                 }`}
-                aria-label="Map view"
+                aria-label={t("views.map")}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
@@ -441,6 +444,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               </button>
             </div>
           )}
+          <LanguageToggle />
           <ThemeToggle />
         </div>
       </div>
@@ -468,7 +472,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: card.color }}
                   />
-                  <span style={{ color: card.color }}>{statusLabel(card.status)}</span>
+                  <span style={{ color: card.color }}>{statusLabel(card.status, t)}</span>
                 </div>
               )}
 
@@ -550,13 +554,13 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                               {w.precipitation > 0.1 && (
                                 <>
                                   <br />
-                                  <span className="text-blue-300">{w.precipitation.toFixed(1)} mm rain</span>
+                                  <span className="text-blue-300">{w.precipitation.toFixed(1)} {t("weather.rain")}</span>
                                 </>
                               )}
                               {w.snowfall > 0.1 && (
                                 <>
                                   <br />
-                                  <span className="text-sky-200">{w.snowfall.toFixed(1)} cm snow</span>
+                                  <span className="text-sky-200">{w.snowfall.toFixed(1)} {t("weather.snow")}</span>
                                 </>
                               )}
                               <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-800" />
@@ -579,14 +583,14 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                   </p>
                   {card.forecastAt && (
                     <p className="text-xs text-foreground/40">
-                      {timeAgo(card.forecastAt)}
+                      {timeAgo(card.forecastAt, t)}
                     </p>
                   )}
                 </div>
               ) : (
                 <div className="mt-4 rounded-lg bg-foreground/5 px-4 py-3">
                   <p className="text-sm text-foreground/40">
-                    Press Refresh to load data
+                    {t("app.pressRefresh")}
                   </p>
                 </div>
               )}
@@ -648,7 +652,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     className="flex-shrink-0 text-xs font-medium"
                     style={{ color: card.color }}
                   >
-                    {statusLabel(card.status)}
+                    {statusLabel(card.status, t)}
                   </span>
                 )}
               </div>
@@ -692,11 +696,11 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                       <span className="text-xs font-normal text-foreground/60">m&sup3;/s</span>
                     </p>
                   ) : (
-                    <p className="text-xs text-foreground/40">No data</p>
+                    <p className="text-xs text-foreground/40">{t("app.noData")}</p>
                   )}
                 </div>
                 {card.forecastAt && (
-                  <span className="text-[10px] text-foreground/40">{timeAgo(card.forecastAt)}</span>
+                  <span className="text-[10px] text-foreground/40">{timeAgo(card.forecastAt, t)}</span>
                 )}
 
                 <div className="ml-auto flex flex-shrink-0 gap-0.5">
@@ -734,15 +738,15 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold">Notifications</h3>
+            <h3 className="text-lg font-semibold">{t("notifications.comingSoon")}</h3>
             <p className="mt-2 text-sm text-foreground/60">
-              Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.
+              {t("notifications.comingSoonMessage")}
             </p>
             <button
               onClick={() => setShowComingSoon(false)}
               className="mt-4 rounded-lg bg-foreground/10 px-4 py-2 text-sm font-medium hover:bg-foreground/15"
             >
-              Got it
+              {t("notifications.gotIt")}
             </button>
           </div>
         </div>

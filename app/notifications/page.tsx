@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { setSubToken } from "../subscribe-button";
+import { useTranslation } from "@/lib/i18n/provider";
 
 interface Subscription {
   id: string;
@@ -31,6 +32,7 @@ interface ManageData {
 }
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const [token, setToken] = useState<string | null>(null);
   const [data, setData] = useState<ManageData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,7 @@ export default function NotificationsPage() {
       setSubToken(t);
       fetch(`/api/notifications/manage?token=${t}`)
         .then((res) => {
-          if (!res.ok) throw new Error("Invalid or expired link");
+          if (!res.ok) throw new Error(t("notifications.invalidLink"));
           return res.json();
         })
         .then((d: ManageData) => {
@@ -67,7 +69,7 @@ export default function NotificationsPage() {
           setLoading(false);
         });
     } else {
-      setError("No token provided. Use the link from your confirmation email.");
+      setError(t("notifications.noToken"));
       setLoading(false);
     }
   }, []);
@@ -104,7 +106,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <p className="text-foreground/50">Loading...</p>
+        <p className="text-foreground/50">{t("app.loading")}</p>
       </div>
     );
   }
@@ -113,9 +115,9 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500">{error ?? "Something went wrong"}</p>
+          <p className="text-red-500">{error ?? t("notifications.somethingWrong")}</p>
           <Link href="/" className="mt-4 inline-block text-blue-500 hover:underline">
-            Back to Rivers
+            {t("app.backToRivers")}
           </Link>
         </div>
       </div>
@@ -129,15 +131,15 @@ export default function NotificationsPage() {
           &larr; Back to Rivers
         </Link>
 
-        <h1 className="mt-4 text-2xl font-bold">Notification Preferences</h1>
+        <h1 className="mt-4 text-2xl font-bold">{t("notifications.title")}</h1>
         <p className="mt-1 text-sm text-foreground/50">{data.email}</p>
 
         {/* Subscribed stations */}
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Watched Rivers</h2>
+          <h2 className="text-lg font-semibold">{t("notifications.watchedRivers")}</h2>
           {data.subscriptions.length === 0 ? (
             <p className="mt-2 text-sm text-foreground/50">
-              No rivers subscribed yet. Click the bell icon on a river card to subscribe.
+              {t("notifications.noRivers")}
             </p>
           ) : (
             <div className="mt-3 space-y-2">
@@ -158,7 +160,7 @@ export default function NotificationsPage() {
                         : "bg-foreground/10 text-foreground/50"
                     }`}
                   >
-                    {sub.active ? "Active" : "Paused"}
+                    {sub.active ? t("notifications.active") : t("notifications.paused")}
                   </button>
                 </div>
               ))}
@@ -168,57 +170,57 @@ export default function NotificationsPage() {
 
         {/* Global preferences */}
         <section className="mt-8">
-          <h2 className="text-lg font-semibold">Alert Settings</h2>
+          <h2 className="text-lg font-semibold">{t("notifications.alertSettings")}</h2>
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-sm font-medium">Skill Level</label>
+              <label className="text-sm font-medium">{t("notifications.skillLevel")}</label>
               <select
                 value={prefs.skillLevel}
                 onChange={(e) => setPrefs((p) => ({ ...p, skillLevel: e.target.value }))}
                 className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
               >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-                <option value="expert">Expert</option>
+                <option value="beginner">{t("notifications.beginner")}</option>
+                <option value="intermediate">{t("notifications.intermediate")}</option>
+                <option value="advanced">{t("notifications.advanced")}</option>
+                <option value="expert">{t("notifications.expert")}</option>
               </select>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Advance Notice</label>
+              <label className="text-sm font-medium">{t("notifications.advanceNotice")}</label>
               <select
                 value={prefs.leadTimeDays}
                 onChange={(e) => setPrefs((p) => ({ ...p, leadTimeDays: Number(e.target.value) }))}
                 className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
               >
-                <option value={1}>1 day before</option>
-                <option value={2}>2 days before</option>
-                <option value={3}>3 days before</option>
-                <option value={5}>5 days before</option>
+                <option value={1}>{t("notifications.daysBefore", { n: 1 })}</option>
+                <option value={2}>{t("notifications.daysBeforePlural", { n: 2 })}</option>
+                <option value={3}>{t("notifications.daysBeforePlural", { n: 3 })}</option>
+                <option value={5}>{t("notifications.daysBeforePlural", { n: 5 })}</option>
               </select>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Forecast Confidence</label>
+              <label className="text-sm font-medium">{t("notifications.forecastConfidence")}</label>
               <select
                 value={prefs.confidenceThreshold}
                 onChange={(e) => setPrefs((p) => ({ ...p, confidenceThreshold: e.target.value }))}
                 className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
               >
-                <option value="high">High confidence only</option>
-                <option value="medium">Medium and high</option>
+                <option value="high">{t("notifications.highOnly")}</option>
+                <option value="medium">{t("notifications.mediumAndHigh")}</option>
               </select>
             </div>
 
             <div>
-              <label className="text-sm font-medium">Flow Range</label>
+              <label className="text-sm font-medium">{t("notifications.flowRange")}</label>
               <select
                 value={prefs.acceptableRange}
                 onChange={(e) => setPrefs((p) => ({ ...p, acceptableRange: e.target.value }))}
                 className="mt-1 block w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2 text-sm"
               >
-                <option value="optimal-only">Optimal only (ideal conditions)</option>
-                <option value="runnable">All runnable (includes low/high runnable)</option>
+                <option value="optimal-only">{t("notifications.optimalOnly")}</option>
+                <option value="runnable">{t("notifications.allRunnable")}</option>
               </select>
             </div>
 
@@ -230,7 +232,7 @@ export default function NotificationsPage() {
                   onChange={(e) => setPrefs((p) => ({ ...p, digestMode: e.target.checked }))}
                   className="h-4 w-4 rounded"
                 />
-                <span className="text-sm">Batch alerts into a daily digest</span>
+                <span className="text-sm">{t("notifications.digestMode")}</span>
               </label>
 
               <label className="flex items-center gap-3">
@@ -240,7 +242,7 @@ export default function NotificationsPage() {
                   onChange={(e) => setPrefs((p) => ({ ...p, weekendOnly: e.target.checked }))}
                   className="h-4 w-4 rounded"
                 />
-                <span className="text-sm">Weekend windows only (Fri-Sun)</span>
+                <span className="text-sm">{t("notifications.weekendOnly")}</span>
               </label>
             </div>
 
@@ -249,7 +251,7 @@ export default function NotificationsPage() {
               disabled={saving}
               className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save Preferences"}
+              {saving ? t("notifications.saving") : t("notifications.savePreferences")}
             </button>
           </div>
         </section>
@@ -257,7 +259,7 @@ export default function NotificationsPage() {
         {/* Recent notifications */}
         {data.recentNotifications.length > 0 && (
           <section className="mt-8">
-            <h2 className="text-lg font-semibold">Recent Notifications</h2>
+            <h2 className="text-lg font-semibold">{t("notifications.recentNotifications")}</h2>
             <div className="mt-3 space-y-2">
               {data.recentNotifications.map((n, i) => (
                 <div
@@ -274,7 +276,7 @@ export default function NotificationsPage() {
                           hour: "2-digit",
                           minute: "2-digit",
                         })
-                      : "Pending"}
+                      : t("notifications.pending")}
                   </p>
                 </div>
               ))}
@@ -287,7 +289,7 @@ export default function NotificationsPage() {
           <button
             onClick={async () => {
               if (!token) return;
-              if (!confirm("Unsubscribe from all river notifications?")) return;
+              if (!confirm(t("notifications.unsubscribeConfirm"))) return;
               await fetch(`/api/notifications/unsubscribe?token=${token}`, {
                 method: "DELETE",
               });
@@ -295,7 +297,7 @@ export default function NotificationsPage() {
             }}
             className="text-sm text-red-500 hover:underline"
           >
-            Unsubscribe from all notifications
+            {t("notifications.unsubscribeAll")}
           </button>
         </section>
       </div>

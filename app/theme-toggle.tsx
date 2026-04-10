@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "@/lib/i18n/provider";
 
 const STORAGE_KEY = "kras-theme";
 type Theme = "system" | "light" | "dark";
@@ -21,6 +22,7 @@ function apply(theme: Theme) {
 }
 
 export default function ThemeToggle() {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>("system");
   const [mounted, setMounted] = useState(false);
 
@@ -54,13 +56,13 @@ export default function ThemeToggle() {
 
   if (!mounted) return <div className="h-8 w-8" />;
 
-  const label = theme === "system" ? "System" : theme === "light" ? "Light" : "Dark";
+  const label = theme === "system" ? t("theme.system") : theme === "light" ? t("theme.light") : t("theme.dark");
 
   return (
     <button
       onClick={cycle}
       className="rounded-md p-1.5 text-foreground/50 transition-colors hover:text-brand"
-      aria-label={`Theme: ${label}. Click to change.`}
+      aria-label={t("theme.ariaLabel", { theme: label })}
       title={label}
     >
       {theme === "light" && (
