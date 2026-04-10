@@ -59,6 +59,7 @@ export function confirmationEmail(
 // ---------------------------------------------------------------------------
 
 interface AlertEmailParams {
+  stationId: string;
   stationName: string;
   alertType: string;
   currentFlow: number | null;
@@ -102,7 +103,7 @@ const ALERT_SUBJECT_PREFIX: Record<string, string> = {
 };
 
 export function alertEmail(params: AlertEmailParams): { subject: string; html: string } {
-  const { stationName, alertType, currentFlow, message, manageToken } = params;
+  const { stationId, stationName, alertType, currentFlow, message, manageToken } = params;
   const emoji = ALERT_EMOJI[alertType] ?? "📢";
   const prefix = ALERT_SUBJECT_PREFIX[alertType] ?? "Alert";
   const unsubscribeUrl = `${appUrl()}/api/notifications/unsubscribe?token=${manageToken}`;
@@ -119,7 +120,7 @@ export function alertEmail(params: AlertEmailParams): { subject: string; html: s
       `<p style="color:#18181b;font-size:16px;line-height:1.6;">${message}</p>
        ${flowLine}
        <div style="margin:24px 0;">
-         <a href="${appUrl()}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
+         <a href="${appUrl()}/rivers/${encodeURIComponent(stationId)}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">
            View River
          </a>
          <a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">

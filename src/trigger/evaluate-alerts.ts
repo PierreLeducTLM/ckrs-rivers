@@ -378,6 +378,7 @@ function detectAlerts(
 
 async function sendAlertEmail(
   to: string,
+  stationId: string,
   stationName: string,
   alertType: string,
   message: string,
@@ -428,7 +429,7 @@ async function sendAlertEmail(
 <p style="color:#18181b;font-size:16px;line-height:1.6;">${message}</p>
 ${flowLine}
 <div style="margin:24px 0;">
-<a href="${appUrl}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
+<a href="${appUrl}/rivers/${encodeURIComponent(stationId)}" style="display:inline-block;padding:10px 20px;background:#2D8FCC;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">View River</a>
 <a href="${manageUrl}" style="display:inline-block;padding:10px 20px;margin-left:8px;background:#f4f4f5;color:#52525b;text-decoration:none;border-radius:8px;">Manage Alerts</a>
 </div></div>
 <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">
@@ -585,6 +586,7 @@ export const evaluateAlerts = task({
           // Send email
           const sent = await sendAlertEmail(
             sub.email,
+            candidate.stationId,
             candidate.stationName,
             candidate.alertType,
             candidate.message,
