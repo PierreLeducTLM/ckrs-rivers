@@ -367,7 +367,8 @@ async function sendDirectEmail(
   const from =
     process.env.NOTIFICATION_FROM_EMAIL ??
     "Kayak Rivière aux Sables <pierre@leduc.tech";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
   const EMOJI: Record<string, string> = {
     "its-on": "\uD83D\uDFE2", "last-call": "\u23F0", "safety-warning": "\uD83D\uDD34",

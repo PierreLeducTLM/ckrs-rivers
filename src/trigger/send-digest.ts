@@ -60,7 +60,8 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
   if (!apiKey) return false;
 
   const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${digest.token}`;
 
   const DOT: Record<string, string> = {
