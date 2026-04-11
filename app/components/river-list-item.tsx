@@ -92,10 +92,10 @@ export default function RiverListItem({
               }}
             >
               <div
-                className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
+                className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
                 style={{
                   left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                  backgroundColor: card.color,
+                  backgroundColor: "#22c55e",
                 }}
               />
             </div>

@@ -282,10 +282,10 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
                   width: 12,
                   height: 12,
                   borderRadius: "50%",
-                  backgroundColor: card.color,
+                  backgroundColor: "#22c55e",
                   border: "2px solid white",
                   transform: "translate(-50%, -50%)",
-                  boxShadow: "0 1px 2px rgba(0,0,0,.3)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,.3)",
                 }}
               />
             </div>
