@@ -34,7 +34,7 @@ export default function RiverCard({
     <Link
       href={`/rivers/${card.id}`}
       className={`group relative rounded-xl bg-background p-6 shadow transition-shadow hover:shadow-lg ${
-        card.isGoodRange ? "border-2" : "border border-foreground/10"
+        card.isGoodRange ? "border-2" : "border border-foreground/20"
       }`}
       style={
         card.isGoodRange
