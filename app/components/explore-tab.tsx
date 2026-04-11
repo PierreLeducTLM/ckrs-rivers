@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/provider";
 import { useTab } from "./tab-context";
 import SearchBar from "./search-bar";
 import FilterChips from "./filter-chips";
+import RapidClassFilter, { matchesClassFilter } from "./rapid-class-filter";
 import RiverListItem from "./river-list-item";
 import type { StationCard } from "./types";
 import { statusPriority, normalizeSearch } from "./utils";
@@ -27,7 +28,7 @@ export default function ExploreTab({
   isNative,
 }: ExploreTabProps) {
   const { t } = useTranslation();
-  const { statusFilter, setStatusFilter } = useTab();
+  const { statusFilter, setStatusFilter, classFilter, setClassFilter } = useTab();
   const [search, setSearch] = useState("");
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [, setFavVersion] = useState(0);
@@ -77,6 +78,9 @@ export default function ExploreTab({
           if (card.municipality !== regionFilter) return false;
         }
 
+        // Rapid class filter
+        if (!matchesClassFilter(card.rapidClass, classFilter)) return false;
+
         return true;
       })
       .sort((a, b) => {
@@ -84,7 +88,7 @@ export default function ExploreTab({
         if (diff !== 0) return diff;
         return a.name.localeCompare(b.name);
       });
-  }, [cards, search, statusFilter, regionFilter]);
+  }, [cards, search, statusFilter, regionFilter, classFilter]);
 
   return (
     <div>
@@ -97,8 +101,9 @@ export default function ExploreTab({
         />
 
         {/* Filters row */}
-        <div className="mt-3">
+        <div className="mt-3 flex flex-col gap-2">
           <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
+          <RapidClassFilter value={classFilter} onChange={setClassFilter} t={t} />
 
           {/* Region dropdown — commented out for now, will reactivate later
           {regions.length > 1 && (
