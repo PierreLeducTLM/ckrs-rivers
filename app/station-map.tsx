@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, useMap } from "react-leaflet";
+import React, { useEffect, useState, useCallback } from "react";
+import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, useMap, useMapEvents } from "react-leaflet";
 import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -116,6 +116,21 @@ function RestoreOrFitBounds({ cards }: { cards: StationCard[] }) {
     map.fitBounds(L.latLngBounds(allPoints), { padding: [30, 30] });
   }, [map, cards]);
   return null;
+}
+
+function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap();
+  useEffect(() => { onZoom(map.getZoom()); }, [map, onZoom]);
+  useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
+  return null;
+}
+
+function boundaryRadius(zoom: number): number {
+  if (zoom >= 13) return 6;
+  if (zoom >= 11) return 5;
+  if (zoom >= 9) return 4;
+  if (zoom >= 7) return 3;
+  return 2;
 }
 
 function computeCardStatusInfo(
@@ -343,6 +358,8 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
     return localStorage.getItem(MAP_LAYER_KEY) ?? t("map.street");
   });
   const isSatellite = savedLayer === "Satellite";
+  const [zoom, setZoom] = useState(DEFAULT_ZOOM);
+  const handleZoom = useCallback((z: number) => setZoom(z), []);
 
   // Helper: render popup or attach click handler based on mode
   const markerContent = (card: StationCard) => {
@@ -379,6 +396,7 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
           </LayersControl.BaseLayer>
         </LayersControl>
         <RestoreOrFitBounds cards={cards} />
+        <ZoomTracker onZoom={handleZoom} />
         {cards.map((card) => {
           const hasPath = card.riverPath && card.riverPath.length > 1;
 
@@ -421,9 +439,43 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
                 <Polyline
                   positions={card.riverPath!}
                   pathOptions={{
+                    color: "#1a1a2e",
+                    weight: 7,
+                    opacity: 0.4,
+                    lineCap: "butt",
+                    lineJoin: "round",
+                  }}
+                  interactive={false}
+                />
+                <Polyline
+                  positions={card.riverPath!}
+                  pathOptions={{
                     color: card.color || "#E07020",
                     weight: 4,
                     opacity: 0.8,
+                    lineCap: "butt",
+                  }}
+                  interactive={false}
+                />
+                <CircleMarker
+                  center={card.riverPath![0]}
+                  radius={boundaryRadius(zoom)}
+                  pathOptions={{
+                    color: "#fff",
+                    fillColor: card.color || "#E07020",
+                    fillOpacity: 1,
+                    weight: zoom >= 11 ? 2 : 1,
+                  }}
+                  interactive={false}
+                />
+                <CircleMarker
+                  center={card.riverPath![card.riverPath!.length - 1]}
+                  radius={boundaryRadius(zoom)}
+                  pathOptions={{
+                    color: "#fff",
+                    fillColor: card.color || "#E07020",
+                    fillOpacity: 1,
+                    weight: zoom >= 11 ? 2 : 1,
                   }}
                   interactive={false}
                 />
