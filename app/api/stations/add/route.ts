@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { randomUUID } from "node:crypto";
 import { sql } from "@/lib/db/client";
 
 const CEHQ_JSON_URL = "https://www.cehq.gouv.qc.ca/depot/suivihydro/bd/JSON";
@@ -47,7 +48,7 @@ function parseCatchmentArea(bassin: string): number | null {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as {
-      stationId: string;
+      stationId?: string;
       name?: string;
       lat?: number;
       lon?: number;
@@ -55,7 +56,47 @@ export async function POST(request: NextRequest) {
 
     const { stationId } = body;
 
-    if (!stationId || !/^\d{6}$/.test(stationId)) {
+    // -----------------------------------------------------------------------
+    // Custom river (no CEHQ station)
+    // -----------------------------------------------------------------------
+    if (!stationId || stationId.trim() === "") {
+      const name = body.name?.trim();
+      if (!name) {
+        return Response.json(
+          { error: "River name is required for custom rivers." },
+          { status: 400 },
+        );
+      }
+
+      const lat = body.lat;
+      const lon = body.lon;
+      if (lat == null || lon == null || isNaN(lat) || isNaN(lon)) {
+        return Response.json(
+          { error: "Latitude and longitude are required for custom rivers." },
+          { status: 400 },
+        );
+      }
+
+      const internalId = `custom_${randomUUID().slice(0, 8)}`;
+
+      await sql(
+        `INSERT INTO stations (id, station_number, name, lat, lon, status)
+         VALUES ($1, NULL, $2, $3, $4, 'ready')`,
+        [internalId, name, lat, lon],
+      );
+
+      console.log(`[add-station] Custom river ${internalId} added: ${name} (${lat}, ${lon})`);
+
+      return Response.json({
+        success: true,
+        station: { id: internalId, name, lat, lon },
+      });
+    }
+
+    // -----------------------------------------------------------------------
+    // CEHQ station
+    // -----------------------------------------------------------------------
+    if (!/^\d{6}$/.test(stationId)) {
       return Response.json(
         { error: "Invalid station ID. Must be a 6-digit number (e.g., 060601)." },
         { status: 400 },

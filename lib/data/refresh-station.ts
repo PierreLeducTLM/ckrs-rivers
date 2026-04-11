@@ -24,9 +24,68 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
     return { stationId, success: false, error: "Station not found" };
   }
 
-  const cehqNumber = station.stationNumber ?? stationId;
+  const cehqNumber = station.stationNumber;
 
   try {
+    // -------------------------------------------------------------------
+    // Custom river (no CEHQ station) — weather-only refresh
+    // -------------------------------------------------------------------
+    if (!cehqNumber) {
+      const weatherStation = station.weatherCoordinates
+        ? { ...station, coordinates: station.weatherCoordinates }
+        : station;
+
+      const lookbackDate = new Date();
+      lookbackDate.setUTCDate(lookbackDate.getUTCDate() - 3);
+      const lookback = lookbackDate.toISOString().slice(0, 10);
+
+      let weatherSummary: Array<{
+        date: string;
+        tempMin: number;
+        tempMax: number;
+        tempMean: number;
+        precipitation: number;
+        snowfall: number;
+        snowDepth: number;
+      }> = [];
+
+      try {
+        const weather = await getWeatherTimeline(weatherStation, lookback, 10);
+        weatherSummary = weather
+          .filter((w) => w.date >= lookback)
+          .map((w) => ({
+            date: w.date,
+            tempMin: Number(w.temperature.min),
+            tempMax: Number(w.temperature.max),
+            tempMean: Number(w.temperature.mean),
+            precipitation: Number(w.precipitation),
+            snowfall: Number(w.snowfall),
+            snowDepth: Number(w.snowDepth),
+          }));
+      } catch {
+        // Weather fetch failed
+      }
+
+      const cacheData = { lastFlow: null, forecastDays: [] };
+
+      await sql(
+        `INSERT INTO forecast_cache (station_id, forecast_json, hourly_json, weather_json, generated_at)
+         VALUES ($1, $2, $3, $4, now())
+         ON CONFLICT (station_id) DO UPDATE SET
+           forecast_json = EXCLUDED.forecast_json,
+           hourly_json = EXCLUDED.hourly_json,
+           weather_json = EXCLUDED.weather_json,
+           generated_at = now()`,
+        [stationId, JSON.stringify(cacheData), JSON.stringify([]), JSON.stringify(weatherSummary)],
+      );
+
+      return { stationId, success: true, generatedAt: new Date().toISOString() };
+    }
+
+    // -------------------------------------------------------------------
+    // CEHQ station — full refresh (real-time + forecast + weather)
+    // -------------------------------------------------------------------
+
     // 1. Fetch CEHQ real-time readings
     const realtimeData = await getRealtimeData(cehqNumber);
     const observedHourly = observedToHourly(realtimeData.readings);
