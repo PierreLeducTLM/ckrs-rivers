@@ -387,12 +387,8 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   }, []);
 
   const handleNeedEmail = useCallback(() => {
-    if (isNative) {
-      setShowComingSoon(true);
-      return;
-    }
     setShowNotificationModal(true);
-  }, [isNative]);
+  }, []);
 
   const refreshFavorites = useCallback(() => {
     setFavorites(getFavorites());

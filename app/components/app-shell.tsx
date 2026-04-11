@@ -141,12 +141,8 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   }, []);
 
   const handleNeedEmail = useCallback(() => {
-    if (isNative) {
-      setShowComingSoon(true);
-      return;
-    }
     setShowNotificationModal(true);
-  }, [isNative]);
+  }, []);
 
   useEffect(() => {
     fetchSubscriptions();
