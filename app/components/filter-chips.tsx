@@ -1,6 +1,6 @@
 "use client";
 
-export type StatusFilter = "all" | "ideal" | "runnable" | "too-low";
+export type StatusFilter = "all" | "runnable" | "too-low";
 
 interface FilterChipsProps {
   value: StatusFilter;
@@ -10,7 +10,6 @@ interface FilterChipsProps {
 
 const CHIPS: { id: StatusFilter; labelKey: string; color?: string }[] = [
   { id: "all", labelKey: "explore.filterAll" },
-  { id: "ideal", labelKey: "explore.filterGoodToGo", color: "#00c853" },
   { id: "runnable", labelKey: "explore.filterRunnable", color: "#2979ff" },
   { id: "too-low", labelKey: "explore.filterTooLow", color: "#ff6d00" },
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import type { StatusFilter } from "./filter-chips";
 
 export type TabId = "my-rivers" | "explore" | "map";
 
@@ -10,6 +11,8 @@ const FAVORITES_STORAGE_KEY = "waterflow-favorites";
 interface TabContextValue {
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
+  statusFilter: StatusFilter;
+  setStatusFilter: (filter: StatusFilter) => void;
 }
 
 const TabContext = createContext<TabContextValue | null>(null);
@@ -33,6 +36,7 @@ function getInitialTab(): TabId {
 
 export function TabProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTabState] = useState<TabId>("my-rivers");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -51,7 +55,7 @@ export function TabProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TabContext.Provider value={{ activeTab, setActiveTab }}>
+    <TabContext.Provider value={{ activeTab, setActiveTab, statusFilter, setStatusFilter }}>
       {children}
     </TabContext.Provider>
   );
@@ -61,7 +65,7 @@ export function useTab(): TabContextValue {
   const ctx = useContext(TabContext);
   if (!ctx) {
     // Fallback for pre-mount render
-    return { activeTab: "my-rivers", setActiveTab: () => {} };
+    return { activeTab: "my-rivers", setActiveTab: () => {}, statusFilter: "all", setStatusFilter: () => {} };
   }
   return ctx;
 }

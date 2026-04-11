@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
+import { useTab } from "./tab-context";
 import SearchBar from "./search-bar";
-import FilterChips, { type StatusFilter } from "./filter-chips";
+import FilterChips from "./filter-chips";
 import RiverListItem from "./river-list-item";
 import type { StationCard } from "./types";
 import { statusPriority, normalizeSearch } from "./utils";
@@ -26,8 +27,8 @@ export default function ExploreTab({
   isNative,
 }: ExploreTabProps) {
   const { t } = useTranslation();
+  const { statusFilter, setStatusFilter } = useTab();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [, setFavVersion] = useState(0);
 
@@ -65,7 +66,6 @@ export default function ExploreTab({
 
         // Status filter
         if (statusFilter !== "all") {
-          if (statusFilter === "ideal" && card.status !== "ideal") return false;
           if (statusFilter === "runnable" && card.status !== "runnable" && card.status !== "ideal")
             return false;
           if (statusFilter === "too-low" && card.status !== "too-low")

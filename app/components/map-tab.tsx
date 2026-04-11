@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "@/lib/i18n/provider";
-import FilterChips, { type StatusFilter } from "./filter-chips";
+import { useTab } from "./tab-context";
+import FilterChips from "./filter-chips";
 import type { StationCard } from "./types";
 
 const StationMap = dynamic(() => import("../station-map"), {
@@ -22,12 +23,11 @@ interface MapTabProps {
 
 export default function MapTab({ cards, isAdmin }: MapTabProps) {
   const { t } = useTranslation();
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const { statusFilter, setStatusFilter } = useTab();
 
   const filteredCards = useMemo(() => {
     if (statusFilter === "all") return cards;
     return cards.filter((c) => {
-      if (statusFilter === "ideal") return c.status === "ideal";
       if (statusFilter === "runnable") return c.status === "runnable" || c.status === "ideal";
       if (statusFilter === "too-low") return c.status === "too-low";
       return true;
@@ -42,7 +42,7 @@ export default function MapTab({ cards, isAdmin }: MapTabProps) {
       </div>
 
       {/* Map fills all remaining vertical space via flex-1 */}
-      <div className="min-h-0 flex-1 -mx-6 sm:mx-0">
+      <div className="min-h-0 flex-1 -mx-6 sm:mx-0 isolate z-0">
         <StationMap
           cards={filteredCards}
           isAdmin={isAdmin}
