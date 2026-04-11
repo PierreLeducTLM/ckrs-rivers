@@ -97,10 +97,10 @@ export default function ExploreTab({
         />
 
         {/* Filters row */}
-        <div className="mt-3 flex items-center gap-3">
+        <div className="mt-3">
           <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
 
-          {/* Region dropdown */}
+          {/* Region dropdown — commented out for now, will reactivate later
           {regions.length > 1 && (
             <select
               value={regionFilter}
@@ -115,6 +115,7 @@ export default function ExploreTab({
               ))}
             </select>
           )}
+          */}
         </div>
       </div>
 
