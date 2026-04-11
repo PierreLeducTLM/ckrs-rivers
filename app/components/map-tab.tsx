@@ -39,18 +39,12 @@ export default function MapTab({ cards, isAdmin }: MapTabProps) {
   return (
     <>
       {/* Filter chips — sits above the map in normal document flow */}
-      <div className="mb-2">
+      <div className="flex-shrink-0 pb-2">
         <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
       </div>
 
-      {/* Full-bleed map container */}
-      <div
-        className="-mx-6 sm:mx-0"
-        style={{
-          /* Fill remaining space: viewport minus header (~4.5rem), chips (~2.5rem), bottom nav (~4rem), safe areas */
-          height: "calc(100vh - 11rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
-        }}
-      >
+      {/* Map fills all remaining vertical space via flex-1 */}
+      <div className="min-h-0 flex-1 -mx-6 sm:mx-0">
         <StationMap
           cards={filteredCards}
           isAdmin={isAdmin}
