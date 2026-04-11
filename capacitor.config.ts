@@ -31,12 +31,11 @@ const config: CapacitorConfig = {
   },
   android: {
     backgroundColor: "#ffffff",
-    // Exclude push-notifications until Firebase (google-services.json) is configured.
-    // The native plugin crashes without Firebase — it's not catchable from JS.
     includePlugins: [
       "@capacitor/app",
       "@capacitor/splash-screen",
       "@capacitor/status-bar",
+      "@capacitor/push-notifications",
     ],
   },
 };

@@ -1,5 +1,6 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
 import { neon } from "@neondatabase/serverless";
+import admin from "firebase-admin";
 
 /**
  * Evaluate alert conditions for all stations and send notifications.
@@ -355,6 +356,89 @@ function detectAlerts(
 }
 
 // ---------------------------------------------------------------------------
+// Firebase Admin (lazy init)
+// ---------------------------------------------------------------------------
+
+function getFirebaseApp(): admin.app.App | null {
+  const json = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!json) return null;
+  if (admin.apps.length > 0) return admin.apps[0]!;
+  try {
+    const credential = admin.credential.cert(JSON.parse(json));
+    return admin.initializeApp({ credential });
+  } catch (err) {
+    logger.error("Firebase Admin init failed", { error: err instanceof Error ? err.message : String(err) });
+    return null;
+  }
+}
+
+/**
+ * Send push notifications to all active devices whose station_ids overlap
+ * with the alerted stations for a given subscriber.
+ */
+async function sendPushForAlerts(
+  alerts: GroupedAlert[],
+  dbSql: SqlFn,
+): Promise<number> {
+  const app = getFirebaseApp();
+  if (!app) return 0;
+
+  const stationIds = alerts.map((a) => a.stationId);
+
+  // Find active push devices that have at least one of the alerted stations
+  const devices = await dbSql(
+    `SELECT token, platform FROM push_devices
+     WHERE active = true AND station_ids && $1`,
+    [stationIds],
+  );
+
+  if (devices.length === 0) return 0;
+
+  const messaging = admin.messaging(app);
+  const top = alerts[0];
+  const topEmoji = EMOJI[top.alertType] ?? "\uD83D\uDCE2";
+  const topPrefix = PREFIX[top.alertType] ?? "Alert";
+
+  const title = alerts.length === 1
+    ? `${topEmoji} ${topPrefix} — ${top.stationName}`
+    : `${topEmoji} ${topPrefix} — ${top.stationName} (+${alerts.length - 1} more)`;
+
+  const body = alerts.length === 1
+    ? top.message
+    : alerts.map((a) => `${EMOJI[a.alertType] ?? ""} ${a.message}`).join("\n");
+
+  let sent = 0;
+  for (const device of devices) {
+    try {
+      await messaging.send({
+        token: device.token,
+        notification: { title, body },
+        data: {
+          stationId: top.stationId,
+          alertType: top.alertType,
+        },
+        android: {
+          priority: "high" as const,
+          notification: { channelId: "river-alerts" },
+        },
+      });
+      sent++;
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      // Deactivate invalid tokens
+      if (errMsg.includes("not-registered") || errMsg.includes("invalid-registration-token")) {
+        await dbSql(`UPDATE push_devices SET active = false WHERE token = $1`, [device.token]);
+        logger.warn("Deactivated stale push token", { token: device.token.slice(0, 12) + "..." });
+      } else {
+        logger.error("FCM send failed", { error: errMsg, platform: device.platform });
+      }
+    }
+  }
+
+  return sent;
+}
+
+// ---------------------------------------------------------------------------
 // Email sending (Resend API, no SDK)
 // ---------------------------------------------------------------------------
 
@@ -645,6 +729,7 @@ export const evaluateAlerts = task({
 
     let totalAlerts = 0;
     let totalEmails = 0;
+    let totalPushes = 0;
 
     for (const [subscriberId, bucket] of Array.from(subscriberBucket.entries())) {
       // Deduplicate: keep only the top-ranked alert per station
@@ -665,6 +750,10 @@ export const evaluateAlerts = task({
 
       // Send ONE grouped email
       const sent = await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token);
+
+      // Send push notifications to matching devices
+      const pushCount = await sendPushForAlerts(finalAlerts, dbSql);
+      totalPushes += pushCount;
 
       // Log + update state for each included alert
       for (const alert of finalAlerts) {
@@ -697,8 +786,8 @@ export const evaluateAlerts = task({
       if (sent) totalEmails++;
     }
 
-    logger.info(`Alert evaluation complete: ${totalAlerts} alerts, ${totalEmails} emails sent`);
+    logger.info(`Alert evaluation complete: ${totalAlerts} alerts, ${totalEmails} emails, ${totalPushes} push notifications sent`);
 
-    return { totalAlerts, totalEmails, stationsEvaluated: stations.length };
+    return { totalAlerts, totalEmails, totalPushes, stationsEvaluated: stations.length };
   },
 });
