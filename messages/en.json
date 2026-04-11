@@ -10,6 +10,28 @@
     "back": "Back",
     "backToRivers": "Back to Rivers"
   },
+  "tabs": {
+    "myRivers": "My Rivers",
+    "explore": "Explore",
+    "map": "Map"
+  },
+  "myRivers": {
+    "empty": "No favorite rivers yet",
+    "emptySubtext": "Explore rivers and tap the star to add them here",
+    "exploreCta": "Explore Rivers",
+    "sortStatus": "By Status",
+    "sortName": "By Name"
+  },
+  "explore": {
+    "searchPlaceholder": "Search rivers...",
+    "allRegions": "All Regions",
+    "filterAll": "All",
+    "filterGoodToGo": "Good to Go",
+    "filterRunnable": "Runnable",
+    "filterTooLow": "Too Low",
+    "riverCount": "{n} rivers",
+    "noResults": "No rivers match your search"
+  },
   "status": {
     "tooLow": "Too Low",
     "runnable": "Runnable",

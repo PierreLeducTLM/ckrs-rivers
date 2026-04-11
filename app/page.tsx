@@ -4,9 +4,9 @@ import { getStations, getPaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { getPaddlingStatus, statusColor } from "@/lib/notifications/paddling-status";
 import { AdminAddStation } from "./admin-wrapper";
-import StationGrid from "./station-grid";
-import T from "./translated-text";
-import type { StationCard } from "./station-grid";
+import { TabProvider } from "./components/tab-context";
+import AppShell from "./components/app-shell";
+import type { StationCard } from "./components/types";
 
 interface HourlyPoint {
   timestamp: string;
@@ -22,6 +22,12 @@ interface HourlyPoint {
 
 export default async function Home() {
   const [stations, paddlingMap] = await Promise.all([getStations(), getPaddlingLevels()]);
+
+  // Fetch municipality for each station (not in domain model but in DB)
+  const municipalityRows = (await sql(
+    `SELECT id, municipality FROM stations`,
+  )) as Array<{ id: string; municipality: string | null }>;
+  const municipalityMap = new Map(municipalityRows.map((r) => [r.id, r.municipality]));
 
   const rows = await sql(
     `SELECT
@@ -78,7 +84,6 @@ export default async function Home() {
       })
       .filter((p) => p.ts >= cutoffTs);
 
-    // Extract upcoming weather days for card pictograms
     const weatherDays = (data?.weather_json ?? [])
       .filter((w) => w.date >= todayStr)
       .slice(0, 7)
@@ -95,6 +100,7 @@ export default async function Home() {
       name: station.name,
       lat: Number(station.coordinates.lat),
       lon: Number(station.coordinates.lon),
+      municipality: municipalityMap.get(station.id) ?? undefined,
       catchmentArea: station.catchmentArea as number | undefined,
       lastFlow: data?.last_flow ?? null,
       forecastAt: data?.forecast_at ?? null,
@@ -120,23 +126,19 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* River cards grid */}
       <main className="mx-auto max-w-6xl px-6 py-4">
-        <StationGrid cards={cards} />
+        <TabProvider>
+          <AppShell cards={cards} />
+        </TabProvider>
 
         <AdminAddStation />
 
         {stations.length === 0 && (
           <p className="py-20 text-center text-foreground/40">
-            <T k="app.noStations" />
+            No stations found.
           </p>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="border-t border-foreground/10 px-6 py-6 text-center text-sm text-foreground/40">
-        <T k="app.footer" />
-      </footer>
     </div>
   );
 }

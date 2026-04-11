@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
@@ -8,6 +7,8 @@ import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
 import RiverHeader from "./river-header";
 import PaddlingStatusMessage from "./paddling-status-message";
+import BackButton from "./back-button";
+import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 
@@ -220,16 +221,11 @@ export default async function RiverPage({
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back link */}
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-          <T k="detail.backToDashboard" />
-        </Link>
+        {/* Back + Favorite */}
+        <div className="flex items-center justify-between">
+          <BackButton />
+          <FavoriteButton stationId={id} />
+        </div>
 
         {/* River header */}
         <header className="mt-6">

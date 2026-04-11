@@ -6,7 +6,7 @@ import Link from "next/link";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import SparklineChart from "./sparkline-chart";
-import type { StationCard } from "./station-grid";
+import type { StationCard } from "./components/types";
 import { useTranslation } from "@/lib/i18n/provider";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 
@@ -329,13 +329,30 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
   );
 }
 
-export default function StationMap({ cards, isAdmin = false }: { cards: StationCard[]; isAdmin?: boolean }) {
+interface StationMapProps {
+  cards: StationCard[];
+  isAdmin?: boolean;
+  onMarkerTap?: (card: StationCard) => void;
+}
+
+export default function StationMap({ cards, isAdmin = false, onMarkerTap }: StationMapProps) {
   const { t } = useTranslation();
   const [savedLayer] = useState(() => {
     if (typeof window === "undefined") return t("map.street");
     return localStorage.getItem(MAP_LAYER_KEY) ?? t("map.street");
   });
   const isSatellite = savedLayer === "Satellite";
+
+  // Helper: render popup or attach click handler based on mode
+  const markerContent = (card: StationCard) => {
+    if (onMarkerTap) return null; // Bottom sheet mode — no popup
+    return <StationPopup card={card} isAdmin={isAdmin} />;
+  };
+
+  const markerHandlers = (card: StationCard) => {
+    if (!onMarkerTap) return {};
+    return { click: () => onMarkerTap(card) };
+  };
 
   return (
     <div className="h-full w-full overflow-hidden rounded-xl border border-foreground/10 sm:rounded-xl sm:border md:h-[70vh]">
@@ -368,7 +385,6 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
             const isShort = pathLengthMeters(card.riverPath!) < 500;
 
             if (isShort) {
-              // Show a dot at the midpoint for very short paths
               const mid = card.riverPath![Math.floor(card.riverPath!.length / 2)];
               return (
                 <CircleMarker
@@ -381,15 +397,15 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
                     fillOpacity: 0.8,
                     weight: 2,
                   }}
+                  eventHandlers={markerHandlers(card)}
                 >
-                  <StationPopup card={card} isAdmin={isAdmin} />
+                  {markerContent(card)}
                 </CircleMarker>
               );
             }
 
             return (
               <React.Fragment key={card.id}>
-                {/* Invisible wider polyline for easier mobile tap target */}
                 <Polyline
                   positions={card.riverPath!}
                   pathOptions={{
@@ -397,10 +413,10 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
                     weight: 30,
                     opacity: 0,
                   }}
+                  eventHandlers={markerHandlers(card)}
                 >
-                  <StationPopup card={card} isAdmin={isAdmin} />
+                  {markerContent(card)}
                 </Polyline>
-                {/* Visible river path */}
                 <Polyline
                   positions={card.riverPath!}
                   pathOptions={{
@@ -414,7 +430,6 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
             );
           }
 
-          // Fallback: single circle marker at station coordinates
           return (
             <CircleMarker
               key={card.id}
@@ -426,8 +441,9 @@ export default function StationMap({ cards, isAdmin = false }: { cards: StationC
                 fillOpacity: 0.8,
                 weight: 2,
               }}
+              eventHandlers={markerHandlers(card)}
             >
-              <StationPopup card={card} isAdmin={isAdmin} />
+              {markerContent(card)}
             </CircleMarker>
           );
         })}

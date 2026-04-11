@@ -10,6 +10,28 @@
     "back": "Retour",
     "backToRivers": "Retour aux rivieres"
   },
+  "tabs": {
+    "myRivers": "Mes Rivieres",
+    "explore": "Explorer",
+    "map": "Carte"
+  },
+  "myRivers": {
+    "empty": "Aucune riviere favorite",
+    "emptySubtext": "Explorez les rivieres et appuyez sur l'etoile pour les ajouter ici",
+    "exploreCta": "Explorer les rivieres",
+    "sortStatus": "Par statut",
+    "sortName": "Par nom"
+  },
+  "explore": {
+    "searchPlaceholder": "Rechercher des rivieres...",
+    "allRegions": "Toutes les regions",
+    "filterAll": "Toutes",
+    "filterGoodToGo": "Conditions ideales",
+    "filterRunnable": "Navigable",
+    "filterTooLow": "Trop bas",
+    "riverCount": "{n} rivieres",
+    "noResults": "Aucune riviere ne correspond a votre recherche"
+  },
   "status": {
     "tooLow": "Trop bas",
     "runnable": "Navigable",
