@@ -130,3 +130,19 @@ export async function PATCH(
 
   return Response.json({ success: true });
 }
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const rows = await sql(`SELECT id FROM stations WHERE id = $1`, [id]) as { id: string }[];
+  if (rows.length === 0) {
+    return Response.json({ error: "Station not found" }, { status: 404 });
+  }
+
+  await sql(`DELETE FROM stations WHERE id = $1`, [id]);
+
+  return Response.json({ success: true });
+}
