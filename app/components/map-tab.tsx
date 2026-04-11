@@ -28,7 +28,7 @@ export default function MapTab({ cards, isAdmin }: MapTabProps) {
     if (statusFilter === "all") return cards;
     return cards.filter((c) => {
       if (statusFilter === "ideal") return c.status === "ideal";
-      if (statusFilter === "runnable") return c.status === "runnable";
+      if (statusFilter === "runnable") return c.status === "runnable" || c.status === "ideal";
       if (statusFilter === "too-low") return c.status === "too-low";
       return true;
     });

@@ -66,7 +66,7 @@ export default function ExploreTab({
         // Status filter
         if (statusFilter !== "all") {
           if (statusFilter === "ideal" && card.status !== "ideal") return false;
-          if (statusFilter === "runnable" && card.status !== "runnable")
+          if (statusFilter === "runnable" && card.status !== "runnable" && card.status !== "ideal")
             return false;
           if (statusFilter === "too-low" && card.status !== "too-low")
             return false;
