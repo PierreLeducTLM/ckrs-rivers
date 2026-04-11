@@ -333,9 +333,10 @@ interface StationMapProps {
   cards: StationCard[];
   isAdmin?: boolean;
   onMarkerTap?: (card: StationCard) => void;
+  className?: string;
 }
 
-export default function StationMap({ cards, isAdmin = false, onMarkerTap }: StationMapProps) {
+export default function StationMap({ cards, isAdmin = false, onMarkerTap, className }: StationMapProps) {
   const { t } = useTranslation();
   const [savedLayer] = useState(() => {
     if (typeof window === "undefined") return t("map.street");
@@ -355,7 +356,7 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap }: Stat
   };
 
   return (
-    <div className="h-full w-full overflow-hidden rounded-xl border border-foreground/10 sm:rounded-xl sm:border md:h-[70vh]">
+    <div className={className ?? "h-full w-full overflow-hidden rounded-xl border border-foreground/10 sm:rounded-xl sm:border md:h-[70vh]"}>
       <MapContainer
         center={QUEBEC_CENTER}
         zoom={DEFAULT_ZOOM}

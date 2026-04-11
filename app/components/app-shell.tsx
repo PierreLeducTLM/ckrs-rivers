@@ -158,7 +158,7 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   }, [fetchSubscriptions]);
 
   return (
-    <div className="pb-16">
+    <div className={activeTab === "map" ? "" : "pb-16"}>
       {/* Pull-to-refresh floating icon */}
       <div
         ref={spinnerRef}

@@ -76,8 +76,8 @@ export default function BottomSheet({ card, onClose, t }: BottomSheetProps) {
     >
       <div
         ref={sheetRef}
-        className="absolute bottom-16 left-0 right-0 rounded-t-2xl border-t border-foreground/10 bg-background px-5 pb-5 pt-3 shadow-2xl transition-transform duration-200"
-        style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom, 0px))" }}
+        className="absolute left-0 right-0 rounded-t-2xl border-t border-foreground/10 bg-background px-5 pb-5 pt-3 shadow-2xl transition-transform duration-200"
+        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

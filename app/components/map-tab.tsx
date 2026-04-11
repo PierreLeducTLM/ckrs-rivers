@@ -37,25 +37,35 @@ export default function MapTab({ cards, isAdmin }: MapTabProps) {
   }, [cards, statusFilter]);
 
   return (
-    <div className="relative -mx-6 -mb-4 h-[calc(100vh-120px)] sm:mx-0 sm:mb-0">
-      {/* Filter chips overlay */}
-      <div className="absolute left-0 right-0 top-2 z-20 px-4">
-        <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
+    <>
+      {/* Full-bleed map container — breaks out of parent padding and fills between header and bottom nav */}
+      <div
+        className="relative -mx-6 sm:mx-0"
+        style={{
+          /* Fill from below header to above bottom nav (56px nav + safe area) */
+          height: "calc(100vh - 8rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))",
+        }}
+      >
+        {/* Filter chips overlay */}
+        <div className="absolute left-0 right-0 top-2 z-20 px-4">
+          <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
+        </div>
+
+        {/* Map — full bleed, no border/rounding */}
+        <StationMap
+          cards={filteredCards}
+          isAdmin={isAdmin}
+          onMarkerTap={setSelectedCard}
+          className="h-full w-full"
+        />
       </div>
 
-      {/* Map */}
-      <StationMap
-        cards={filteredCards}
-        isAdmin={isAdmin}
-        onMarkerTap={setSelectedCard}
-      />
-
-      {/* Bottom sheet */}
+      {/* Bottom sheet — rendered outside map container so it overlays properly */}
       <BottomSheet
         card={selectedCard}
         onClose={() => setSelectedCard(null)}
         t={t}
       />
-    </div>
+    </>
   );
 }
