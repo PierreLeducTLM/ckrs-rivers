@@ -184,7 +184,7 @@ export default function RiverPathEditor({
         return;
       }
       const fullPath = [putIn, ...path, takeOut];
-      let bestIdx = 1;
+      let bestSegment = 0;
       let bestDist = Infinity;
       for (let i = 0; i < fullPath.length - 1; i++) {
         const d =
@@ -192,12 +192,14 @@ export default function RiverPathEditor({
           Math.hypot(fullPath[i + 1][0] - lat, fullPath[i + 1][1] - lon);
         if (d < bestDist) {
           bestDist = d;
-          bestIdx = i;
+          bestSegment = i;
         }
       }
-      const insertIdx = Math.max(0, bestIdx);
+      // bestSegment is the index in fullPath where fullPath = [putIn, ...path, takeOut].
+      // Segment 0 = putIn→path[0], so inserting into path at index bestSegment
+      // places the new point right after putIn (or after the Nth waypoint).
       const newPath = [...path];
-      newPath.splice(insertIdx, 0, [lat, lon]);
+      newPath.splice(bestSegment, 0, [lat, lon]);
       setPath(newPath);
     },
     [putIn, takeOut, path],
