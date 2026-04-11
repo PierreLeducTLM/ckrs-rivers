@@ -48,3 +48,8 @@ next-env.d.ts
 
 # capacitor
 /www
+
+# Android signing
+android/keystore.properties
+*.keystore
+*.jks

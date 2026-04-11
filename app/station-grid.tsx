@@ -13,6 +13,7 @@ import { useAdmin } from "./use-admin";
 import ThemeToggle from "./theme-toggle";
 import LanguageToggle from "./language-toggle";
 import { useTranslation } from "@/lib/i18n/provider";
+import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 
 const StationMap = dynamic(() => import("./station-map"), {
   ssr: false,
@@ -65,6 +66,83 @@ function statusLabel(status: string, t: (key: string) => string): string {
     case "too-high": return t("status.tooHigh");
     default: return "";
   }
+}
+
+// ---------------------------------------------------------------------------
+// Forecast status info (when will it be good / dropping out)
+// ---------------------------------------------------------------------------
+
+function computeCardStatusInfo(
+  card: StationCard,
+): { key: string; param?: number } | null {
+  const paddling = card.paddling;
+  if (!paddling || (paddling.min == null && paddling.ideal == null && paddling.max == null)) {
+    return null;
+  }
+  if (card.status === "unknown") return null;
+
+  if (card.status === "ideal") return { key: "detail.ideal" };
+  if (card.status === "runnable") return { key: "detail.goodToGo" };
+
+  if (card.status === "too-low" || card.status === "too-high") {
+    const now = card.nowTs;
+    for (const point of card.sparkData) {
+      const flow = point.cehqForecast;
+      if (flow == null || point.ts <= now) continue;
+      const { status } = getPaddlingStatus(flow, paddling);
+      if (isGoodRange(status)) {
+        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
+        if (hoursAhead <= 24) {
+          return { key: "detail.runnableInHours", param: hoursAhead };
+        }
+        return { key: "detail.runnableInDays", param: Math.ceil(hoursAhead / 24) };
+      }
+    }
+    return { key: card.status === "too-low" ? "detail.tooLow" : "detail.tooHigh" };
+  }
+
+  if (card.isGoodRange) {
+    const now = card.nowTs;
+    for (const point of card.sparkData) {
+      const flow = point.cehqForecast;
+      if (flow == null || point.ts <= now) continue;
+      const { status } = getPaddlingStatus(flow, paddling);
+      if (!isGoodRange(status)) {
+        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
+        if (hoursAhead <= 48) {
+          return { key: "detail.droppingOutHours", param: hoursAhead };
+        }
+        break;
+      }
+    }
+  }
+
+  return null;
+}
+
+const STATUS_PILL_COLORS: Record<string, { bg: string; text: string }> = {
+  "detail.ideal": { bg: "rgba(16,185,129,0.12)", text: "#059669" },
+  "detail.goodToGo": { bg: "rgba(59,130,246,0.12)", text: "#2563eb" },
+  "detail.tooLow": { bg: "rgba(113,113,122,0.12)", text: "#71717a" },
+  "detail.tooHigh": { bg: "rgba(239,68,68,0.12)", text: "#dc2626" },
+  "detail.runnableInHours": { bg: "rgba(245,158,11,0.12)", text: "#d97706" },
+  "detail.runnableInDays": { bg: "rgba(245,158,11,0.12)", text: "#d97706" },
+  "detail.droppingOutHours": { bg: "rgba(249,115,22,0.12)", text: "#ea580c" },
+};
+
+function StatusPill({ card, t }: { card: StationCard; t: (key: string, params?: Record<string, string | number>) => string }) {
+  const info = computeCardStatusInfo(card);
+  if (!info) return null;
+  const style = STATUS_PILL_COLORS[info.key] ?? { bg: "rgba(113,113,122,0.12)", text: "#71717a" };
+  const text = info.param != null ? t(info.key, { n: info.param }) : t(info.key);
+  return (
+    <span
+      className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+      style={{ backgroundColor: style.bg, color: style.text }}
+    >
+      {text}
+    </span>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -449,7 +527,9 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       default: return 4; // unknown
     }
   };
-  const sorted = [...cards].sort((a, b) => {
+  // Hide test stations (TEST-*) unless admin mode is active
+  const visible = isAdmin ? cards : cards.filter((c) => !c.id.startsWith("TEST-"));
+  const sorted = [...visible].sort((a, b) => {
     const favDiff = (favorites.has(a.id) ? 0 : 1) - (favorites.has(b.id) ? 0 : 1);
     if (favDiff !== 0) return favDiff;
     return statusPriority(a.status) - statusPriority(b.status);
@@ -676,9 +756,14 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 </div>
               )}
 
+              {/* Forecast status pill */}
+              <div className="mt-2">
+                <StatusPill card={card} t={t} />
+              </div>
+
               {/* Gradient bar showing flow position between min → ideal → max */}
               {card.status !== "unknown" && card.lastFlow != null && (
-                <div className="mt-3">
+                <div className="mt-2">
                   <div
                     className="relative h-1.5 w-full overflow-hidden rounded-full"
                     style={{
@@ -719,7 +804,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               }`}
               style={card.isGoodRange ? { borderColor: card.color, boxShadow: `0 0 8px ${card.color}20` } : undefined}
             >
-              {/* Row 1 on mobile: name + status label */}
+              {/* Row 1 on mobile: name + status label + forecast pill */}
               <div className="flex items-center gap-2 min-w-0 sm:flex-1">
                 <span
                   className="h-3 w-3 flex-shrink-0 rounded-full"
@@ -736,6 +821,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     {statusLabel(card.status, t)}
                   </span>
                 )}
+                <StatusPill card={card} t={t} />
               </div>
 
               {/* Row 2 on mobile: flow, gradient bar, buttons */}

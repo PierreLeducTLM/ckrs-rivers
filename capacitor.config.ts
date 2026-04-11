@@ -1,13 +1,13 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.ckrsrivers.com",
+  appId: "com.ckrsrivers.app",
   appName: "CKRS Rivers",
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
   server: {
     url: "https://water-flow-eight.vercel.app/",
-    cleartext: true, // allow HTTP in dev — remove for production HTTPS
+    cleartext: false, // allow HTTP in dev — remove for production HTTPS
   },
   plugins: {
     PushNotifications: {

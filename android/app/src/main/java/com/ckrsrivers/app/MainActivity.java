@@ -1,4 +1,4 @@
-package com.ckrsrivers.com;
+package com.ckrsrivers.app;
 
 import com.getcapacitor.BridgeActivity;
 

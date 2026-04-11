@@ -20,6 +20,15 @@ export function AdminAddStation() {
           </svg>
           Notification Testing
         </Link>
+        <Link
+          href="/admin/subscribers"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/15 px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground/80"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128H5.228A2 2 0 0 1 3.4 17.41a11.77 11.77 0 0 1 .702-2.238C4.593 13.244 4.756 11.147 4.379 9.56A5.5 5.5 0 0 1 15.786 9.52M9.5 4a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7ZM18.5 9a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Z" />
+          </svg>
+          Subscribers
+        </Link>
       </div>
     </>
   );
