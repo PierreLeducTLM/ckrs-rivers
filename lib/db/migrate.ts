@@ -48,6 +48,7 @@ async function migrate() {
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS river_path JSONB`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS rapid_class TEXT`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS description TEXT`,
+    `ALTER TABLE stations ALTER COLUMN station_number DROP NOT NULL`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

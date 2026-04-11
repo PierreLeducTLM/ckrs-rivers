@@ -41,7 +41,7 @@ interface StationRow {
 function rowToStation(row: StationRow): RiverStation {
   return RiverStationSchema.parse({
     id: row.id,
-    stationNumber: row.station_number ?? row.id,
+    stationNumber: row.station_number ?? undefined,
     name: row.name || `Station ${row.id}`,
     coordinates: { lat: row.lat, lon: row.lon },
     catchmentArea: row.catchment_area_km2 ?? undefined,
