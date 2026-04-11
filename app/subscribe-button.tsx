@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
+import { getPushToken, initPushNotifications } from "@/lib/capacitor/push";
 
 const SUB_TOKEN_KEY = "waterflow-sub-token";
 
@@ -42,11 +43,36 @@ export default function SubscribeButton({
       e.preventDefault();
       e.stopPropagation();
 
+      // Native: use push notifications directly (no email needed)
       if (isNative) {
-        onNeedEmail();
+        setToggling(true);
+        try {
+          // Ensure push is registered
+          await initPushNotifications();
+          const pushToken = getPushToken();
+          if (!pushToken) {
+            setToggling(false);
+            return;
+          }
+
+          await fetch("/api/notifications/push-register", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: pushToken,
+              stationId,
+              subscribe: !isSubscribed,
+            }),
+          });
+          onToggled();
+        } catch {
+          // Silently fail
+        }
+        setToggling(false);
         return;
       }
 
+      // Web: use email subscription flow
       const token = getSubToken();
       if (!token) {
         onNeedEmail();

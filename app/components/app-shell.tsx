@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdmin } from "../use-admin";
 import { getSubToken } from "../subscribe-button";
+import { getPushToken } from "@/lib/capacitor/push";
 import SubscribeModal from "../subscribe-modal";
 import { useTab } from "./tab-context";
 import BottomNav from "./bottom-nav";
@@ -121,6 +122,20 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   // Subscriptions
   // ---------------------------------------------------------------------------
   const fetchSubscriptions = useCallback(() => {
+    // Native: load from push device subscriptions
+    const pushToken = getPushToken();
+    if (pushToken) {
+      fetch(`/api/notifications/push-register?token=${encodeURIComponent(pushToken)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) return;
+          setSubscribedStationIds(new Set<string>(data.stationIds ?? []));
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // Web: load from email subscriptions
     const token = getSubToken();
     if (!token) {
       setSubscribedStationIds(new Set());

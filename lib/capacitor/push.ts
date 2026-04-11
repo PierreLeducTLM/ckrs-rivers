@@ -8,7 +8,15 @@
  * On web it's a no-op.
  */
 
+const PUSH_TOKEN_KEY = "waterflow-push-token";
+
 let initialized = false;
+
+/** Get the stored push device token (null on web or if not yet registered). */
+export function getPushToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(PUSH_TOKEN_KEY);
+}
 
 export async function initPushNotifications() {
   if (initialized) return;
@@ -33,6 +41,7 @@ export async function initPushNotifications() {
   // Listen for registration
   PushNotifications.addListener("registration", async (token) => {
     console.log("Push token:", token.value);
+    localStorage.setItem(PUSH_TOKEN_KEY, token.value);
     try {
       await fetch("/api/notifications/push-register", {
         method: "POST",

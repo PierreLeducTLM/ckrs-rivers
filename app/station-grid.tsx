@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import SparklineChart from "./sparkline-chart";
 import FavoriteButton from "./favorite-button";
 import SubscribeButton, { getSubToken } from "./subscribe-button";
+import { getPushToken } from "@/lib/capacitor/push";
 import SubscribeModal from "./subscribe-modal";
 import { useAdmin } from "./use-admin";
 import ThemeToggle from "./theme-toggle";
@@ -367,6 +368,20 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
   }, [isPending, slideOut]);
 
   const fetchSubscriptions = useCallback(() => {
+    // Native: load from push device subscriptions
+    const pushToken = getPushToken();
+    if (pushToken) {
+      fetch(`/api/notifications/push-register?token=${encodeURIComponent(pushToken)}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!data) return;
+          setSubscribedStationIds(new Set<string>(data.stationIds ?? []));
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // Web: load from email subscriptions
     const token = getSubToken();
     if (!token) {
       setSubscribedStationIds(new Set());
