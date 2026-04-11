@@ -133,6 +133,15 @@ function boundaryRadius(zoom: number): number {
   return 2;
 }
 
+function stationRadius(zoom: number, isUnknown: boolean): number {
+  const base = isUnknown ? -1 : 0;
+  if (zoom >= 13) return 8 + base;
+  if (zoom >= 11) return 7 + base;
+  if (zoom >= 9) return 6 + base;
+  if (zoom >= 7) return 4 + base;
+  return 3 + base;
+}
+
 function computeCardStatusInfo(
   card: StationCard,
 ): { key: string; param?: number } | null {
@@ -409,11 +418,11 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
                 <CircleMarker
                   key={card.id}
                   center={mid}
-                  radius={card.status === "unknown" ? 6 : 8}
+                  radius={stationRadius(zoom, card.status === "unknown")}
                   pathOptions={{
-                    color: card.color || "#E07020",
+                    color: "#1a1a2e",
                     fillColor: card.color || "#E07020",
-                    fillOpacity: 0.8,
+                    fillOpacity: 0.9,
                     weight: 2,
                   }}
                   eventHandlers={markerHandlers(card)}
@@ -487,11 +496,11 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
             <CircleMarker
               key={card.id}
               center={[card.lat, card.lon]}
-              radius={card.status === "unknown" ? 6 : 8}
+              radius={stationRadius(zoom, card.status === "unknown")}
               pathOptions={{
-                color: card.color || "#E07020",
+                color: "#1a1a2e",
                 fillColor: card.color || "#E07020",
-                fillOpacity: 0.8,
+                fillOpacity: 0.9,
                 weight: 2,
               }}
               eventHandlers={markerHandlers(card)}
