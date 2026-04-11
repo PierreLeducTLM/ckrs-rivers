@@ -11,6 +11,8 @@ import BackButton from "./back-button";
 import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import RiverMapWrapper from "./river-map-wrapper";
+import NavigateToPoint from "./navigate-to-point";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,6 +34,25 @@ function timeAgo(isoDate: string): string {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+/** Approximate path length in km using Haversine */
+function pathDistanceKm(coords: [number, number][]): number {
+  let total = 0;
+  for (let i = 1; i < coords.length; i++) {
+    const [lat1, lon1] = coords[i - 1];
+    const [lat2, lon2] = coords[i];
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) ** 2;
+    total += R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  return total;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,6 +86,35 @@ interface HourlyPoint {
   cehqForecast: number | null;
   cehqLow: number | null;
   cehqHigh: number | null;
+}
+
+// ---------------------------------------------------------------------------
+// Section wrapper for consistent visual style
+// ---------------------------------------------------------------------------
+
+function Section({
+  title,
+  titleKey,
+  children,
+  className,
+}: {
+  title?: string;
+  titleKey?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 ${className ?? ""}`}
+    >
+      {(title || titleKey) && (
+        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {titleKey ? <T k={titleKey} /> : title}
+        </h2>
+      )}
+      {children}
+    </section>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -107,7 +157,6 @@ export default async function RiverPage({
       generatedAt = cacheRows[0].generated_at;
     }
   } catch {
-    // Cache table may not have all columns yet
     try {
       const cacheRows = await sql(
         `SELECT forecast_json, hourly_json, generated_at::text FROM forecast_cache WHERE station_id = $1`,
@@ -126,12 +175,11 @@ export default async function RiverPage({
   const lastFlow = cached?.lastFlow ?? null;
   const forecastDays = cached?.forecastDays ?? [];
 
-  // Find the timestamp of the last observed hourly point for display
   const lastObservedTimestamp = hourlyData
     .filter((p) => p.observed != null)
     .at(-1)?.timestamp ?? null;
 
-  // Compute paddling status info for the "last observed flow" box
+  // Compute paddling status
   const currentFlow = lastFlow?.flow ?? null;
   const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
   let statusInfo: { key: string; param?: number } | null = null;
@@ -142,7 +190,6 @@ export default async function RiverPage({
     } else if (paddlingStatus === "runnable") {
       statusInfo = { key: "detail.goodToGo" };
     } else if (paddlingStatus === "too-low" || paddlingStatus === "too-high") {
-      // Check if forecast shows it entering runnable range
       let entersInDays: number | null = null;
       for (let i = 0; i < forecastDays.length; i++) {
         const { status: fStatus } = getPaddlingStatus(forecastDays[i].flow, paddling);
@@ -151,7 +198,6 @@ export default async function RiverPage({
           break;
         }
       }
-      // Also check hourly forecast for sub-day precision
       if (entersInDays === null || entersInDays === 1) {
         const now = Date.now();
         for (const point of hourlyData) {
@@ -179,7 +225,6 @@ export default async function RiverPage({
       }
     }
 
-    // For currently runnable: check if it's about to exit range
     if (isGoodRange(paddlingStatus)) {
       const now = Date.now();
       for (const point of hourlyData) {
@@ -199,7 +244,7 @@ export default async function RiverPage({
     }
   }
 
-  // Convert hourly data for the chart — only keep 2 days before today onward
+  // Chart data
   const twoDaysAgo = new Date();
   twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
   const cutoff = twoDaysAgo.toISOString().slice(0, 10) + "T00:00:00Z";
@@ -217,6 +262,20 @@ export default async function RiverPage({
     }));
 
   const nowTimestamp = new Date().toISOString();
+
+  // Computed metadata
+  const riverPath = station.riverPath ?? null;
+  const putIn = station.putIn
+    ? ([Number(station.putIn.lat), Number(station.putIn.lon)] as [number, number])
+    : null;
+  const takeOut = station.takeOut
+    ? ([Number(station.takeOut.lat), Number(station.takeOut.lon)] as [number, number])
+    : null;
+  const distanceKm = riverPath && riverPath.length > 1 ? pathDistanceKm(riverPath) : null;
+  const rapidClass = (station.rapidClass as string | undefined) ?? null;
+  const description = (station.description as string | undefined) ?? null;
+
+  const hasMapContent = (riverPath && riverPath.length > 0) || putIn || takeOut;
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
@@ -240,18 +299,12 @@ export default async function RiverPage({
             initialWeatherCity={(station.weatherCity as string | undefined) ?? null}
             stationLat={Number(station.coordinates.lat)}
             stationLon={Number(station.coordinates.lon)}
-            initialPutIn={
-              station.putIn
-                ? [Number(station.putIn.lat), Number(station.putIn.lon)]
-                : null
-            }
-            initialTakeOut={
-              station.takeOut
-                ? [Number(station.takeOut.lat), Number(station.takeOut.lon)]
-                : null
-            }
-            initialRiverPath={station.riverPath ?? null}
+            initialPutIn={putIn}
+            initialTakeOut={takeOut}
+            initialRiverPath={riverPath}
             catchmentArea={station.catchmentArea as number | undefined}
+            initialRapidClass={rapidClass}
+            initialDescription={description}
           />
 
           <div className="mt-3 flex items-center gap-3">
@@ -263,6 +316,10 @@ export default async function RiverPage({
             )}
           </div>
         </header>
+
+        {/* ================================================================
+            SECTION 1: Flow & Forecast (most useful info first)
+            ================================================================ */}
 
         {/* Last observed flow */}
         {lastFlow && (
@@ -297,23 +354,143 @@ export default async function RiverPage({
           </section>
         )}
 
-        {/* Weather strip */}
+        {/* No data state */}
+        {!cached && (
+          <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <T k="detail.noDataYet" />
+            </p>
+          </section>
+        )}
+
+        {/* ================================================================
+            SECTION 2: Overview (Map + Quick Info)
+            ================================================================ */}
+        {(hasMapContent || rapidClass || distanceKm || description) && (
+          <div className="mt-8 space-y-4">
+            {/* River closeup map */}
+            {hasMapContent && (
+              <Section titleKey="detail.riverMap">
+                <RiverMapWrapper
+                  riverPath={riverPath}
+                  putIn={putIn}
+                  takeOut={takeOut}
+                  stationLat={Number(station.coordinates.lat)}
+                  stationLon={Number(station.coordinates.lon)}
+                />
+
+                {/* Quick stats bar under map */}
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                  {rapidClass && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        <T k="detail.rapidClass" />
+                      </span>
+                      <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-bold text-white dark:bg-zinc-200 dark:text-zinc-900">
+                        {rapidClass}
+                      </span>
+                    </div>
+                  )}
+                  {distanceKm != null && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500 dark:text-zinc-400">
+                        <T k="detail.distance" />
+                      </span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                        {distanceKm < 1
+                          ? `${(distanceKm * 1000).toFixed(0)} m`
+                          : `${distanceKm.toFixed(1)} km`}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </Section>
+            )}
+
+            {/* Description */}
+            {description && (
+              <Section titleKey="detail.description">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  {description}
+                </p>
+              </Section>
+            )}
+
+            {/* Put-in / Take-out */}
+            {(putIn || takeOut) && (
+              <Section titleKey="detail.putInTakeOut">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {putIn && (
+                    <NavigateToPoint
+                      lat={putIn[0]}
+                      lon={putIn[1]}
+                      label="Put-in"
+                      className="cursor-pointer rounded-lg border border-green-200 bg-green-50/50 p-4 text-left transition-colors hover:bg-green-100/60 active:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:bg-green-950/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">
+                          P
+                        </span>
+                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300">
+                          <T k="detail.putIn" />
+                        </h3>
+                        <svg className="ml-auto h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </div>
+                      <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                        {putIn[0].toFixed(5)}, {putIn[1].toFixed(5)}
+                      </p>
+                    </NavigateToPoint>
+                  )}
+                  {takeOut && (
+                    <NavigateToPoint
+                      lat={takeOut[0]}
+                      lon={takeOut[1]}
+                      label="Take-out"
+                      className="cursor-pointer rounded-lg border border-red-200 bg-red-50/50 p-4 text-left transition-colors hover:bg-red-100/60 active:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:hover:bg-red-950/50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                          T
+                        </span>
+                        <h3 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                          <T k="detail.takeOut" />
+                        </h3>
+                        <svg className="ml-auto h-4 w-4 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </div>
+                      <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                        {takeOut[0].toFixed(5)}, {takeOut[1].toFixed(5)}
+                      </p>
+                    </NavigateToPoint>
+                  )}
+                </div>
+              </Section>
+            )}
+          </div>
+        )}
+
+        {/* ================================================================
+            SECTION 3: Weather
+            ================================================================ */}
         {weatherData.length > 0 && (() => {
           const days = weatherData
             .filter((w) => w.date >= new Date().toISOString().slice(0, 10))
             .slice(0, 7);
 
           function weatherIcon(w: WeatherDay) {
-            if (w.snowfall > 0.5) return "\u2744\uFE0F"; // snowflake
-            if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F"; // rain cloud
-            if (w.precipitation > 0.5) return "\uD83C\uDF26\uFE0F"; // sun behind rain cloud
-            if (w.tempMax > 15) return "\u2600\uFE0F"; // sun
-            if (w.tempMax > 5) return "\u26C5"; // sun behind cloud
-            return "\u2601\uFE0F"; // cloud
+            if (w.snowfall > 0.5) return "\u2744\uFE0F";
+            if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F";
+            if (w.precipitation > 0.5) return "\uD83C\uDF26\uFE0F";
+            if (w.tempMax > 15) return "\u2600\uFE0F";
+            if (w.tempMax > 5) return "\u26C5";
+            return "\u2601\uFE0F";
           }
 
           return (
-            <section className="mt-2">
+            <section className="mt-8">
               <div className="grid grid-cols-4 gap-1 text-center text-[11px] leading-tight sm:grid-cols-7 sm:gap-0">
                 {days.map((w) => {
                   const isToday = w.date === new Date().toISOString().slice(0, 10);
@@ -355,54 +532,6 @@ export default async function RiverPage({
             </section>
           );
         })()}
-
-        {/* No data state */}
-        {!cached && (
-          <section className="mt-8 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <T k="detail.noDataYet" />
-            </p>
-          </section>
-        )}
-
-        {/* CEHQ Forecast table */}
-        {forecastDays.length > 0 && (
-          <section className="mt-8">
-            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-              <T k="detail.cehqForecast" />
-            </h2>
-
-            <div className="mt-4 overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-zinc-200 bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                    <th className="px-4 py-3"><T k="detail.date" /></th>
-                    <th className="px-4 py-3 text-right"><T k="detail.flow" /></th>
-                    <th className="px-4 py-3 text-right"><T k="detail.range" /></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {forecastDays.map((day) => (
-                    <tr
-                      key={day.date}
-                      className="bg-white transition-colors hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900"
-                    >
-                      <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-900 dark:text-zinc-100">
-                        {formatDate(day.date)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
-                        {day.flow.toFixed(1)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right tabular-nums text-zinc-500 dark:text-zinc-400">
-                        {day.flowLow.toFixed(1)} &ndash; {day.flowHigh.toFixed(1)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
       </div>
     </div>
   );

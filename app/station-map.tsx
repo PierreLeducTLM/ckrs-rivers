@@ -226,8 +226,27 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
           </div>
         )}
 
-        {/* Name */}
-        <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 2px" }}>{card.name}</p>
+        {/* Name + rapid class */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "0 0 2px" }}>
+          <p style={{ fontSize: 14, fontWeight: 700, margin: 0 }}>{card.name}</p>
+          {card.rapidClass && (
+            <span
+              style={{
+                display: "inline-block",
+                padding: "1px 5px",
+                borderRadius: 3,
+                fontSize: 10,
+                fontWeight: 700,
+                backgroundColor: "#27272a",
+                color: "#fff",
+                textTransform: "uppercase",
+                lineHeight: 1.4,
+              }}
+            >
+              {card.rapidClass}
+            </span>
+          )}
+        </div>
 
         {/* Station ID + catchment (admin only) */}
         {isAdmin && (

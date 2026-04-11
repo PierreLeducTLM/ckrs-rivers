@@ -44,6 +44,8 @@ export const RiverStationSchema = z.object({
   putIn: CoordinatesSchema.optional(),
   takeOut: CoordinatesSchema.optional(),
   riverPath: z.array(z.tuple([z.number(), z.number()])).optional(),
+  rapidClass: z.string().optional(),
+  description: z.string().optional(),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;

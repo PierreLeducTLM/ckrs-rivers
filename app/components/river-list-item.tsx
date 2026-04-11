@@ -50,6 +50,11 @@ export default function RiverListItem({
         <h2 className="truncate text-sm font-semibold group-hover:underline">
           {card.name}
         </h2>
+        {card.rapidClass && (
+          <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
+            {card.rapidClass}
+          </span>
+        )}
         {card.municipality && (
           <span className="hidden text-xs text-foreground/40 sm:inline">
             {card.municipality}

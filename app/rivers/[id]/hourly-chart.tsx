@@ -91,7 +91,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
   if (paddling?.max !== undefined) {
     const v = paddling.max;
     thresholds.push({
-      value: v, label: `Max ${v}`, color: "#8B2E90",
+      value: v, label: `Max ${v}`, color: "#dc2626",
       inRange: v >= yMin && v <= yMax,
       position: v > yMax ? "above" : v < yMin ? "below" : "in",
     });

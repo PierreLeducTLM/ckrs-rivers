@@ -42,6 +42,8 @@ export async function PATCH(
     take_out_lat?: number | null;
     take_out_lon?: number | null;
     river_path?: [number, number][] | null;
+    rapid_class?: string | null;
+    description?: string | null;
   };
 
   const sets: string[] = [];
@@ -114,6 +116,14 @@ export async function PATCH(
   if (body.river_path !== undefined) {
     sets.push(`river_path = $${idx++}`);
     values.push(body.river_path ? JSON.stringify(body.river_path) : null);
+  }
+  if (body.rapid_class !== undefined) {
+    sets.push(`rapid_class = $${idx++}`);
+    values.push(body.rapid_class);
+  }
+  if (body.description !== undefined) {
+    sets.push(`description = $${idx++}`);
+    values.push(body.description);
   }
 
   if (sets.length === 0) {

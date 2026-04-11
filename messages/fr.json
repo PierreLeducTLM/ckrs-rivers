@@ -144,7 +144,19 @@
     "noForecast": "Aucune prevision disponible",
     "rising": "En hausse",
     "falling": "En baisse",
-    "stable": "Stable"
+    "stable": "Stable",
+    "rapidClass": "Classe",
+    "description": "Description",
+    "descriptionPlaceholder": "Decrivez cette section de riviere...",
+    "riverMap": "Carte de la riviere",
+    "distance": "Distance",
+    "putIn": "Mise a l'eau",
+    "takeOut": "Sortie",
+    "putInTakeOut": "Mise a l'eau / Sortie",
+    "noInstructions": "Aucune instruction",
+    "instructionsPlaceholder": "Ajouter des instructions d'acces...",
+    "overview": "Apercu",
+    "conditions": "Conditions et previsions"
   },
   "chart": {
     "title": "Debit et previsions CEHQ",

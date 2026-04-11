@@ -121,6 +121,7 @@ export default async function Home() {
         ? [Number(station.takeOut.lat), Number(station.takeOut.lon)] as [number, number]
         : undefined,
       riverPath: station.riverPath,
+      rapidClass: station.rapidClass as string | undefined,
     };
   });
 

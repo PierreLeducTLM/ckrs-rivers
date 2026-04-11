@@ -144,7 +144,19 @@
     "noForecast": "No forecast available",
     "rising": "Rising",
     "falling": "Falling",
-    "stable": "Stable"
+    "stable": "Stable",
+    "rapidClass": "Class",
+    "description": "Description",
+    "descriptionPlaceholder": "Describe this river section...",
+    "riverMap": "River Map",
+    "distance": "Distance",
+    "putIn": "Put-in",
+    "takeOut": "Take-out",
+    "putInTakeOut": "Put-in / Take-out",
+    "noInstructions": "No instructions yet",
+    "instructionsPlaceholder": "Add access instructions...",
+    "overview": "Overview",
+    "conditions": "Conditions & Forecast"
   },
   "chart": {
     "title": "Flow & CEHQ Forecast",

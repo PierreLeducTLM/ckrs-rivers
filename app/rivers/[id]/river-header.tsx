@@ -29,6 +29,8 @@ interface RiverHeaderProps {
   initialPutIn?: [number, number] | null;
   initialTakeOut?: [number, number] | null;
   initialRiverPath?: [number, number][] | null;
+  initialRapidClass?: string | null;
+  initialDescription?: string | null;
 }
 
 export default function RiverHeader({
@@ -42,6 +44,8 @@ export default function RiverHeader({
   initialPutIn = null,
   initialTakeOut = null,
   initialRiverPath = null,
+  initialRapidClass = null,
+  initialDescription = null,
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
   const { t } = useTranslation();
@@ -75,6 +79,8 @@ export default function RiverHeader({
         initialName={initialName}
         initialPaddling={initialPaddling}
         initialWeatherCity={initialWeatherCity}
+        initialRapidClass={initialRapidClass}
+        initialDescription={initialDescription}
         isAdmin={isAdmin}
       />
       {isAdmin && (

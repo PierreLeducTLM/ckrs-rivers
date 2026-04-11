@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS stations (
   paddling_min       DOUBLE PRECISION,
   paddling_ideal     DOUBLE PRECISION,
   paddling_max       DOUBLE PRECISION,
+  rapid_class        TEXT,
+  description        TEXT,
   status             TEXT NOT NULL DEFAULT 'pending',
   error_message      TEXT,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),

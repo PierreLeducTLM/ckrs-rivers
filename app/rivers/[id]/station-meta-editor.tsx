@@ -262,6 +262,8 @@ function EditableNumber({
 // Main component
 // ---------------------------------------------------------------------------
 
+const RAPID_CLASSES = ["I", "I-II", "II", "II-III", "III", "III-IV", "IV", "IV-V", "V", "V+"];
+
 interface StationMetaEditorProps {
   stationId: string;
   initialName: string;
@@ -271,6 +273,8 @@ interface StationMetaEditorProps {
     max: number | null;
   };
   initialWeatherCity?: string | null;
+  initialRapidClass?: string | null;
+  initialDescription?: string | null;
   isAdmin?: boolean;
 }
 
@@ -279,6 +283,8 @@ export default function StationMetaEditor({
   initialName,
   initialPaddling,
   initialWeatherCity = null,
+  initialRapidClass = null,
+  initialDescription = null,
   isAdmin = false,
 }: StationMetaEditorProps) {
   const { t } = useTranslation();
@@ -286,6 +292,11 @@ export default function StationMetaEditor({
   const [paddling, setPaddling] = useState(initialPaddling);
   const [weatherCity, setWeatherCity] = useState(initialWeatherCity ?? "");
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [rapidClass, setRapidClass] = useState(initialRapidClass ?? "");
+  const [description, setDescription] = useState(initialDescription ?? "");
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [savingDesc, setSavingDesc] = useState(false);
+  const [savingClass, setSavingClass] = useState(false);
 
   const patch = async (fields: Record<string, string | number | null>) => {
     const res = await fetch(`/api/stations/${stationId}`, {
@@ -300,9 +311,16 @@ export default function StationMetaEditor({
   if (!isAdmin) {
     return (
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {name}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {name}
+          </h1>
+          {rapidClass && (
+            <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-bold uppercase text-white dark:bg-zinc-200 dark:text-zinc-900">
+              {rapidClass}
+            </span>
+          )}
+        </div>
       </div>
     );
   }
@@ -391,6 +409,92 @@ export default function StationMetaEditor({
         </span>
         {weatherError && (
           <span className="text-xs text-red-500">{weatherError}</span>
+        )}
+      </div>
+
+      {/* Rapid class */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          {t("detail.rapidClass")}
+        </span>
+        <select
+          value={rapidClass}
+          onChange={async (e) => {
+            const value = e.target.value;
+            setRapidClass(value);
+            setSavingClass(true);
+            await patch({ rapid_class: value || null });
+            setSavingClass(false);
+          }}
+          disabled={savingClass}
+          className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">—</option>
+          {RAPID_CLASSES.map((cls) => (
+            <option key={cls} value={cls}>
+              {cls}
+            </option>
+          ))}
+        </select>
+        {savingClass && (
+          <span className="text-xs text-zinc-400">...</span>
+        )}
+      </div>
+
+      {/* Description */}
+      <div className="mt-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            {t("detail.description")}
+          </span>
+          {!editingDesc && (
+            <button
+              onClick={() => setEditingDesc(true)}
+              className="rounded p-0.5 text-zinc-400 transition-opacity hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300"
+              aria-label="Edit description"
+            >
+              <PencilIcon className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+        {editingDesc ? (
+          <div className="mt-2">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={t("detail.descriptionPlaceholder")}
+              rows={4}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            />
+            <div className="mt-2 flex gap-2">
+              <button
+                onClick={async () => {
+                  setSavingDesc(true);
+                  await patch({ description: description.trim() || null });
+                  setSavingDesc(false);
+                  setEditingDesc(false);
+                }}
+                disabled={savingDesc}
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingDesc ? "..." : "Save"}
+              </button>
+              <button
+                onClick={() => {
+                  setDescription(initialDescription ?? "");
+                  setEditingDesc(false);
+                }}
+                disabled={savingDesc}
+                className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              >
+                {t("subscribe.cancel")}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            {description || t("detail.noInstructions")}
+          </p>
         )}
       </div>
     </div>

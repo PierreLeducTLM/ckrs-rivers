@@ -34,6 +34,8 @@ interface StationRow {
   take_out_lat: number | null;
   take_out_lon: number | null;
   river_path: [number, number][] | null;
+  rapid_class: string | null;
+  description: string | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -57,6 +59,8 @@ function rowToStation(row: StationRow): RiverStation {
         ? { lat: row.take_out_lat, lon: row.take_out_lon }
         : undefined,
     riverPath: row.river_path ?? undefined,
+    rapidClass: row.rapid_class ?? undefined,
+    description: row.description ?? undefined,
   });
 }
 

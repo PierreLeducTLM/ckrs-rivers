@@ -29,4 +29,5 @@ export interface StationCard {
   putIn?: [number, number];
   takeOut?: [number, number];
   riverPath?: [number, number][];
+  rapidClass?: string;
 }

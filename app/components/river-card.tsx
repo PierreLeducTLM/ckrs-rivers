@@ -56,9 +56,16 @@ export default function RiverCard({
       )}
 
       <div className="flex items-start gap-1.5">
-        <h2 className="flex-1 text-lg font-semibold leading-tight group-hover:underline">
-          {card.name}
-        </h2>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <h2 className="truncate text-lg font-semibold leading-tight group-hover:underline">
+            {card.name}
+          </h2>
+          {card.rapidClass && (
+            <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
+              {card.rapidClass}
+            </span>
+          )}
+        </div>
         <SubscribeButton
           stationId={card.id}
           isSubscribed={isSubscribed}

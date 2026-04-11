@@ -26,6 +26,7 @@ export default function SparklineChart({ data, nowTs, paddling }: SparklineChart
     return vals;
   });
   if (paddling?.min != null) allValues.push(paddling.min);
+  if (paddling?.max != null) allValues.push(paddling.max);
   if (allValues.length === 0) return null;
 
   const yMin = Math.max(0, Math.min(...allValues) * 0.9);
@@ -48,6 +49,10 @@ export default function SparklineChart({ data, nowTs, paddling }: SparklineChart
 
         {paddling?.min != null && (
           <ReferenceLine y={paddling.min} stroke="#6A9FD8" strokeDasharray="3 3" strokeWidth={1} strokeOpacity={0.6} />
+        )}
+
+        {paddling?.max != null && (
+          <ReferenceLine y={paddling.max} stroke="#dc2626" strokeDasharray="3 3" strokeWidth={1} strokeOpacity={0.6} />
         )}
 
         <Area
