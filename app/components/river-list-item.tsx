@@ -30,7 +30,7 @@ export default function RiverListItem({
     <Link
       href={`/rivers/${card.id}`}
       className={`group flex flex-col gap-1 rounded-lg bg-background px-4 py-3 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-4 ${
-        card.isGoodRange ? "border-2" : "border border-foreground/30"
+        card.isGoodRange ? "border-2" : "border border-foreground/40"
       }`}
       style={
         card.isGoodRange
