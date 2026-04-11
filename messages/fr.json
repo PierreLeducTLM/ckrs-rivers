@@ -30,7 +30,9 @@
     "filterRunnable": "Navigable",
     "filterTooLow": "Trop bas",
     "riverCount": "{n} rivieres",
-    "noResults": "Aucune riviere ne correspond a votre recherche"
+    "noResults": "Aucune riviere ne correspond a votre recherche",
+    "filterAllClasses": "Toutes les classes",
+    "classFilterLabel": "Classe de rapide"
   },
   "status": {
     "tooLow": "Trop bas",

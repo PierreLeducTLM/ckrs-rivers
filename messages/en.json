@@ -30,7 +30,9 @@
     "filterRunnable": "Runnable",
     "filterTooLow": "Too Low",
     "riverCount": "{n} rivers",
-    "noResults": "No rivers match your search"
+    "noResults": "No rivers match your search",
+    "filterAllClasses": "All Classes",
+    "classFilterLabel": "Rapid Class"
   },
   "status": {
     "tooLow": "Too Low",
