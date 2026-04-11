@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useTranslation } from "@/lib/i18n/provider";
 import FilterChips, { type StatusFilter } from "./filter-chips";
-import BottomSheet from "./bottom-sheet";
 import type { StationCard } from "./types";
 
 const StationMap = dynamic(() => import("../station-map"), {
@@ -24,7 +23,6 @@ interface MapTabProps {
 export default function MapTab({ cards, isAdmin }: MapTabProps) {
   const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [selectedCard, setSelectedCard] = useState<StationCard | null>(null);
 
   const filteredCards = useMemo(() => {
     if (statusFilter === "all") return cards;
@@ -48,17 +46,9 @@ export default function MapTab({ cards, isAdmin }: MapTabProps) {
         <StationMap
           cards={filteredCards}
           isAdmin={isAdmin}
-          onMarkerTap={setSelectedCard}
           className="h-full w-full"
         />
       </div>
-
-      {/* Bottom sheet */}
-      <BottomSheet
-        card={selectedCard}
-        onClose={() => setSelectedCard(null)}
-        t={t}
-      />
     </>
   );
 }

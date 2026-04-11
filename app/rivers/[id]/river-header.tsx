@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAdmin } from "@/app/use-admin";
 import { useTranslation } from "@/lib/i18n/provider";
@@ -43,6 +45,28 @@ export default function RiverHeader({
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
   const { t } = useTranslation();
+  const router = useRouter();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/stations/${stationId}`, { method: "DELETE" });
+      if (res.ok) {
+        router.push("/");
+      } else {
+        const body = await res.json().catch(() => ({}));
+        alert(body.error ?? "Failed to delete river");
+        setShowDeleteConfirm(false);
+      }
+    } catch {
+      alert("Network error");
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <>
@@ -85,6 +109,48 @@ export default function RiverHeader({
           initialTakeOut={initialTakeOut}
           initialPath={initialRiverPath}
         />
+      )}
+      {isAdmin && (
+        <>
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950"
+          >
+            {t("admin.deleteRiver")}
+          </button>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+              <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+                <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                  {t("admin.deleteConfirmTitle")}
+                </h3>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                  {t("admin.deleteConfirmMessage", { name: initialName })}
+                </p>
+                <div className="mt-5 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="flex-1 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                  >
+                    {t("subscribe.cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {deleting ? t("admin.deleting") : t("admin.confirmDelete")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </>
   );

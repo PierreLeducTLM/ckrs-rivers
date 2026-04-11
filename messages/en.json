@@ -171,6 +171,13 @@
     "usingStationCoords": "(using station coordinates)",
     "edit": "Edit"
   },
+  "admin": {
+    "deleteRiver": "Delete this river",
+    "deleteConfirmTitle": "Delete river?",
+    "deleteConfirmMessage": "This will permanently delete \"{name}\" and all its data (forecasts, subscriptions, flow readings). This cannot be undone.",
+    "confirmDelete": "Delete",
+    "deleting": "Deleting..."
+  },
   "language": {
     "label": "Language",
     "en": "English",

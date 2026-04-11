@@ -171,6 +171,13 @@
     "usingStationCoords": "(coordonnees de la station)",
     "edit": "Modifier"
   },
+  "admin": {
+    "deleteRiver": "Supprimer cette riviere",
+    "deleteConfirmTitle": "Supprimer la riviere?",
+    "deleteConfirmMessage": "Cela supprimera definitivement \"{name}\" et toutes ses donnees (previsions, abonnements, lectures de debit). Cette action est irreversible.",
+    "confirmDelete": "Supprimer",
+    "deleting": "Suppression..."
+  },
   "language": {
     "label": "Langue",
     "en": "English",
