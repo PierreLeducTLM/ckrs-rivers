@@ -4,8 +4,8 @@ import Link from "next/link";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
+import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
-import { timeAgo } from "./utils";
 
 interface RiverListItemProps {
   card: StationCard;
@@ -112,9 +112,11 @@ export default function RiverListItem({
           )}
         </div>
         {card.forecastAt && (
-          <span className="text-[10px] text-foreground/40">
-            {timeAgo(card.forecastAt, t)}
-          </span>
+          <RelativeTime
+            isoDate={card.forecastAt}
+            t={t}
+            className="text-[10px] text-foreground/40"
+          />
         )}
         <StatusPill card={card} t={t} />
 

@@ -6,8 +6,9 @@ import SparklineChart from "../sparkline-chart";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
+import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
-import { timeAgo, weatherIcon, statusLabel } from "./utils";
+import { weatherIcon, statusLabel } from "./utils";
 
 interface RiverCardProps {
   card: StationCard;
@@ -209,9 +210,11 @@ export default function RiverCard({
             </span>
           </p>
           {card.forecastAt && (
-            <p className="text-xs text-foreground/40">
-              {timeAgo(card.forecastAt, t)}
-            </p>
+            <RelativeTime
+              isoDate={card.forecastAt}
+              t={t}
+              className="text-xs text-foreground/40"
+            />
           )}
         </div>
       ) : (
