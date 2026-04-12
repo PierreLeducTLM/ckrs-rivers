@@ -119,17 +119,53 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   }, [isPending, slideOut]);
 
   // ---------------------------------------------------------------------------
-  // Auto-refresh data every 5 minutes
+  // Auto-refresh: poll /api/freshness every 2 min, reload when data changes
   // ---------------------------------------------------------------------------
-  useEffect(() => {
-    const id = setInterval(() => {
-      startTransition(() => {
-        router.refresh();
-      });
-    }, 5 * 60 * 1000);
+  const knownTs = useRef<string | null>(null);
 
-    return () => clearInterval(id);
-  }, [router, startTransition]);
+  useEffect(() => {
+    // Seed with the latest forecastAt from initial server render
+    const newest = cards.reduce<string | null>((best, c) => {
+      if (!c.forecastAt) return best;
+      return !best || c.forecastAt > best ? c.forecastAt : best;
+    }, null);
+    knownTs.current = newest;
+  }, []); // only on mount — we don't want cards updates to overwrite
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkFreshness() {
+      if (document.hidden) return; // skip when tab is in background
+      try {
+        const res = await fetch("/api/freshness", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const { ts } = (await res.json()) as { ts: string | null };
+        if (ts && knownTs.current && ts !== knownTs.current) {
+          knownTs.current = ts;
+          window.location.reload();
+        } else if (ts && !knownTs.current) {
+          knownTs.current = ts; // first seed from API
+        }
+      } catch {
+        // network error — ignore, will retry next interval
+      }
+    }
+
+    const id = setInterval(checkFreshness, 2 * 60 * 1000);
+
+    // Also reload when user comes back to a stale tab
+    function onVisibilityChange() {
+      if (!document.hidden) checkFreshness();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Subscriptions

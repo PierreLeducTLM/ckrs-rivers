@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 
 function timeAgo(isoDate: string): string {
   const diff = Date.now() - new Date(isoDate).getTime();
@@ -15,12 +14,17 @@ function timeAgo(isoDate: string): string {
 
 /**
  * Client component that displays "Updated Xm ago", re-calculates every 60s,
- * and auto-refreshes the page data every 5 minutes.
+ * and polls /api/freshness to reload the page when fresh data arrives.
  */
-export default function UpdatedAt({ isoDate }: { isoDate: string }) {
+export default function UpdatedAt({
+  isoDate,
+  stationId,
+}: {
+  isoDate: string;
+  stationId: string;
+}) {
   const [text, setText] = useState(() => timeAgo(isoDate));
-  const router = useRouter();
-  const [, startTransition] = useTransition();
+  const knownTs = useRef(isoDate);
 
   // Tick the relative timestamp every 60s
   useEffect(() => {
@@ -33,16 +37,41 @@ export default function UpdatedAt({ isoDate }: { isoDate: string }) {
     return () => clearInterval(id);
   }, [isoDate]);
 
-  // Auto-refresh page data every 5 minutes
+  // Poll /api/freshness every 2 min, reload when this station has new data
   useEffect(() => {
-    const id = setInterval(() => {
-      startTransition(() => {
-        router.refresh();
-      });
-    }, 5 * 60 * 1000);
+    let cancelled = false;
 
-    return () => clearInterval(id);
-  }, [router, startTransition]);
+    async function checkFreshness() {
+      if (document.hidden) return;
+      try {
+        const res = await fetch(
+          `/api/freshness?station=${encodeURIComponent(stationId)}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok || cancelled) return;
+        const { ts } = (await res.json()) as { ts: string | null };
+        if (ts && ts !== knownTs.current) {
+          knownTs.current = ts;
+          window.location.reload();
+        }
+      } catch {
+        // network error — ignore, will retry next interval
+      }
+    }
+
+    const id = setInterval(checkFreshness, 2 * 60 * 1000);
+
+    function onVisibilityChange() {
+      if (!document.hidden) checkFreshness();
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [stationId]);
 
   return (
     <span className="text-xs text-zinc-400 dark:text-zinc-500">
