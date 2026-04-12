@@ -13,6 +13,7 @@ import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
+import UpdatedAt from "./updated-at";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,16 +25,6 @@ function formatDate(date: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function timeAgo(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
 }
 
 /** Approximate path length in km using Haversine */
@@ -310,9 +301,7 @@ export default async function RiverPage({
           <div className="mt-3 flex items-center gap-3">
             <RefreshButton stationId={id} />
             {generatedAt && (
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
-                Updated {timeAgo(generatedAt)}
-              </span>
+              <UpdatedAt isoDate={generatedAt} />
             )}
           </div>
         </header>

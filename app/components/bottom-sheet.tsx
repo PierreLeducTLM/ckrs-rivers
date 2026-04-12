@@ -3,8 +3,9 @@
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import FavoriteButton from "../favorite-button";
+import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
-import { statusLabel, timeAgo } from "./utils";
+import { statusLabel } from "./utils";
 
 interface BottomSheetProps {
   card: StationCard | null;
@@ -135,9 +136,11 @@ export default function BottomSheet({ card, onClose, t }: BottomSheetProps) {
               </span>
               <span className="text-sm text-foreground/50">m&sup3;/s</span>
               {card.forecastAt && (
-                <span className="ml-auto text-xs text-foreground/40">
-                  {timeAgo(card.forecastAt, t)}
-                </span>
+                <RelativeTime
+                  isoDate={card.forecastAt}
+                  t={t}
+                  className="ml-auto text-xs text-foreground/40"
+                />
               )}
             </div>
           )}

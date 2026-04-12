@@ -119,6 +119,19 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   }, [isPending, slideOut]);
 
   // ---------------------------------------------------------------------------
+  // Auto-refresh data every 5 minutes
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    const id = setInterval(() => {
+      startTransition(() => {
+        router.refresh();
+      });
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(id);
+  }, [router, startTransition]);
+
+  // ---------------------------------------------------------------------------
   // Subscriptions
   // ---------------------------------------------------------------------------
   const fetchSubscriptions = useCallback(() => {
