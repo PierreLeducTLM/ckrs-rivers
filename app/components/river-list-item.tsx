@@ -5,7 +5,7 @@ import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import type { StationCard } from "./types";
-import { timeAgo, statusLabel } from "./utils";
+import { timeAgo } from "./utils";
 
 interface RiverListItemProps {
   card: StationCard;
@@ -58,14 +58,6 @@ export default function RiverListItem({
         {card.municipality && (
           <span className="hidden text-xs text-foreground/40 sm:inline">
             {card.municipality}
-          </span>
-        )}
-        {card.status !== "unknown" && (
-          <span
-            className="flex-shrink-0 text-xs font-medium"
-            style={{ color: card.color }}
-          >
-            {statusLabel(card.status, t)}
           </span>
         )}
         <StatusPill card={card} t={t} />
