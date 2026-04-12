@@ -301,7 +301,7 @@ export default async function RiverPage({
           <div className="mt-3 flex items-center gap-3">
             <RefreshButton stationId={id} />
             {generatedAt && (
-              <UpdatedAt isoDate={generatedAt} />
+              <UpdatedAt isoDate={generatedAt} stationId={id} />
             )}
           </div>
         </header>
