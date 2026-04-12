@@ -64,7 +64,6 @@ export default function RiverListItem({
 
       {/* Row 2: flow + controls */}
       <div className="flex items-center gap-3 pl-5 sm:pl-0">
-        <StatusPill card={card} t={t} />
         {isAdmin && (
           <p className="hidden text-xs text-foreground/50 sm:block">
             {card.id}
@@ -117,6 +116,7 @@ export default function RiverListItem({
             {timeAgo(card.forecastAt, t)}
           </span>
         )}
+        <StatusPill card={card} t={t} />
 
         <div className="ml-auto flex flex-shrink-0 gap-0.5">
           {onNeedEmail && onToggled && (
