@@ -1,4 +1,5 @@
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import type { PaddlingLevels } from "@/lib/data/rivers";
 import type { StationCard } from "./types";
 
 export function timeAgo(
@@ -54,12 +55,6 @@ export function statusLabel(
 const MIN_CONSECUTIVE_HOURS = 3;
 
 type ForecastPoint = { ts: number; cehqForecast: number | null };
-
-type PaddlingLevels = {
-  min: number | null;
-  ideal: number | null;
-  max: number | null;
-};
 
 /**
  * Scan hourly forecast points for the first future run of ≥ MIN_CONSECUTIVE_HOURS
