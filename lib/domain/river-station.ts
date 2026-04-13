@@ -34,6 +34,7 @@ export const RiverStationSchema = z.object({
   coordinates: CoordinatesSchema,
   elevation: MetersSchema.optional(),
   catchmentArea: SquareKilometersSchema.optional(),
+  regime: z.string().optional(),
   catchmentSlope: z.number().nonnegative().optional(),
   landCover: LandCoverProfileSchema.optional(),
   baseFlow: CubicMetersPerSecondSchema.optional(),
