@@ -11,6 +11,10 @@ import BackButton from "./back-button";
 import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import {
+  findFirstSustainedBadPoint,
+  findFirstSustainedGoodPoint,
+} from "@/app/components/utils";
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
 import UpdatedAt from "./updated-at";
@@ -164,7 +168,6 @@ export default async function RiverPage({
   }
 
   const lastFlow = cached?.lastFlow ?? null;
-  const forecastDays = cached?.forecastDays ?? [];
 
   const lastObservedTimestamp = hourlyData
     .filter((p) => p.observed != null)
@@ -176,61 +179,43 @@ export default async function RiverPage({
   let statusInfo: { key: string; param?: number } | null = null;
 
   if (paddling && (paddling.min != null || paddling.ideal != null || paddling.max != null)) {
+    const paddlingLevels = {
+      min: paddling.min,
+      ideal: paddling.ideal,
+      max: paddling.max,
+    };
+    const hourlyPoints = hourlyData.map((p) => ({
+      ts: new Date(p.timestamp).getTime(),
+      cehqForecast: p.cehqForecast ?? null,
+    }));
+    const nowTs = Date.now();
+
     if (paddlingStatus === "ideal") {
       statusInfo = { key: "detail.ideal" };
     } else if (paddlingStatus === "runnable") {
       statusInfo = { key: "detail.goodToGo" };
     } else if (paddlingStatus === "too-low" || paddlingStatus === "too-high") {
-      let entersInDays: number | null = null;
-      for (let i = 0; i < forecastDays.length; i++) {
-        const { status: fStatus } = getPaddlingStatus(forecastDays[i].flow, paddling);
-        if (isGoodRange(fStatus)) {
-          entersInDays = i + 1;
-          break;
+      const hit = findFirstSustainedGoodPoint(hourlyPoints, nowTs, paddlingLevels);
+      if (hit) {
+        if (hit.hoursAhead <= 24) {
+          statusInfo = { key: "detail.runnableInHours", param: hit.hoursAhead };
+        } else {
+          statusInfo = {
+            key: "detail.runnableInDays",
+            param: Math.ceil(hit.hoursAhead / 24),
+          };
         }
-      }
-      if (entersInDays === null || entersInDays === 1) {
-        const now = Date.now();
-        for (const point of hourlyData) {
-          const flow = point.cehqForecast;
-          if (flow == null) continue;
-          const ts = new Date(point.timestamp).getTime();
-          if (ts <= now) continue;
-          const { status: fStatus } = getPaddlingStatus(flow, paddling);
-          if (isGoodRange(fStatus)) {
-            const hoursAhead = Math.round((ts - now) / (1000 * 60 * 60));
-            if (hoursAhead <= 24) {
-              statusInfo = { key: "detail.runnableInHours", param: hoursAhead };
-            } else {
-              statusInfo = { key: "detail.runnableInDays", param: Math.ceil(hoursAhead / 24) };
-            }
-            break;
-          }
-        }
-      }
-      if (statusInfo === null && entersInDays != null) {
-        statusInfo = { key: "detail.runnableInDays", param: entersInDays };
-      }
-      if (statusInfo === null) {
-        statusInfo = { key: paddlingStatus === "too-low" ? "detail.tooLow" : "detail.tooHigh" };
+      } else {
+        statusInfo = {
+          key: paddlingStatus === "too-low" ? "detail.tooLow" : "detail.tooHigh",
+        };
       }
     }
 
     if (isGoodRange(paddlingStatus)) {
-      const now = Date.now();
-      for (const point of hourlyData) {
-        const flow = point.cehqForecast;
-        if (flow == null) continue;
-        const ts = new Date(point.timestamp).getTime();
-        if (ts <= now) continue;
-        const { status: fStatus } = getPaddlingStatus(flow, paddling);
-        if (!isGoodRange(fStatus)) {
-          const hoursAhead = Math.round((ts - now) / (1000 * 60 * 60));
-          if (hoursAhead <= 48) {
-            statusInfo = { key: "detail.droppingOutHours", param: hoursAhead };
-          }
-          break;
-        }
+      const hit = findFirstSustainedBadPoint(hourlyPoints, nowTs, paddlingLevels);
+      if (hit && hit.hoursAhead <= 48) {
+        statusInfo = { key: "detail.droppingOutHours", param: hit.hoursAhead };
       }
     }
   }

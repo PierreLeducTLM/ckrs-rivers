@@ -1,4 +1,5 @@
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import type { PaddlingLevels } from "@/lib/data/rivers";
 import type { StationCard } from "./types";
 
 export function timeAgo(
@@ -45,6 +46,64 @@ export function statusLabel(
   }
 }
 
+/**
+ * Minimum consecutive hours of forecast flow that must match a condition
+ * (in-range or out-of-range) before we treat it as the river genuinely
+ * entering/leaving the good range. Prevents single-hour spikes or dips
+ * from flipping the status pill.
+ */
+const MIN_CONSECUTIVE_HOURS = 3;
+
+type ForecastPoint = { ts: number; cehqForecast: number | null };
+
+/**
+ * Scan hourly forecast points for the first future run of ≥ MIN_CONSECUTIVE_HOURS
+ * consecutive points matching `predicate`. Returns hoursAhead of the run's first
+ * point (rounded), or null if no such run exists within the provided points.
+ */
+function findFirstSustainedPoint(
+  points: ForecastPoint[],
+  nowTs: number,
+  paddling: PaddlingLevels,
+  predicate: (status: ReturnType<typeof getPaddlingStatus>["status"]) => boolean,
+): { hoursAhead: number } | null {
+  let runStart: number | null = null;
+  let runLen = 0;
+  for (const p of points) {
+    if (p.ts <= nowTs || p.cehqForecast == null) continue;
+    const { status } = getPaddlingStatus(p.cehqForecast, paddling);
+    if (predicate(status)) {
+      if (runStart == null) runStart = p.ts;
+      runLen += 1;
+      if (runLen >= MIN_CONSECUTIVE_HOURS) {
+        return {
+          hoursAhead: Math.round((runStart - nowTs) / (1000 * 60 * 60)),
+        };
+      }
+    } else {
+      runStart = null;
+      runLen = 0;
+    }
+  }
+  return null;
+}
+
+export function findFirstSustainedGoodPoint(
+  points: ForecastPoint[],
+  nowTs: number,
+  paddling: PaddlingLevels,
+): { hoursAhead: number } | null {
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => isGoodRange(s));
+}
+
+export function findFirstSustainedBadPoint(
+  points: ForecastPoint[],
+  nowTs: number,
+  paddling: PaddlingLevels,
+): { hoursAhead: number } | null {
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => !isGoodRange(s));
+}
+
 export function computeCardStatusInfo(
   card: StationCard,
 ): { key: string; param?: number } | null {
@@ -61,21 +120,15 @@ export function computeCardStatusInfo(
   if (card.status === "runnable") return { key: "detail.goodToGo" };
 
   if (card.status === "too-low" || card.status === "too-high") {
-    const now = card.nowTs;
-    for (const point of card.sparkData) {
-      const flow = point.cehqForecast;
-      if (flow == null || point.ts <= now) continue;
-      const { status } = getPaddlingStatus(flow, paddling);
-      if (isGoodRange(status)) {
-        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
-        if (hoursAhead <= 24) {
-          return { key: "detail.runnableInHours", param: hoursAhead };
-        }
-        return {
-          key: "detail.runnableInDays",
-          param: Math.ceil(hoursAhead / 24),
-        };
+    const hit = findFirstSustainedGoodPoint(card.sparkData, card.nowTs, paddling);
+    if (hit) {
+      if (hit.hoursAhead <= 24) {
+        return { key: "detail.runnableInHours", param: hit.hoursAhead };
       }
+      return {
+        key: "detail.runnableInDays",
+        param: Math.ceil(hit.hoursAhead / 24),
+      };
     }
     return {
       key: card.status === "too-low" ? "detail.tooLow" : "detail.tooHigh",
@@ -83,18 +136,9 @@ export function computeCardStatusInfo(
   }
 
   if (card.isGoodRange) {
-    const now = card.nowTs;
-    for (const point of card.sparkData) {
-      const flow = point.cehqForecast;
-      if (flow == null || point.ts <= now) continue;
-      const { status } = getPaddlingStatus(flow, paddling);
-      if (!isGoodRange(status)) {
-        const hoursAhead = Math.round((point.ts - now) / (1000 * 60 * 60));
-        if (hoursAhead <= 48) {
-          return { key: "detail.droppingOutHours", param: hoursAhead };
-        }
-        break;
-      }
+    const hit = findFirstSustainedBadPoint(card.sparkData, card.nowTs, paddling);
+    if (hit && hit.hoursAhead <= 48) {
+      return { key: "detail.droppingOutHours", param: hit.hoursAhead };
     }
   }
 
