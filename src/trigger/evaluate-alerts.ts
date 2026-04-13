@@ -381,36 +381,72 @@ function getFirebaseApp(): admin.app.App | null {
 async function sendPushForAlerts(
   alerts: GroupedAlert[],
   dbSql: SqlFn,
+  subscriberId?: string,
 ): Promise<number> {
   const app = getFirebaseApp();
   if (!app) return 0;
 
   const stationIds = alerts.map((a) => a.stationId);
 
-  // Find active push devices that have at least one of the alerted stations
-  const devices = await dbSql(
-    `SELECT token, platform FROM push_devices
-     WHERE active = true AND station_ids && $1`,
-    [stationIds],
-  );
+  // Find active push devices that overlap with the alerted stations.
+  // If a subscriber is known, narrow to their linked devices (and unlinked
+  // devices — they ride along) so a shared email doesn't blast every paired phone.
+  const deviceRows = subscriberId
+    ? await dbSql(
+        `SELECT token, platform, station_ids, preferences, subscriber_id FROM push_devices
+         WHERE active = true AND station_ids && $1
+           AND (subscriber_id = $2 OR subscriber_id IS NULL)`,
+        [stationIds, subscriberId],
+      )
+    : await dbSql(
+        `SELECT token, platform, station_ids, preferences, subscriber_id FROM push_devices
+         WHERE active = true AND station_ids && $1`,
+        [stationIds],
+      );
+
+  const devices = deviceRows as Array<{
+    token: string;
+    platform: string;
+    station_ids: string[] | null;
+    preferences: Record<string, unknown> | null;
+    subscriber_id: string | null;
+  }>;
 
   if (devices.length === 0) return 0;
 
   const messaging = admin.messaging(app);
-  const top = alerts[0];
-  const topEmoji = EMOJI[top.alertType] ?? "\uD83D\uDCE2";
-  const topPrefix = PREFIX[top.alertType] ?? "Alert";
-
-  const title = alerts.length === 1
-    ? `${topEmoji} ${topPrefix} — ${top.stationName}`
-    : `${topEmoji} ${topPrefix} — ${top.stationName} (+${alerts.length - 1} more)`;
-
-  const body = alerts.length === 1
-    ? top.message
-    : alerts.map((a) => `${EMOJI[a.alertType] ?? ""} ${a.message}`).join("\n");
 
   let sent = 0;
   for (const device of devices) {
+    const devicePrefs = device.preferences ?? {};
+    const pushEnabled = (devicePrefs.pushEnabled as boolean | undefined) ?? true;
+    if (!pushEnabled) continue;
+
+    const enabledTypes = devicePrefs.enabledAlertTypes as string[] | undefined;
+    const deviceStationIds = new Set(device.station_ids ?? []);
+
+    // Filter alerts for this device: must match one of the device's stations
+    // AND (if set) be in the device's enabled alert types.
+    const allowedAlerts = alerts.filter((a) => {
+      if (!deviceStationIds.has(a.stationId)) return false;
+      if (enabledTypes && !enabledTypes.includes(a.alertType)) return false;
+      return true;
+    });
+
+    if (allowedAlerts.length === 0) continue;
+
+    const top = allowedAlerts[0];
+    const topEmoji = EMOJI[top.alertType] ?? "\uD83D\uDCE2";
+    const topPrefix = PREFIX[top.alertType] ?? "Alert";
+
+    const title = allowedAlerts.length === 1
+      ? `${topEmoji} ${topPrefix} — ${top.stationName}`
+      : `${topEmoji} ${topPrefix} — ${top.stationName} (+${allowedAlerts.length - 1} more)`;
+
+    const body = allowedAlerts.length === 1
+      ? top.message
+      : allowedAlerts.map((a) => `${EMOJI[a.alertType] ?? ""} ${a.message}`).join("\n");
+
     try {
       await messaging.send({
         token: device.token,
@@ -668,6 +704,7 @@ export const evaluateAlerts = task({
     const subscriberBucket = new Map<string, {
       email: string;
       token: string;
+      emailEnabled: boolean;
       alerts: GroupedAlert[];
     }>();
 
@@ -689,9 +726,14 @@ export const evaluateAlerts = task({
         const leadTimeDays = (prefs.leadTimeDays as number) ?? 2;
         const weekendOnly = (prefs.weekendOnly as boolean) ?? false;
         const digestMode = (prefs.digestMode as boolean) ?? false;
+        const emailEnabled = (prefs.emailEnabled as boolean | undefined) ?? true;
+        const enabledAlertTypes = prefs.enabledAlertTypes as string[] | undefined;
 
         for (const candidate of candidates) {
           if (isInCooldown(candidate.alertType, alertStates, now)) continue;
+
+          // User-level opt-out for this alert type
+          if (enabledAlertTypes && !enabledAlertTypes.includes(candidate.alertType)) continue;
 
           if (candidate.alertType === "runnable-in-n-days" && snapshot.forecastEntersRangeInDays != null) {
             if (snapshot.forecastEntersRangeInDays > leadTimeDays) continue;
@@ -709,6 +751,7 @@ export const evaluateAlerts = task({
             subscriberBucket.set(sub.subscriber_id, {
               email: sub.email,
               token: sub.token,
+              emailEnabled,
               alerts: [],
             });
           }
@@ -750,11 +793,13 @@ export const evaluateAlerts = task({
         types: finalAlerts.map((a) => `${a.stationId}:${a.alertType}`),
       });
 
-      // Send ONE grouped email
-      const sent = await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token);
+      // Send ONE grouped email (skipped when user has disabled email channel)
+      const sent = bucket.emailEnabled
+        ? await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token)
+        : false;
 
-      // Send push notifications to matching devices
-      const pushCount = await sendPushForAlerts(finalAlerts, dbSql);
+      // Send push notifications to this subscriber's linked devices
+      const pushCount = await sendPushForAlerts(finalAlerts, dbSql, subscriberId);
       totalPushes += pushCount;
 
       // Log + update state for each included alert

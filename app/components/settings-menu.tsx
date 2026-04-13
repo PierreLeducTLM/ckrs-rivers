@@ -5,6 +5,7 @@ import Link from "next/link";
 import ThemeToggle from "../theme-toggle";
 import LanguageToggle from "../language-toggle";
 import { getSubToken } from "../subscribe-button";
+import { getPushToken } from "@/lib/capacitor/push";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdminToggle } from "../use-admin";
 
@@ -14,7 +15,15 @@ function NotificationsLink() {
 
   useEffect(() => {
     const token = getSubToken();
-    if (token) setHref(`/notifications?token=${token}`);
+    if (token) {
+      setHref(`/notifications?token=${token}`);
+      return;
+    }
+    // Native-only users (push-only): open prefs via their device push token.
+    const pushToken = getPushToken();
+    if (pushToken) {
+      setHref(`/notifications?pushToken=${encodeURIComponent(pushToken)}`);
+    }
   }, []);
 
   if (!href) return null;

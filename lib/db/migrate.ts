@@ -49,6 +49,9 @@ async function migrate() {
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS rapid_class TEXT`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS description TEXT`,
     `ALTER TABLE stations ALTER COLUMN station_number DROP NOT NULL`,
+    `ALTER TABLE push_devices ADD COLUMN IF NOT EXISTS subscriber_id TEXT REFERENCES subscribers(id) ON DELETE SET NULL`,
+    `ALTER TABLE push_devices ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb`,
+    `CREATE INDEX IF NOT EXISTS idx_push_devices_subscriber ON push_devices(subscriber_id)`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);
