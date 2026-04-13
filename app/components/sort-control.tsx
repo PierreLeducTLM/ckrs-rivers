@@ -1,6 +1,6 @@
 "use client";
 
-export type SortMode = "status" | "name";
+export type SortMode = "ideal" | "status" | "name";
 
 interface SortControlProps {
   value: SortMode;
@@ -9,6 +9,7 @@ interface SortControlProps {
 }
 
 const OPTIONS: { id: SortMode; labelKey: string }[] = [
+  { id: "ideal", labelKey: "myRivers.sortIdeal" },
   { id: "status", labelKey: "myRivers.sortStatus" },
   { id: "name", labelKey: "myRivers.sortName" },
 ];
