@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Kayak Riviere aux Sables",
+    "title": "FlowCast - River flow forcast",
     "footer": "Data from CEHQ & Open-Meteo",
     "noStations": "No stations found. Add a CEHQ station to get started.",
     "loading": "Loading...",

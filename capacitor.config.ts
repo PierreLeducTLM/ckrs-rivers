@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.ckrsrivers.app",
-  appName: "CKRS Rivers",
+  appId: "com.flowcast.app",
+  appName: "FlowCast",
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
   server: {
@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: "automatic",
     preferredContentMode: "mobile",
-    scheme: "CKRSRivers",
+    scheme: "FlowCast",
   },
   android: {
     backgroundColor: "#ffffff",

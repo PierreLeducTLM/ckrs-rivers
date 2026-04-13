@@ -1,0 +1,229 @@
+id,name,alt_names,region_id,region_name,created_at,updated_at
+aae82020-39f0-11ec-a898-4b90fe3c3678,Acadie,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T02:17:16.389Z,2021-10-31T02:17:16.389Z
+a2c8be0c-917f-11e9-8167-73913ac7ff45,Achigan,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-18T04:14:58.942Z,2020-11-22T06:02:39.462Z
+872eea02-2acd-11eb-b9e3-cfc94b8807b1,Albion,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T01:12:58.955Z,2020-11-22T06:02:39.462Z
+e21c8b96-3026-11eb-adfb-b345b5e17678,À Mars,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T20:35:12.528Z,2020-11-26T20:35:12.528Z
+4015b92c-8de5-11eb-8c9c-9343ad3ad461,Anglais (des),,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-03-26T03:42:12.702Z,2021-03-26T03:42:12.702Z
+a19c408e-2784-11eb-bbda-efafba51bf75,A Pierre,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T20:53:36.538Z,2020-11-22T06:02:39.462Z
+6663a1a4-911e-11e9-880b-1f8ee06e73be,Archambault,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-17T16:38:56.431Z,2020-11-22T06:02:39.462Z
+6d1d33f4-983d-11e9-b784-9f688af80312,Ascot,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-26T18:08:40.251Z,2020-11-22T06:02:39.462Z
+f8605780-302a-11eb-98b9-3f40e01ce411,Ashuapmuchuan,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T21:04:27.866Z,2020-11-26T21:04:27.866Z
+3c3b2c1c-92db-11e9-a883-0755d88f5e26,Assomption,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-19T21:43:11.748Z,2020-11-22T06:02:39.462Z
+73da4b7c-eb24-11ec-a96f-43be617b6e44,Au Emeraude,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-13T14:23:53.662Z,2022-06-13T14:23:53.662Z
+f21a08cc-987c-11e9-add8-e35904fa9710,Au Saumon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-27T01:43:21.663Z,2020-11-22T06:02:39.462Z
+5c5157a6-13e5-11eb-a6b7-e79f5ed17acb,Au Saumon du lac Brompton,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-21T21:35:38.214Z,2020-11-22T06:02:39.462Z
+b91f2868-df56-11eb-a8cb-6730ccedfdcd,Aux Brochets,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-07-07T19:08:33.085Z,2021-07-07T19:08:33.085Z
+3b605cbc-eb2d-11ea-9116-070e09ca28c9,Aux Écorces,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-31T01:56:49.039Z,2020-11-22T06:02:39.462Z
+1ceeea68-93f5-11e9-9a65-13beec729f0c,Aux Mulets,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-21T07:20:57.317Z,2020-11-22T06:02:39.462Z
+fe36088a-2ac6-11eb-a9ea-d3dc52c6dd4e,Aux Rapides,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:26:12.172Z,2020-11-22T06:02:39.462Z
+9f65f8dc-3c38-11f0-ad25-a7c73c84e20f,Aux Rats,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-05-29T02:57:13.834Z,2025-05-29T02:57:13.834Z
+3c559c10-2ac8-11eb-abb7-a32b4939a1bf,Aux Roches,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:35:05.895Z,2020-11-22T06:02:39.462Z
+b369e8d4-dc4d-11ea-acd4-1b94036151df,Aux Sables,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-12T03:41:26.882Z,2020-11-22T06:02:39.462Z
+f32ee1a0-abe6-11ea-80ab-bbcc2040a7a5,Aux Saumons,Ruisseau aux saumons,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-06-11T13:24:59.894Z,2020-11-22T06:02:39.462Z
+aa44921c-612a-11e9-8b2f-bb045deb345c,Batiscan,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:05:48.462Z,2020-11-22T06:02:39.462Z
+e6270d0c-39f7-11ec-ae2c-d7f0eea126ed,Bayonne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T03:09:02.264Z,2021-10-31T03:09:02.264Z
+b6a5aa3c-e4d5-11ec-a91a-13b6454e6138,Bear river,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-05T13:45:08.499Z,2022-06-05T13:45:08.499Z
+7c051570-7aac-11ee-b2c5-bb208c6049b3,Beauchène,ruisseau Beauchène,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-11-04T00:52:52.855Z,2024-06-02T02:55:45.345Z
+2c5f9608-2ab9-11eb-a329-2370496ddae9,Beaurivage,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-19T22:47:16.666Z,2020-11-22T06:02:39.462Z
+97f0b202-8f0d-11ed-a3fa-73b76b7b62b5,Bécancour,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-01-08T04:33:26.461Z,2023-01-08T04:33:26.461Z
+6018954e-39f9-11ec-9bb5-3be91221017f,Bécancour,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T03:19:36.348Z,2021-10-31T03:19:36.348Z
+302d5442-1379-11ec-88cc-c74880da70a0,Bell,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T03:26:16.184Z,2021-09-12T03:26:16.184Z
+c97cf390-1370-11ec-8704-1feac0d953d7,Bell,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T02:26:07.926Z,2021-09-12T02:26:07.926Z
+a3a84522-136e-11ec-ade3-fb37736a7cd2,Bell,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T02:10:45.464Z,2021-09-25T09:34:12.959Z
+cc117baa-9102-11e9-9b9d-6bd191bd8188,Bellefeuille,Torrent Bellefeuille,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-17T13:21:21.112Z,2020-11-22T06:02:39.462Z
+cdadd33e-3032-11eb-9e09-8f2499a8eb78,Belle Rivière,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T22:00:32.209Z,2020-11-26T22:00:32.209Z
+537773c4-a251-11e9-8459-63b0818f5353,Betsiamites,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-09T13:56:18.787Z,2020-11-22T06:02:39.462Z
+9c50f31e-1fae-11f0-8bef-0f1f1f8a28f5,Blanche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-04-22T19:18:45.555Z,2025-04-22T19:18:45.555Z
+8bf052e4-edc5-11ec-9b3e-9f8093c4a1f5,Blanche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-16T22:42:05.334Z,2022-06-16T22:42:05.334Z
+2143f1c8-907e-11e9-9bff-7face669d1a4,Blanche,Blanche near Gatineau-Ottawa; Thurso Blanche,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-16T21:31:40.985Z,2020-11-22T06:02:39.462Z
+b255c190-2787-11eb-9fb0-771dc23edfdd,Blanche - Lac-du-Milieu,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T21:15:33.090Z,2020-11-22T06:02:39.462Z
+2afb3a7a-a17a-11e9-ab54-231c920cc961,Bonaventure,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-08T12:16:09.065Z,2020-11-22T06:02:39.462Z
+76c05b5c-612e-11e9-ba57-8f1635f50cee,Bonniebrook,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:33:00.017Z,2020-11-22T06:02:39.462Z
+06e4ffb0-2ddb-11eb-9787-5fc2cd01bd06,Bostonnais,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-23T22:27:10.161Z,2020-11-23T22:27:10.161Z
+b7dd5582-a264-11e9-9e7c-4b8d60f943bd,Boucher,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-09T16:15:07.663Z,2020-11-22T06:02:39.462Z
+4b3d0390-9121-11e9-84d5-575785a54222,Boulé,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-17T16:59:39.370Z,2020-11-22T06:02:39.462Z
+b82bea28-c506-11eb-925e-b3a3f370ce24,Bourlamaque,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-06-04T07:30:21.519Z,2021-06-04T07:30:21.519Z
+d3dcbc92-dbd8-11ea-a639-0b1f97892905,Bras du Nord (Valin),,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-11T13:44:50.207Z,2020-11-22T06:02:39.462Z
+9941c09c-a031-11ea-b718-d35c6742ad63,Bras-Louis,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-05-27T15:49:07.324Z,2020-11-22T06:02:39.462Z
+17918ffc-2874-11eb-b0f0-1fe0a8ea3439,Bras Nord Ouest,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-17T01:27:44.148Z,2020-11-22T06:02:39.462Z
+2c9b87c4-2abb-11eb-a07d-97d4077f39fd,Bras Saint-Nicolas,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-19T23:01:36.053Z,2020-11-22T06:02:39.462Z
+b1f469b8-8647-11ef-8c2d-c374a9a2898a,Broadback,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-10-09T14:06:35.785Z,2024-10-09T14:06:35.785Z
+cdf5ab3a-7946-11ef-8162-6f4dc5485a8e,Broadback,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-09-23T00:57:28.150Z,2025-04-02T07:39:03.536Z
+b7c7f6fc-f7d7-11e8-b1ca-ebe1b239a422,Cachée,BC; cachée; Basse-cachée,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-04T15:17:30.813Z,2020-11-22T06:02:39.462Z
+b54a9eda-1cf1-11ef-abef-c7b53bc3ce67,Cap Chat ,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-05-28T12:56:32.587Z,2024-06-02T02:55:00.672Z
+24a461e6-2c2b-11eb-9544-a764bbf96027,Capri,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-21T18:55:37.485Z,2020-11-22T06:02:39.462Z
+f3498d2e-e7bc-11ed-8e8b-736661386407,Cap Rouge,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-05-01T01:10:23.977Z,2024-06-02T02:53:53.570Z
+08bacb2e-a274-11e9-a864-3ff4fe71dddf,Cassian,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-09T18:04:45.785Z,2020-11-22T06:02:39.462Z
+b7544b28-9843-11e9-a958-935a276e05a9,Chateauguay,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-26T18:53:41.746Z,2020-11-22T06:02:39.462Z
+2ffcbd32-6129-11e9-a8d0-4f5382a43a4b,Chaudière,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T15:55:13.813Z,2020-11-22T06:02:39.462Z
+36410d8c-a01c-11ea-b5b1-774acab2db93,Chezine,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-05-27T13:16:01.794Z,2020-11-22T06:02:39.462Z
+d7fe9732-3a00-11ec-8ea0-6b7aeacea81a,Chicot,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T04:13:03.981Z,2021-10-31T04:13:03.981Z
+f32ef97c-dc44-11ea-a343-c7b9c954e18b,Chicoutimi,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-12T02:38:48.399Z,2020-11-22T06:02:39.462Z
+f9ea4db2-3030-11eb-90ef-17934a375267,Cyriac,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T21:47:27.432Z,2020-11-26T21:47:27.432Z
+1428af42-f8f8-11ed-a02b-73b630258565,Cyriac ,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-05-22T23:26:29.195Z,2023-05-23T11:47:45.938Z
+b937684c-2c2d-11eb-93b6-eb431cf76b3a,Dalesville,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-21T19:14:05.741Z,2020-11-22T06:02:39.462Z
+58b16780-5841-11f0-8d3b-6f3e765d324f,Darthmouth,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-07-03T19:10:13.240Z,2025-07-03T19:10:13.240Z
+46dfed7a-ac95-11ec-8937-87dcec277385,Delisle,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-03-25T23:42:48.062Z,2022-03-25T23:42:48.062Z
+9595cb4e-3034-11eb-aab5-e357f47fa697,Des Ha! Ha!,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T22:13:17.095Z,2020-11-26T22:13:17.095Z
+448c08fc-2ddd-11eb-b621-5bbbe37139c1,Des Îles,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-23T22:43:12.594Z,2020-11-23T22:43:12.594Z
+fcefc6a8-a713-11ec-87c4-6b33a66a0ccc,Des Mille-Iles,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-03-18T23:34:43.141Z,2022-03-18T23:34:43.141Z
+cfcdfa84-278d-11eb-bf4a-c719c549a957,Des Neiges,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T21:59:19.514Z,2020-11-22T06:02:39.462Z
+9f126d36-278c-11eb-9558-bbfff87b3e0f,Des Neiges,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T21:50:48.256Z,2020-11-22T06:02:39.462Z
+5f4963aa-612f-11e9-88ca-87df32c29e97,Diable,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:39:30.148Z,2020-11-22T06:02:39.462Z
+a2e37146-156a-11eb-a8e7-8ff3097e7a1d,Domonique,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-23T20:02:10.837Z,2020-11-22T06:02:39.462Z
+bde1e448-5fb1-11e9-ae21-bfd177dc8a74,Doncaster,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-15T19:07:41.103Z,2020-11-22T06:02:39.462Z
+7696ccb8-94dc-11eb-8f80-47b4cd3f5e83,Dufresne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-04-04T00:26:56.822Z,2021-04-04T00:26:56.822Z
+1f9ecef6-a01d-11ea-a117-0b0cf4bbf16c,Du Gouffre,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-05-27T13:22:33.318Z,2020-11-22T06:02:39.462Z
+d225b8d4-a11b-11e9-b2f3-3f9868070105,Du Lievre,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-08T01:00:47.335Z,2020-11-22T06:02:39.462Z
+6db48f4e-612c-11e9-8c6f-4b037cac947b,Du Loup,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:18:25.848Z,2020-11-22T06:02:39.462Z
+f13211e2-736d-11ec-872b-53f94369fa29,Dumoine,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-01-12T06:07:37.679Z,2022-01-12T06:07:37.679Z
+7373865a-7368-11ec-8aba-cfd4f632a58b,Dumoine,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-01-12T05:28:19.232Z,2022-01-12T05:28:19.232Z
+e1757f2e-055b-11ee-a2b7-9b8e895eeaa7,Du Moulin,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-06-07T17:51:07.760Z,2023-06-07T17:51:07.760Z
+205f3e5a-5fb1-11e9-ade6-d79b0dd24b89,Du Nord,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-15T19:03:16.845Z,2020-11-22T06:02:39.462Z
+219df2f8-2ac0-11eb-babc-273ab7ddc4c0,Du Pin,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-19T23:37:05.097Z,2020-11-22T06:02:39.462Z
+317d3fa0-f348-11ed-9618-8f068b835259,Du Portage,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-05-15T17:44:51.168Z,2023-05-15T17:44:51.168Z
+02ce47d2-2ac1-11eb-a5dc-4376fa543669,Du Sud,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-19T23:43:22.900Z,2020-11-22T06:02:39.462Z
+c0cb77b4-a1f1-11e9-8d91-23507b66d6a5,Etchemin,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-09T02:32:10.522Z,2020-11-22T06:02:39.462Z
+2a2f2a8e-1799-11f0-acbf-d3b67c897815,Famine,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-04-12T12:25:05.346Z,2025-04-12T12:25:05.346Z
+a210a524-486d-11ef-a8be-efd374227651,Fildegrand,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-07-22T21:01:57.909Z,2024-07-22T21:01:57.909Z
+18a5284c-735d-11ec-8afa-4b855c5e4a4e,Gatineau,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-01-12T04:07:02.423Z,2022-01-12T04:07:02.423Z
+f7e5b088-922a-11e9-9535-fb45f3ef141f,Gatineau,Gat,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-19T00:41:25.676Z,2020-11-22T06:02:39.462Z
+a7164c84-2c30-11eb-8922-772fdeb82367,Gauthier,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-21T19:35:03.819Z,2020-11-22T06:02:39.462Z
+8c5c1938-e1fa-11ec-8658-6b4f96eefa67,Gens de Terre,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-01T22:31:15.444Z,2022-06-01T22:31:15.444Z
+db5c16fe-e8c2-11ec-956a-4764f62b968a,Grande cascapedia,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-10T13:40:14.301Z,2022-06-10T13:40:14.301Z
+b62f6fd8-e48e-11ee-a977-47911bba02bb,Grass River,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-03-17T18:46:48.783Z,2024-05-16T11:32:41.671Z
+8b768b2c-f345-11ed-80bb-0fbee5fc50f2,Gros Bras,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-05-15T17:25:53.631Z,2023-05-15T17:25:53.631Z
+d78a1d02-1206-11ec-bb37-b718f12b82c3,Harricana,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-10T07:15:13.687Z,2021-09-10T07:15:13.687Z
+ed579e98-3a6f-11ec-9438-ff877dc83d13,Hinchinbrooke,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T17:28:13.934Z,2021-10-31T17:28:13.934Z
+651c8912-a273-11e9-88b5-4b21ecfda331,Huit Chutes,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-07-09T18:00:11.278Z,2020-11-22T06:02:39.462Z
+8adff684-f896-11e8-beb1-a71f0dd101cc,Huron,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-05T14:03:29.348Z,2020-11-22T06:02:39.462Z
+b58a9bce-e624-11e9-8e91-5b01068af98c,Jackson,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-10-03T21:28:15.045Z,2020-11-22T06:02:39.462Z
+3d53a9ba-f7d3-11e8-94e5-230ecac14f6b,Jacques-Cartier ,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-04T14:45:27.382Z,2020-11-22T06:02:39.462Z
+804208b6-2de1-11eb-af27-7f1767f579be,Jeannotte,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-23T23:13:30.757Z,2020-11-23T23:13:30.757Z
+dfac584c-93fa-11e9-bcd7-9312315e4ec1,Keebrook,Key; Keybrook,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-21T08:02:11.519Z,2021-03-28T18:57:22.959Z
+83238246-3a72-11ec-bf3e-0fc60c551f5f,Kiamika,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T17:46:44.239Z,2021-10-31T17:46:44.239Z
+8779b180-be57-11ec-8d84-9f779cc32aa1,kinojevis,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-04-17T14:06:08.569Z,2022-04-17T14:06:08.569Z
+b680b69c-1320-11eb-8da4-77766dd6d58a,Kinojévis,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-20T22:07:58.663Z,2020-11-22T06:02:39.462Z
+bcc6bc98-938a-11e9-9549-134ff8773731,Kipawa,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T18:39:29.337Z,2020-11-22T06:02:39.462Z
+139eb37c-137c-11ec-afff-5bdafcfe69da,Laflamme,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T03:46:56.766Z,2021-09-12T03:46:56.766Z
+f96fb14c-3b97-11ec-a4d3-b77ed6b58712,La Lenoir,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-02T04:47:25.256Z,2021-11-02T04:47:25.256Z
+c5cc88f2-df19-11ed-81f4-8f9fe44922d4,Lavigne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-04-20T01:22:10.396Z,2023-04-20T01:22:10.396Z
+ef0fb290-2ac4-11eb-91fd-23d5859cdaee,Linière,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:11:27.763Z,2020-11-22T06:02:39.462Z
+49f368da-f876-11eb-b383-eba124300c35,Loutre,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-08-08T18:27:29.542Z,2021-08-08T18:27:29.542Z
+0913895a-3a78-11ec-be52-8355a6fb94a6,Macaza,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-10-31T18:26:16.438Z,2021-10-31T18:26:16.438Z
+a3423270-28a6-11ed-a506-4b97d3332440,Maganasipi river,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-08-30T20:59:28.663Z,2022-08-30T20:59:28.663Z
+d8f56fb2-92bd-11ea-9b3f-8398d66490cb,Magpie,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-05-10T12:57:47.459Z,2020-11-22T06:02:39.462Z
+f3729028-92bc-11ea-b87b-037720ea4ccc,Magpie West ,Magpie Ouest,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-05-10T12:51:22.404Z,2020-11-22T06:02:39.462Z
+d40144e4-f7e7-11e8-bfc0-4332b29f31cf,Malbaie,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-04T17:12:50.112Z,2020-11-22T06:02:39.462Z
+ae976bde-abe6-11ea-bc2b-83e8f7258c7c,Marsoui,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-06-11T13:23:04.812Z,2020-11-22T06:02:39.462Z
+d4e3e654-6129-11e9-960d-ef2c0ff1a396,Maskinongé,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T15:59:50.474Z,2020-11-22T06:02:39.462Z
+c30caf7e-3ac5-11ec-9647-cfa261233826,Massawipi,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-01T03:42:39.697Z,2021-11-01T03:42:39.697Z
+2096852e-6130-11e9-8aaa-23163e5415aa,Mastigouche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:44:54.454Z,2020-11-22T06:02:39.462Z
+30902a26-2de3-11eb-aa96-fff13c34129d,Matawin - Basse,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-23T23:25:36.045Z,2020-11-23T23:25:36.045Z
+f2ee2fde-81ac-11ea-b2b8-7bf8cae9a8e2,Mauvaise,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-04-18T19:43:59.824Z,2020-11-22T06:02:39.462Z
+0b02f382-dbfa-11ea-84e6-f7e26b05ca7a,Metabetchouane,Métabetchouane,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-11T17:42:36.122Z,2020-11-22T06:02:39.462Z
+c76da6ac-a6a7-11eb-9032-5f0cbf83895e,Métabetchouane,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-04-26T15:55:10.049Z,2021-04-26T15:55:10.049Z
+da130d50-166b-11eb-b4d2-c7df245eaa70,MilleB,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-25T02:43:24.089Z,2020-11-22T06:02:39.462Z
+b676b2b6-166b-11eb-9a3e-1fbd4d7794b7,MilleB,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-25T02:42:24.340Z,2020-11-22T06:02:39.462Z
+a3446948-13e3-11eb-b0dc-77bd220b349d,Mille-iles,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-21T21:23:18.255Z,2020-11-22T06:02:39.462Z
+01492a26-3b2d-11ec-8341-732ce5e9611e,Missisquoi,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-01T16:01:42.275Z,2021-11-01T16:01:42.275Z
+56d87f70-ef0d-11ec-be48-4b7046a2f70a,Missisquoi Nord,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-18T13:48:31.213Z,2022-06-18T13:48:31.213Z
+90dce7b8-1d0c-11ea-b8a6-633e1cfbb370,Mistassibi,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-12-12T18:23:59.539Z,2020-11-22T06:02:39.462Z
+2a5cb756-10d0-11ed-b7ea-4b183b87be60,Mistassibi nord est,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-07-31T12:56:16.821Z,2022-07-31T12:56:16.821Z
+9f2fec2e-fbd5-11e8-9769-43a843a4208f,Mistassini,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-09T17:12:35.208Z,2020-11-22T06:02:39.462Z
+f5646076-66e4-11f0-863b-97bf404327da,Mistigougèche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-07-22T10:16:40.291Z,2025-07-22T10:16:40.291Z
+f0f39fe4-f874-11eb-96a2-ef9a6221bad3,Mitchinamecus,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-08-08T18:17:50.729Z,2021-08-08T18:17:50.729Z
+5e0d4fc8-66e7-11f0-8aa6-3b31682127bf,Mitis,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-07-22T10:33:54.976Z,2025-07-22T10:33:54.976Z
+62da7bea-9b3f-11e9-a149-4fe1e55a1ccc,Moe,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-30T14:00:15.521Z,2020-11-22T06:02:39.462Z
+564ce998-1565-11eb-ad9f-d3641f3d9d8d,Moisie,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-23T19:24:14.863Z,2020-11-22T06:02:39.462Z
+aeac1b64-22ca-11eb-9fcc-17ced219d46c,Momorency,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-09T20:32:27.413Z,2020-11-22T06:02:39.462Z
+23750f50-1cf0-11ef-8386-437d6ad46c21,Mont-Louis Ouest,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-05-28T12:45:18.410Z,2024-05-28T12:45:18.410Z
+96646260-92f6-11e9-8ae0-e338afa830b7,Montmorency,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T00:58:59.423Z,2020-11-22T06:02:39.462Z
+cefa3876-e928-11ec-af1b-c3385ce19662,Murphy creek,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-11T01:50:02.188Z,2022-06-11T01:50:02.188Z
+cec60086-f897-11e8-a5e3-ab255cb31b51,Neilson,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-05T14:12:32.760Z,2020-11-22T06:02:39.462Z
+b32f0254-dca4-11e9-8fed-f37d694b6e0e,Nepisiguit,NB,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-09-21T19:19:15.040Z,2020-11-22T06:02:39.462Z
+abba8f82-2acf-11eb-af2c-ebcf51eaa49a,Nicolet,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T01:28:19.262Z,2020-11-22T06:02:39.462Z
+efce9e9a-7721-11eb-a16f-eb479c19b87c,Nicolet Sud-Ouest,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-02-25T04:28:40.580Z,2021-03-14T07:06:24.472Z
+a704d06a-dcab-11e9-853f-2ff9ec4d4e34,Nigadoo,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-09-21T20:09:01.110Z,2020-11-22T06:02:39.462Z
+8eaf306a-a714-11ec-917d-17ae4734aaed,Noire,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-03-18T23:38:47.665Z,2022-03-18T23:38:47.665Z
+b00d9516-9881-11e9-ace9-2b797ea946b6,Noire,Estrie,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-27T02:17:18.336Z,2020-11-22T06:02:39.462Z
+cf70f6b8-612d-11e9-9c99-0fd9e816b1d7,Noire,Lanaudière,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:28:19.318Z,2020-11-22T06:02:39.462Z
+354545e6-3b35-11ec-a95e-6386508b56d2,Nominingue,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-01T17:00:25.463Z,2021-11-01T17:00:25.463Z
+02ded814-5d61-11ea-a4b4-d7e632ee5d63,North Pole,North Pole Stream; NB,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-03-03T15:09:42.956Z,2020-11-22T06:02:39.462Z
+4322893c-2798-11eb-8e2a-63260b228228,Ontaritzi,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T23:14:07.967Z,2020-11-22T06:02:39.462Z
+26de02aa-938e-11e9-ba83-03e60468ca47,Ottawa,rivières des Outaouais; Outaouais; Rocher Fendu,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T19:03:55.819Z,2020-11-22T06:02:39.462Z
+0d07ac1a-225c-11eb-bc56-8f96e4a1850e,Ottawa ON,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-09T07:20:31.581Z,2020-11-22T06:02:39.462Z
+2d53bef8-295c-11eb-85af-33e8fd3a9fef,Ottawa River,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-18T05:09:03.907Z,2020-11-22T06:02:39.462Z
+5cb126e6-eb2b-11ea-a761-d7ad83aa2bce,Ouaitchouaniche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-31T01:43:25.941Z,2020-11-22T06:02:39.462Z
+d2fd4cd4-92f4-11e9-9ee3-7f5f742b0ba8,Ouareau,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T00:46:22.096Z,2020-11-22T06:02:39.462Z
+d0331848-2ac5-11eb-b617-d338a448df7f,Ouelle,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:17:45.482Z,2020-11-22T06:02:39.462Z
+4d0cf07a-92f4-11e9-8b75-efb358f4301f,Ouest,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T00:42:37.384Z,2020-11-22T06:02:39.462Z
+e48b0648-eb5f-11ea-baa6-6fc426dab7de,Ouiatchouaniche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-31T07:59:27.689Z,2020-11-22T06:02:39.462Z
+f3b1378e-eb2b-11ea-9325-f32aff89edce,Ouiatchouaniche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-31T01:47:39.275Z,2020-11-22T06:02:39.462Z
+fdf1cd0a-1373-11ec-8e7f-77f061803db1,Outaouais,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T02:49:04.426Z,2021-09-12T02:49:04.426Z
+5f3016f6-987b-11e9-92a4-778c03072c02,Outardes,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-27T01:32:05.685Z,2020-11-22T06:02:39.462Z
+694f0174-827c-11ea-8598-632c6b01f5f4,Oxtoungue ,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-04-19T20:29:04.250Z,2020-11-22T06:02:39.462Z
+b6695860-fd83-11ea-9a9d-975a1d9fef3d,Pelletier,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-09-23T10:01:13.105Z,2020-11-22T06:02:39.462Z
+26061e60-16b9-11ed-9839-0f948ba80559,Penniseault,Penniseault Creek,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-08-08T01:26:38.081Z,2022-08-08T01:26:38.081Z
+aeb3ebae-e578-11e9-b224-e32be36d7d91,Perdrix,Rivière des Perdrix,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-10-03T00:56:50.134Z,2020-11-22T06:02:39.462Z
+60722b6c-e927-11ec-b9a1-53b3f1d1b530,Petite-fourche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-11T01:39:47.266Z,2022-06-11T09:29:33.982Z
+867c6c5a-6130-11e9-adc2-93b0250e7d4c,Petite Nation,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-17T16:47:45.410Z,2020-11-22T06:02:39.462Z
+67ab84aa-3b8f-11ec-be6c-77fa50d35810,Petite Rouge,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-02T03:46:04.726Z,2021-11-02T03:46:04.726Z
+73ed176c-303a-11eb-9b2f-5bde9500f98b,Petit Saguenay,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T22:55:17.602Z,2020-11-26T22:55:17.602Z
+325c2cbe-fd83-11ea-aa5d-cfb124a41d6d,Pikauba,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-09-23T09:57:31.562Z,2020-11-22T06:02:39.462Z
+f1fcbcfe-287c-11eb-9ca5-5bf4fd13f5f7,Port-au-Saumon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-17T02:31:06.579Z,2020-11-22T06:02:39.462Z
+fab1c7d6-ee81-11ed-aa2a-9f20122d05a1,Portneuf,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-05-09T15:55:54.226Z,2023-05-09T15:55:54.226Z
+da475706-2ac8-11eb-a31f-07e5a7267305,Pozer,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:39:30.882Z,2020-11-22T06:02:39.462Z
+61ffadba-137b-11ec-9663-937c6940bd6b,Quévillon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T03:41:58.766Z,2021-09-12T03:41:58.766Z
+1d7c251a-817d-11ea-9de5-4f45dfe86a42,Quyon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-04-18T14:01:35.372Z,2020-11-22T06:02:39.462Z
+52174d24-3b92-11ec-8f0a-fb4b0202806f,Richelieu,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-02T04:06:57.014Z,2021-11-02T04:06:57.014Z
+8d9633e2-8d0a-11eb-882b-4776fbe5ffaa,Rigaud,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-03-25T01:36:42.943Z,2021-03-25T01:36:42.943Z
+01763c8e-3b8a-11ec-84c8-eb8da35dfb95,Rigaud Est,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-02T03:07:25.767Z,2021-11-02T03:07:25.767Z
+d2836184-cf76-11ef-96a1-67fd69e3bd8f,Riviere des milles iles,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2025-01-10T17:17:51.614Z,2025-01-10T17:17:51.614Z
+7ac6a9fe-f7d9-11e8-b447-e7a0c8f2d1e5,Rouge,Rivière Rouge; Rouge River,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-04T15:30:07.456Z,2020-11-22T06:02:39.462Z
+d4f9390a-6e07-11ea-868c-fffb88a54b4c,Ruiter,Ruiter Brook,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-03-24T19:44:10.510Z,2020-11-22T06:02:39.462Z
+27b1cda6-1e26-11ef-a227-235a57dcffcf,Saint anne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2024-05-30T01:44:29.517Z,2024-05-30T01:44:29.517Z
+56fbdf42-27a4-11eb-89e1-cff12b250d7f,Saint Anne Ouest,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-16T00:40:35.235Z,2020-11-22T06:02:39.462Z
+1a67d2f4-2dec-11eb-9723-47839858f345,Sainte-Anne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-24T00:29:24.340Z,2020-11-24T00:29:24.340Z
+c61ee088-6f97-11ea-a5bd-7ffd3f4ec071,Sainte-Anne-du-Nord,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-03-26T19:27:04.283Z,2020-11-22T06:02:39.462Z
+c948bde8-abe6-11ea-9922-1baee26a7f39,Sainte-Anne Nord-Est,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-06-11T13:23:49.601Z,2020-11-22T06:02:39.462Z
+c755cd6e-abe6-11ea-a429-937271f94b5b,Sainte-Anne Nord-Est,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-06-11T13:23:46.329Z,2020-11-22T06:02:39.462Z
+68bc4b90-2de4-11eb-bc2c-9bc7e92a23ed,Saint-Maurice,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-23T23:34:19.781Z,2020-11-23T23:34:19.781Z
+65e55ee2-2aca-11eb-8e81-e7d8e2d19ccb,Saint-Nicolas,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:50:34.617Z,2020-11-22T06:02:39.462Z
+20c7c86c-2acb-11eb-92f8-3392d7555dee,Saint-Victor,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-20T00:55:48.155Z,2020-11-22T06:02:39.462Z
+dee858f6-f8b0-11e8-a524-476c9fdf7afd,Sault à la Puce,sap,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-05T17:11:57.246Z,2020-11-22T06:02:39.462Z
+14e3b020-279b-11eb-8ace-571dfe61ae3c,Sautauriski,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T23:34:18.875Z,2020-11-22T06:02:39.462Z
+73b7623c-c046-11ec-a783-8bd78b38fd77,Schyan,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-04-20T01:08:56.301Z,2022-04-20T01:08:56.301Z
+e2158640-2dea-11eb-8d6d-afe97f0edbd3,Shawinigan,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-24T00:20:40.352Z,2020-11-24T00:20:40.352Z
+ad85415e-dc50-11ea-a774-c7c999ddb228,Shipshaw,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-08-12T04:02:45.486Z,2020-11-22T06:02:39.462Z
+8cacd890-92f3-11e9-abad-1758b75013c9,Simon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T00:37:14.631Z,2020-11-22T06:02:39.462Z
+990a8b28-279e-11eb-906c-53aeddf99c44,St-Adolphe,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-15T23:59:29.080Z,2020-11-22T06:02:39.462Z
+26322ed2-93e1-11e9-be38-1ba0e2ea6eaa,St-Charles,Valleyfield,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-21T04:58:02.922Z,2020-11-22T06:02:39.462Z
+d14df75c-92f5-11e9-988d-47eb8aa7ff16,St-Charles,Quebec,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T00:53:28.766Z,2020-11-22T06:02:39.462Z
+5af8f8ea-27a0-11eb-a958-af7f239c7691,Ste-Anne,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-16T00:12:03.939Z,2020-11-22T06:02:39.462Z
+9b893b90-303d-11eb-b4b6-0378992fffe0,Ste-Marguerite,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T23:17:52.547Z,2020-11-26T23:17:52.547Z
+6bfdc76e-3da3-11ec-9eba-6bdd3f29ad5d,St-Esprit,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-11-04T19:14:24.234Z,2021-11-04T19:14:24.234Z
+d25cea12-4d8b-11ea-b5d8-2f0ff2807c64,St-Francois,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-02-12T11:35:51.325Z,2020-11-22T06:02:39.462Z
+4ddf38f4-fd84-11ea-bb0a-f3d887bf6f4f,St-Jean,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-09-23T10:05:27.217Z,2020-11-22T06:02:39.462Z
+b24cd22a-77e7-11e9-ba10-6bb23d052045,St-Laurent,Fleuve St-Laurent; St-Lawrence,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-05-16T14:34:22.399Z,2020-11-22T06:02:39.462Z
+514ca79c-5fb0-11e9-ab6c-033eac10c779,Talayarde,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-04-15T18:57:29.434Z,2020-11-22T06:02:39.462Z
+ba48381a-1fb6-11ec-842c-b7f8c462b684,Tantramar River,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-27T17:17:01.132Z,2021-09-27T17:17:01.132Z
+f5675dac-c576-11ec-aa2c-8b455374e502,Tartigou,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-04-26T15:38:45.560Z,2022-04-26T15:38:45.560Z
+d032a014-c576-11ec-832f-9721e062d2ca,Tartigou,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-04-26T15:37:43.114Z,2022-04-26T15:37:43.114Z
+cd7edfbe-c3e5-11ec-95d7-9bf01b3738a7,Tartigou river,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-04-24T15:47:10.406Z,2022-05-01T16:37:06.326Z
+44048f18-303e-11eb-a821-dba41a43b094,Tête Blanche,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-26T23:22:35.211Z,2020-11-26T23:22:35.211Z
+5c3a0904-8de9-11ed-978b-eb164bcb1007,Tomasine,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2023-01-06T17:41:33.246Z,2023-01-06T17:41:33.246Z
+678a965c-9379-11e9-a841-57e09a10202b,Tourilli,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-20T16:35:24.894Z,2020-11-22T06:02:39.462Z
+c3adf962-a442-11ea-b327-fbb83fb3a86d,Trois Pistoles,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-06-01T20:02:04.593Z,2020-11-22T06:02:39.462Z
+3e85e9a2-f7e1-11e8-85c5-c37941f7bf26,Valin,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2018-12-04T16:25:42.343Z,2020-11-22T06:02:39.462Z
+8a2f15c4-2ded-11eb-baa0-9f44a158d38a,Vermillon,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-11-24T00:39:41.372Z,2020-11-24T00:39:41.372Z
+7ed03ee4-cfeb-11e9-b8a3-7fcad2028627,Wacouno,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-09-05T14:43:16.333Z,2020-11-22T06:02:39.462Z
+4c6a7e32-f68b-11ec-bbd1-937eaf91ba66,Waka,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-06-28T02:37:48.455Z,2022-06-28T02:37:48.455Z
+6cb4905c-401d-11ed-beac-6bd468804d97,Watopeka,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-09-29T17:37:44.006Z,2022-09-29T17:37:44.006Z
+a055a0be-8fec-11eb-b5bc-9fc557f34ecd,Willow,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-03-28T17:40:02.992Z,2021-03-28T17:40:02.992Z
+319c866c-137a-11ec-bb0f-6b2d9fa9749f,Winneway,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2021-09-12T03:33:28.090Z,2021-09-12T03:33:28.090Z
+937c482a-984f-11e9-b903-d3608c8e65d4,Yamaska,Haute Yamaska,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2019-06-26T20:18:35.571Z,2020-11-22T06:02:39.462Z
+f1c6ace8-6e07-11ea-95ee-539a8d9bbf60,Yamaska ,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-03-24T19:44:58.834Z,2020-11-22T06:02:39.462Z
+c148f41c-a71d-11ec-b690-978448450de5,Yamaska Sud Est,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2022-03-19T00:44:37.972Z,2022-03-19T00:44:37.972Z
+195a3740-1478-11eb-a65d-776c32939079,York,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-22T15:06:01.884Z,2020-11-22T06:02:39.462Z
+e383f0c0-1472-11eb-b419-5ff8641a3bbf,York,,dde6c374-f50a-11e8-bdc6-3f946fba00da,"Canada, Québec",2020-10-22T14:28:44.078Z,2020-11-22T06:02:39.462Z

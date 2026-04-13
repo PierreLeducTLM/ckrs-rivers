@@ -564,7 +564,7 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
       {/* Header + View toggle */}
       <div ref={headerRef} className="relative z-20 mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+          <Image src="/logo2.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
           <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">{t("app.title")}</h1>
         </div>
         <div className="flex items-center gap-2">

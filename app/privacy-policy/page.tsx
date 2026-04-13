@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — CKRS Rivers",
-  description: "Privacy policy for the CKRS Rivers application",
+  title: "Privacy Policy — FlowCast",
+  description: "Privacy policy for the FlowCast application",
 };
 
 export default function PrivacyPolicyPage() {
   const effectiveDate = "2025-04-10";
-  const contactEmail = "info@ckrsrivers.com";
-  const appName = "CKRS Rivers";
-  const developerName = "CKRS Rivers";
+  const contactEmail = "info@flowcast.app";
+  const appName = "FlowCast";
+  const developerName = "FlowCast";
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">

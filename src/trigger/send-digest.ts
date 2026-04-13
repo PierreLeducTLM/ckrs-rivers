@@ -59,7 +59,7 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "FlowCast <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
     ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${digest.token}`;
@@ -79,11 +79,11 @@ async function sendDigestEmail(digest: SubscriberDigest, period: string): Promis
     </tr>`;
   }).join("");
 
-  const subject = `Kayak Rivi\u00e8re aux Sables \u2014 ${period} forecast digest`;
+  const subject = `FlowCast \u2014 ${period} forecast digest`;
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;border:1px solid #e4e4e7;">
-<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">Kayak Rivi&egrave;re aux Sables</h1></div>
+<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">FlowCast</h1></div>
 <div style="padding:24px;">
 <h2 style="margin:0 0 16px;font-size:18px;">${period} River Forecast</h2>
 <table style="width:100%;border-collapse:collapse;font-size:14px;">

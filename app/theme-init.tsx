@@ -2,7 +2,7 @@
 
 import { useLayoutEffect } from "react";
 
-const STORAGE_KEY = "kras-theme";
+const STORAGE_KEY = "flowcast-theme";
 
 export default function ThemeInit() {
   useLayoutEffect(() => {

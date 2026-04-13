@@ -306,7 +306,7 @@ async function sendDirectEmail(
 
   const from =
     process.env.NOTIFICATION_FROM_EMAIL ??
-    "Kayak Rivière aux Sables <pierre@leduc.tech";
+    "FlowCast <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
     ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
@@ -343,7 +343,7 @@ async function sendDirectEmail(
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;border:1px solid #e4e4e7;">
-<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">Kayak Rivi&egrave;re aux Sables</h1></div>
+<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">FlowCast</h1></div>
 <div style="padding:24px;">
 <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:8px 12px;margin-bottom:16px;font-size:13px;color:#92400e;">TEST NOTIFICATION &mdash; Sent from admin panel</div>
 <h2 style="margin:0 0 16px;font-size:18px;">${emoji} ${stationName}</h2>

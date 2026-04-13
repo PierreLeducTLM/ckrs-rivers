@@ -8,10 +8,10 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.ckrsrivers.app"
+    namespace "com.flowcast.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.ckrsrivers.app"
+        applicationId "com.flowcast.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 2

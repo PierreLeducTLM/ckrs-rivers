@@ -307,7 +307,7 @@ export const refreshAllStations = schedules.task({
 
     // Get all active stations with a CEHQ station number (skip custom rivers)
     const stations = (await dbSql(
-      `SELECT id, station_number, lat, lon FROM stations WHERE status NOT IN ('error', 'test') AND station_number IS NOT NULL ORDER BY id`,
+      `SELECT id, COALESCE(station_number, id) as station_number, lat, lon FROM stations WHERE status NOT IN ('error', 'test', 'info') ORDER BY id`,
     )) as Array<{ id: string; station_number: string; lat: number; lon: number }>;
 
     logger.info(`Refreshing ${stations.length} stations`, {

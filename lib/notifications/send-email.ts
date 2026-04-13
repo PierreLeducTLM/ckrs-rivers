@@ -23,7 +23,7 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   }
 
   const from =
-    process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivière aux Sables <pierre@leduc.tech>";
+    process.env.NOTIFICATION_FROM_EMAIL ?? "FlowCast <pierre@leduc.tech>";
 
   try {
     const res = await fetch(RESEND_API_URL, {

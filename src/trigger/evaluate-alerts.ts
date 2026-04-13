@@ -483,7 +483,7 @@ async function sendGroupedAlertEmail(
     return false;
   }
 
-  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "Kayak Rivi\u00e8re aux Sables <pierre@leduc.tech>";
+  const from = process.env.NOTIFICATION_FROM_EMAIL ?? "FlowCast <pierre@leduc.tech>";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
     ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
   const unsubUrl = `${appUrl}/api/notifications/unsubscribe?token=${manageToken}`;
@@ -536,7 +536,7 @@ ${cards}
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;border:1px solid #e4e4e7;">
-<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">Kayak Rivi&egrave;re aux Sables</h1></div>
+<div style="background:#2D8FCC;padding:20px 24px;"><h1 style="margin:0;color:#fff;font-size:20px;">FlowCast</h1></div>
 <div style="padding:24px;">${body}</div>
 <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">
 <a href="${unsubUrl}" style="color:#71717a;">Unsubscribe</a></div></div></body></html>`;

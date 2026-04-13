@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
 
-const STORAGE_KEY = "kras-theme";
+const STORAGE_KEY = "flowcast-theme";
 type Theme = "system" | "light" | "dark";
 
 function getStored(): Theme {

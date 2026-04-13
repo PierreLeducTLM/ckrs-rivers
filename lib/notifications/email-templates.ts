@@ -15,7 +15,7 @@ function layout(title: string, body: string, unsubscribeUrl?: string): string {
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:24px auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
     <div style="background:#2D8FCC;padding:20px 24px;">
-      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600;">Kayak Rivi&egrave;re aux Sables</h1>
+      <h1 style="margin:0;color:#fff;font-size:20px;font-weight:600;">FlowCast</h1>
     </div>
     <div style="padding:24px;">
       <h2 style="margin:0 0 16px;font-size:18px;color:#18181b;">${title}</h2>
@@ -23,7 +23,7 @@ function layout(title: string, body: string, unsubscribeUrl?: string): string {
     </div>
     <div style="padding:16px 24px;border-top:1px solid #e4e4e7;background:#fafafa;font-size:13px;color:#71717a;">
       ${unsubscribeUrl ? `<a href="${unsubscribeUrl}" style="color:#71717a;">Unsubscribe</a> &middot; ` : ""}
-      <a href="${appUrl()}" style="color:#71717a;">Kayak Rivi&egrave;re aux Sables</a>
+      <a href="${appUrl()}" style="color:#71717a;">FlowCast</a>
     </div>
   </div>
 </body>
@@ -40,7 +40,7 @@ export function confirmationEmail(
   const confirmUrl = `${appUrl()}/api/notifications/confirm?token=${token}`;
 
   return {
-    subject: "Confirm your Kayak Rivière aux Sables notifications",
+    subject: "Confirm your FlowCast notifications",
     html: layout(
       "Confirm your email",
       `<p style="color:#52525b;line-height:1.6;">Click the button below to verify your email. Once confirmed, you'll be able to choose which rivers you want to receive notifications for.</p>
@@ -49,7 +49,7 @@ export function confirmationEmail(
            Verify My Email
          </a>
        </div>
-       <p style="font-size:13px;color:#a1a1aa;">If you didn't sign up for Kayak Rivi&egrave;re aux Sables, you can ignore this email.</p>`,
+       <p style="font-size:13px;color:#a1a1aa;">If you didn't sign up for FlowCast, you can ignore this email.</p>`,
     ),
   };
 }
@@ -155,7 +155,7 @@ export function digestEmail(
   }).join("");
 
   return {
-    subject: `Kayak Rivière aux Sables — ${period} forecast digest`,
+    subject: `FlowCast — ${period} forecast digest`,
     html: layout(
       `${period} River Forecast`,
       `<table style="width:100%;border-collapse:collapse;font-size:14px;">

@@ -16,12 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kayak Rivière aux Sables — Prévisions de débit",
-  description: "Prévisions de débit des rivières pour les pagayeurs",
+  title: "FlowCast — River flow forecasts",
+  description: "River flow forecasts for paddlers",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "KRAS",
+    title: "FlowCast",
   },
 };
 

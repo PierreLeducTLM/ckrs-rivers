@@ -13,7 +13,7 @@ export type Locale = "en" | "fr";
 type Messages = typeof en;
 
 const MESSAGES: Record<Locale, Messages> = { en, fr };
-const STORAGE_KEY = "kras-locale";
+const STORAGE_KEY = "flowcast-locale";
 const SUPPORTED: Locale[] = ["en", "fr"];
 
 // ---------------------------------------------------------------------------
