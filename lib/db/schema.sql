@@ -160,4 +160,5 @@ CREATE TABLE IF NOT EXISTS push_devices (
 
 CREATE INDEX IF NOT EXISTS idx_push_devices_token ON push_devices(token);
 CREATE INDEX IF NOT EXISTS idx_push_devices_active ON push_devices(active) WHERE active = true;
-CREATE INDEX IF NOT EXISTS idx_push_devices_subscriber ON push_devices(subscriber_id);
+-- idx_push_devices_subscriber is created in the ALTER block in migrate.ts
+-- after the subscriber_id column has been added to existing databases.
