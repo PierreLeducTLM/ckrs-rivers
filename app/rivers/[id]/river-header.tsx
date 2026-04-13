@@ -31,6 +31,7 @@ interface RiverHeaderProps {
   initialRiverPath?: [number, number][] | null;
   initialRapidClass?: string | null;
   initialDescription?: string | null;
+  regime?: string | null;
 }
 
 export default function RiverHeader({
@@ -46,6 +47,7 @@ export default function RiverHeader({
   initialRiverPath = null,
   initialRapidClass = null,
   initialDescription = null,
+  regime = null,
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
   const { t } = useTranslation();
@@ -101,6 +103,14 @@ export default function RiverHeader({
                 <span className="font-medium text-zinc-700 dark:text-zinc-300">
                   {Number(catchmentArea).toLocaleString()} km&sup2;
                 </span>
+              </span>
+            </>
+          )}
+          {regime === "Influencé" && (
+            <>
+              <span className="hidden sm:inline" aria-hidden="true">&middot;</span>
+              <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                {t("detail.damControlled")}
               </span>
             </>
           )}

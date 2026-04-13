@@ -78,6 +78,7 @@ interface WeatherDay {
 interface StationRow {
   id: string;
   name: string;
+  regime: string | null;
   paddling_min: number | null;
   paddling_ideal: number | null;
   paddling_max: number | null;
@@ -298,6 +299,7 @@ function detectAlerts(
   prev: StationSnapshot | null,
   stationName: string,
   paddling: PaddlingLevels | undefined,
+  regime?: string | null,
 ): AlertCandidate[] {
   const alerts: AlertCandidate[] = [];
   const wasRunnable = prev ? isGoodRange(prev.paddlingStatus) : false;
@@ -337,8 +339,8 @@ function detectAlerts(
     add("runnable-in-n-days", `${stationName} predicted to become runnable in ${d} day${d === 1 ? "" : "s"}.`);
   }
 
-  // rain-bump
-  if (curr.precipNext48h > 15 && (prev == null || prev.precipNext48h <= 15)) {
+  // rain-bump — skip for dam-influenced rivers (CEHQ: "Influencé")
+  if (regime !== "Influencé" && curr.precipNext48h > 15 && (prev == null || prev.precipNext48h <= 15)) {
     add("rain-bump", `${curr.precipNext48h.toFixed(0)}mm of rain expected in 48h for ${stationName}. Flow may rise.`);
   }
 
@@ -582,7 +584,7 @@ export const evaluateAlerts = task({
 
     // 1. Load stations with paddling thresholds
     const stations = (await dbSql(
-      `SELECT id, name, paddling_min, paddling_ideal, paddling_max
+      `SELECT id, name, regime, paddling_min, paddling_ideal, paddling_max
        FROM stations WHERE status != 'error'`,
     )) as StationRow[];
 
@@ -639,7 +641,7 @@ export const evaluateAlerts = task({
       stationSnapshots.set(station.id, snapshot);
       const prevSnapshot = prevSnapshots.get(station.id) ?? null;
 
-      const candidates = detectAlerts(snapshot, prevSnapshot, station.name, paddling);
+      const candidates = detectAlerts(snapshot, prevSnapshot, station.name, paddling, station.regime);
 
       if (candidates.length > 0) {
         logger.info(`Station ${station.id}: ${candidates.length} alert candidates`, {

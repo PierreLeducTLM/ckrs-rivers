@@ -45,6 +45,7 @@ function rowToStation(row: StationRow): RiverStation {
     name: row.name || `Station ${row.id}`,
     coordinates: { lat: row.lat, lon: row.lon },
     catchmentArea: row.catchment_area_km2 ?? undefined,
+    regime: row.regime ?? undefined,
     weatherCity: row.weather_city ?? undefined,
     weatherCoordinates:
       row.weather_lat != null && row.weather_lon != null

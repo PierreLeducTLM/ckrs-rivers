@@ -44,6 +44,7 @@ export interface WeatherDay {
 export interface StationForecastData {
   stationId: string;
   stationName: string;
+  regime?: string;
   lastFlow: { date: string; flow: number } | null;
   forecastDays: ForecastDay[];
   hourlyData: HourlyPoint[];
@@ -115,6 +116,7 @@ export function detectAlerts(
   previous: StationSnapshot | null,
   stationName: string,
   paddling: PaddlingLevels | undefined,
+  options?: { regime?: string },
 ): AlertCandidate[] {
   const candidates: AlertCandidate[] = [];
   const prev = previous;
@@ -169,7 +171,8 @@ export function detectAlerts(
   }
 
   // --- rain-bump: significant precipitation incoming ---
-  if (current.precipNext48h > 15 && (prev == null || prev.precipNext48h <= 15)) {
+  // Skip for dam-influenced rivers — rain doesn't directly affect their flow
+  if (options?.regime !== "Influencé" && current.precipNext48h > 15 && (prev == null || prev.precipNext48h <= 15)) {
     add(
       "rain-bump",
       `${current.precipNext48h.toFixed(0)}mm of rain expected in the next 48 hours for ${stationName}. Flow may rise significantly.`,

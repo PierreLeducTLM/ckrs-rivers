@@ -296,6 +296,7 @@ export default async function RiverPage({
             catchmentArea={station.catchmentArea as number | undefined}
             initialRapidClass={rapidClass}
             initialDescription={description}
+            regime={station.regime ?? null}
           />
 
           <div className="mt-3 flex items-center gap-3">
