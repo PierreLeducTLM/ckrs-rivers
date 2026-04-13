@@ -7,10 +7,11 @@ import RiverListItem from "./river-list-item";
 import SortControl, { type SortMode } from "./sort-control";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
-import { statusPriority } from "./utils";
+import { idealSortKey, statusPriority } from "./utils";
 
 const FAVORITES_KEY = "waterflow-favorites";
 const VIEW_MODE_KEY = "waterflow-view-mode";
+const SORT_MODE_KEY = "waterflow-sort-mode";
 
 type ViewMode = "card" | "list";
 
@@ -45,7 +46,7 @@ export default function MyRiversTab({
   const { setActiveTab } = useTab();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
-  const [sort, setSort] = useState<SortMode>("status");
+  const [sort, setSort] = useState<SortMode>("ideal");
   const [mounted, setMounted] = useState(false);
 
   const refreshFavorites = useCallback(() => {
@@ -56,6 +57,9 @@ export default function MyRiversTab({
     refreshFavorites();
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     if (saved === "card" || saved === "list") setViewMode(saved);
+    const savedSort = localStorage.getItem(SORT_MODE_KEY);
+    if (savedSort === "ideal" || savedSort === "status" || savedSort === "name")
+      setSort(savedSort);
     setMounted(true);
     window.addEventListener("favorites-changed", refreshFavorites);
     return () =>
@@ -67,10 +71,22 @@ export default function MyRiversTab({
     localStorage.setItem(VIEW_MODE_KEY, mode);
   };
 
+  const handleSortChange = (mode: SortMode) => {
+    setSort(mode);
+    localStorage.setItem(SORT_MODE_KEY, mode);
+  };
+
   const favoriteCards = useMemo(() => {
     const filtered = cards.filter((c) => favorites.has(c.id));
     return [...filtered].sort((a, b) => {
       if (sort === "name") return a.name.localeCompare(b.name);
+      if (sort === "ideal") {
+        const ka = idealSortKey(a);
+        const kb = idealSortKey(b);
+        if (ka.group !== kb.group) return ka.group - kb.group;
+        if (ka.score !== kb.score) return ka.score - kb.score;
+        return a.name.localeCompare(b.name);
+      }
       // By status (paddleable first)
       const diff = statusPriority(a.status) - statusPriority(b.status);
       if (diff !== 0) return diff;
@@ -117,7 +133,7 @@ export default function MyRiversTab({
     <div>
       {/* Header controls */}
       <div className="mb-4 flex items-center justify-between">
-        <SortControl value={sort} onChange={setSort} t={t} />
+        <SortControl value={sort} onChange={handleSortChange} t={t} />
         <div className="inline-flex rounded-lg border border-brand/20 p-0.5">
           <button
             onClick={() => toggleView("card")}

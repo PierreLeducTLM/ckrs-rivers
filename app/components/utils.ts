@@ -136,6 +136,49 @@ export function statusPriority(s: string): number {
   }
 }
 
+/**
+ * Compute a sort key for the "by ideal level" sort mode.
+ *
+ * Group 1: Rivers currently paddleable (ideal/runnable) — ordered by
+ *          absolute distance from the ideal paddling level (closest first).
+ * Group 2: Rivers not currently paddleable but forecast to become good —
+ *          ordered by time until they become good (soonest first).
+ * Group 3: All other rivers (no forecast window, unknown, missing levels).
+ */
+export function idealSortKey(card: StationCard): {
+  group: number;
+  score: number;
+} {
+  const paddling = card.paddling;
+  const lastFlow = card.lastFlow;
+
+  // Group 1: currently paddleable — distance from ideal
+  if (
+    (card.status === "ideal" || card.status === "runnable") &&
+    paddling &&
+    paddling.ideal != null &&
+    lastFlow != null
+  ) {
+    return { group: 1, score: Math.abs(lastFlow - paddling.ideal) };
+  }
+
+  // Group 2: forecast will become good — soonest first
+  if (paddling) {
+    const now = card.nowTs;
+    for (const point of card.sparkData) {
+      const flow = point.cehqForecast;
+      if (flow == null || point.ts <= now) continue;
+      const { status } = getPaddlingStatus(flow, paddling);
+      if (isGoodRange(status)) {
+        return { group: 2, score: point.ts - now };
+      }
+    }
+  }
+
+  // Group 3: no imminent window
+  return { group: 3, score: statusPriority(card.status) };
+}
+
 /** Normalize a string for accent-insensitive search */
 export function normalizeSearch(s: string): string {
   return s
