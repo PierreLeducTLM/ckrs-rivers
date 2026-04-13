@@ -58,7 +58,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const stationIds = body.stationIds ?? [];
+  // Only overwrite station_ids when the client explicitly sends them.
+  // On mobile, initPushNotifications() POSTs on every app launch to refresh
+  // the device token; without this guard, the user's previously-selected
+  // rivers would be wiped to [] on every restart.
+  const stationIds =
+    body.stationIds === undefined ? null : body.stationIds;
 
   const subscriberId =
     body.subscriberId ??
@@ -67,10 +72,10 @@ export async function POST(request: NextRequest) {
   // Upsert. Preserve existing station_ids/subscriber_id unless new values provided.
   await sql(
     `INSERT INTO push_devices (token, platform, station_ids, subscriber_id)
-     VALUES ($1, $2, $3, $4)
+     VALUES ($1, $2, COALESCE($3::TEXT[], ARRAY[]::TEXT[]), $4)
      ON CONFLICT (token) DO UPDATE
        SET platform      = EXCLUDED.platform,
-           station_ids   = EXCLUDED.station_ids,
+           station_ids   = COALESCE($3::TEXT[], push_devices.station_ids),
            active        = true,
            subscriber_id = COALESCE(EXCLUDED.subscriber_id, push_devices.subscriber_id),
            updated_at    = now()`,
