@@ -194,6 +194,9 @@
     "confirmDelete": "Supprimer",
     "deleting": "Suppression..."
   },
+  "menu": {
+    "explore": "Explorer"
+  },
   "language": {
     "label": "Langue",
     "en": "English",

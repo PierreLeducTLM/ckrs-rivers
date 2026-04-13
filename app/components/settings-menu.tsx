@@ -39,6 +39,28 @@ function NotificationsLink() {
   );
 }
 
+function ExploreLink() {
+  const { t } = useTranslation();
+
+  return (
+    <button
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
+    >
+      <svg
+        className="h-4 w-4 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+      </svg>
+      {t("menu.explore")}
+    </button>
+  );
+}
+
 export default function SettingsMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -110,6 +132,7 @@ export default function SettingsMenu() {
       {open && (
         <div className="absolute right-0 top-full z-[9999] mt-1 flex min-w-[160px] flex-col gap-0.5 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
           <NotificationsLink />
+          <ExploreLink />
           <LanguageToggle />
           <ThemeToggle />
           {showAdminToggle && (
