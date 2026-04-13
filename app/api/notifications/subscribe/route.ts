@@ -7,31 +7,68 @@ import { sendEmail } from "@/lib/notifications/send-email";
 /**
  * POST /api/notifications/subscribe
  *
- * Body: { email: string }
- * Creates or finds subscriber and sends a confirmation email.
- * No rivers are subscribed at this stage — the user selects rivers
- * after confirming their email.
+ * Body: { email: string, pushToken?: string }
+ *
+ * Creates or finds a subscriber.
+ *
+ * - Web flow: sends a confirmation email; user must click the link.
+ * - Native flow (pushToken provided): trusts the device identity, marks the
+ *   subscriber as confirmed, links the push device to the subscriber, and
+ *   returns the subscriber token so the client can immediately manage prefs.
  */
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as { email?: string };
+  const body = (await request.json()) as { email?: string; pushToken?: string };
 
   const email = body.email?.trim().toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: "Valid email required" }, { status: 400 });
   }
 
-  // Upsert subscriber
-  const subscribers = (await sql(
-    `INSERT INTO subscribers (email)
-     VALUES ($1)
-     ON CONFLICT (email) DO UPDATE SET updated_at = now()
-     RETURNING id, token, confirmed`,
-    [email],
-  )) as Array<{ id: string; token: string; confirmed: boolean }>;
+  const pushToken = body.pushToken?.trim();
+
+  // Upsert subscriber. Auto-confirm when the request originates from a
+  // trusted native device that already has a push_devices row.
+  const autoConfirm = !!pushToken;
+
+  const subscribers = autoConfirm
+    ? ((await sql(
+        `INSERT INTO subscribers (email, confirmed, confirmed_at)
+         VALUES ($1, true, now())
+         ON CONFLICT (email) DO UPDATE
+           SET confirmed    = true,
+               confirmed_at = COALESCE(subscribers.confirmed_at, now()),
+               updated_at   = now()
+         RETURNING id, token, confirmed`,
+        [email],
+      )) as Array<{ id: string; token: string; confirmed: boolean }>)
+    : ((await sql(
+        `INSERT INTO subscribers (email)
+         VALUES ($1)
+         ON CONFLICT (email) DO UPDATE SET updated_at = now()
+         RETURNING id, token, confirmed`,
+        [email],
+      )) as Array<{ id: string; token: string; confirmed: boolean }>);
 
   const subscriber = subscribers[0];
 
-  // Send confirmation email
+  // Native flow: link push device → subscriber and return token immediately.
+  if (pushToken) {
+    await sql(
+      `UPDATE push_devices
+       SET subscriber_id = $1, updated_at = now()
+       WHERE token = $2`,
+      [subscriber.id, pushToken],
+    );
+
+    return Response.json({
+      success: true,
+      token: subscriber.token,
+      email,
+      alreadyConfirmed: subscriber.confirmed,
+    });
+  }
+
+  // Web flow: send confirmation email.
   const template = confirmationEmail(subscriber.token);
   const result = await sendEmail({
     to: email,

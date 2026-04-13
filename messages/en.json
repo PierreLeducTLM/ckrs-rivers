@@ -110,7 +110,30 @@
     "somethingWrong": "Something went wrong",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "channels": "Notification Channels",
+    "emailNotifications": "Email notifications",
+    "pushNotifications": "Push notifications",
+    "emailDisabledHint": "Add an email below to enable email notifications.",
+    "addEmail": "Add an email (optional)",
+    "emailPlaceholder": "you@example.com",
+    "saveEmail": "Save",
+    "notificationTypes": "Notification Types",
+    "notificationTypesHint": "Choose which alerts you want to receive.",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "saved": "Saved",
+    "saveFailed": "Couldn't save — please try again.",
+    "alertTypes": {
+      "itsOn": { "label": "It's on!", "description": "A river just entered runnable range." },
+      "safetyWarning": { "label": "Safety warning", "description": "Flow has exceeded the safe paddling max." },
+      "runnableInNDays": { "label": "Runnable soon", "description": "Predicted to become runnable within your lead time." },
+      "weekendForecast": { "label": "Weekend forecast", "description": "Weekly digest of upcoming weekend windows." },
+      "rainBump": { "label": "Rain incoming", "description": "Heavy rain expected — flow may rise." },
+      "confidenceUpgraded": { "label": "Forecast confirmed", "description": "Forecast confidence upgraded to high." },
+      "risingIntoRange": { "label": "Rising into range", "description": "Flow trending up, approaching runnable." },
+      "droppingOut": { "label": "Dropping out", "description": "Currently runnable, expected to drop out in 12–24h." }
+    }
   },
   "favorites": {
     "add": "Add to favorites",

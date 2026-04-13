@@ -31,6 +31,9 @@ export function filterAlerts(
   ctx: FilterContext,
 ): AlertCandidate[] {
   return candidates.filter((c) => {
+    // 0. Alert-type allow-list (user opt-out per type)
+    if (!isAlertTypeEnabled(c.alertType, ctx.preferences)) return false;
+
     // 1. Cooldown check
     if (isInCooldown(c.alertType, ctx.alertStates, ctx.now)) return false;
 
@@ -79,6 +82,15 @@ export function routeAlerts(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function isAlertTypeEnabled(
+  alertType: AlertType,
+  prefs: SubscriberPreferences,
+): boolean {
+  // If the field is missing (legacy row), treat as "all enabled".
+  if (!prefs.enabledAlertTypes) return true;
+  return prefs.enabledAlertTypes.includes(alertType);
+}
 
 function isInCooldown(
   alertType: AlertType,

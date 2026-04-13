@@ -110,7 +110,30 @@
     "somethingWrong": "Une erreur est survenue",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Les notifications push arrivent bientot sur mobile. En attendant, vous pouvez vous abonner aux alertes par courriel depuis la version web.",
-    "gotIt": "Compris"
+    "gotIt": "Compris",
+    "channels": "Canaux de notification",
+    "emailNotifications": "Notifications courriel",
+    "pushNotifications": "Notifications push",
+    "emailDisabledHint": "Ajoutez un courriel ci-dessous pour activer les notifications par courriel.",
+    "addEmail": "Ajouter un courriel (optionnel)",
+    "emailPlaceholder": "vous@exemple.com",
+    "saveEmail": "Enregistrer",
+    "notificationTypes": "Types de notification",
+    "notificationTypesHint": "Choisissez les alertes que vous voulez recevoir.",
+    "selectAll": "Tout cocher",
+    "deselectAll": "Tout decocher",
+    "saved": "Enregistre",
+    "saveFailed": "Enregistrement impossible — reessayez.",
+    "alertTypes": {
+      "itsOn": { "label": "C'est parti !", "description": "Une riviere vient d'entrer dans la plage navigable." },
+      "safetyWarning": { "label": "Avertissement securite", "description": "Le debit depasse la limite securitaire." },
+      "runnableInNDays": { "label": "Bientot navigable", "description": "Prevu navigable dans votre delai de preavis." },
+      "weekendForecast": { "label": "Apercu de fin de semaine", "description": "Resume hebdomadaire des fenetres de fin de semaine." },
+      "rainBump": { "label": "Pluie a venir", "description": "Forte pluie prevue — le debit pourrait monter." },
+      "confidenceUpgraded": { "label": "Prevision confirmee", "description": "Confiance de la prevision passee a elevee." },
+      "risingIntoRange": { "label": "Debit en hausse", "description": "Debit en hausse, approche de la plage navigable." },
+      "droppingOut": { "label": "Fin de fenetre", "description": "Navigable, sortie prevue dans 12 a 24h." }
+    }
   },
   "favorites": {
     "add": "Ajouter aux favoris",

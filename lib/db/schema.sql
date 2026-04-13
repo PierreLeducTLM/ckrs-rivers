@@ -147,14 +147,17 @@ CREATE INDEX IF NOT EXISTS idx_notif_log_subscriber ON notification_log(subscrib
 
 -- 11. Push device tokens (Capacitor native push notifications)
 CREATE TABLE IF NOT EXISTS push_devices (
-  id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  token       TEXT NOT NULL UNIQUE,
-  platform    TEXT NOT NULL CHECK (platform IN ('ios', 'android', 'web')),
-  station_ids TEXT[] NOT NULL DEFAULT '{}',
-  active      BOOLEAN NOT NULL DEFAULT true,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+  id            TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  token         TEXT NOT NULL UNIQUE,
+  platform      TEXT NOT NULL CHECK (platform IN ('ios', 'android', 'web')),
+  station_ids   TEXT[] NOT NULL DEFAULT '{}',
+  active        BOOLEAN NOT NULL DEFAULT true,
+  subscriber_id TEXT REFERENCES subscribers(id) ON DELETE SET NULL,
+  preferences   JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_push_devices_token ON push_devices(token);
 CREATE INDEX IF NOT EXISTS idx_push_devices_active ON push_devices(active) WHERE active = true;
+CREATE INDEX IF NOT EXISTS idx_push_devices_subscriber ON push_devices(subscriber_id);

@@ -18,6 +18,9 @@ export const AlertTypeSchema = z.enum([
 ]);
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 
+/** All known alert types — iterate for UI toggles and default enable set. */
+export const ALL_ALERT_TYPES: readonly AlertType[] = AlertTypeSchema.options;
+
 export const PrioritySchema = z.enum(["critical", "high", "normal", "low"]);
 export type Priority = z.infer<typeof PrioritySchema>;
 
@@ -72,6 +75,13 @@ export const SubscriberPreferencesSchema = z.object({
   digestMode: z.boolean().default(false),
   weekendOnly: z.boolean().default(false),
   channel: ChannelSchema.default("email"),
+  /** Per-channel opt-out. Both default true so existing users keep receiving. */
+  emailEnabled: z.boolean().default(true),
+  pushEnabled: z.boolean().default(true),
+  /** Allow-list of alert types the user wants to receive. Defaults to all 8. */
+  enabledAlertTypes: z
+    .array(AlertTypeSchema)
+    .default([...ALL_ALERT_TYPES]),
 });
 export type SubscriberPreferences = z.infer<typeof SubscriberPreferencesSchema>;
 
