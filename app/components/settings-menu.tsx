@@ -5,6 +5,7 @@ import Link from "next/link";
 import ThemeToggle from "../theme-toggle";
 import LanguageToggle from "../language-toggle";
 import { getSubToken } from "../subscribe-button";
+import { getPushToken } from "@/lib/capacitor/push";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdminToggle } from "../use-admin";
 
@@ -13,8 +14,17 @@ function NotificationsLink() {
   const [href, setHref] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = getSubToken();
-    if (token) setHref(`/notifications?token=${token}`);
+    // Prefer subscriber token (web email flow)
+    const subToken = getSubToken();
+    if (subToken) {
+      setHref(`/notifications?token=${subToken}`);
+      return;
+    }
+    // Fall back to push token on native
+    const pushToken = getPushToken();
+    if (pushToken) {
+      setHref(`/notifications?pushToken=${pushToken}`);
+    }
   }, []);
 
   if (!href) return null;

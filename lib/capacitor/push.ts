@@ -10,7 +10,8 @@
 
 const PUSH_TOKEN_KEY = "waterflow-push-token";
 
-let initialized = false;
+/** Module-scoped pending promise so repeated calls share the same registration. */
+let pendingRegistration: Promise<string | null> | null = null;
 
 /** Get the stored push device token (null on web or if not yet registered). */
 export function getPushToken(): string | null {
@@ -18,13 +19,31 @@ export function getPushToken(): string | null {
   return localStorage.getItem(PUSH_TOKEN_KEY);
 }
 
-export async function initPushNotifications() {
-  if (initialized) return;
-  if (typeof window === "undefined") return;
+/**
+ * Register for push notifications and return the device token.
+ *
+ * Returns a Promise that resolves with the token once APNs/FCM registration
+ * completes, or null if permission is denied or not on native.
+ * Repeated calls return the same pending promise (memo).
+ */
+export function initPushNotifications(): Promise<string | null> {
+  // Return cached token immediately if already registered
+  const existing = getPushToken();
+  if (existing) return Promise.resolve(existing);
+
+  // Reuse in-flight registration
+  if (pendingRegistration) return pendingRegistration;
+
+  pendingRegistration = doInit();
+  return pendingRegistration;
+}
+
+async function doInit(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
 
   // Only run inside Capacitor native shell
   const { Capacitor } = await import("@capacitor/core");
-  if (!Capacitor.isNativePlatform()) return;
+  if (!Capacitor.isNativePlatform()) return null;
 
   const { PushNotifications } = await import("@capacitor/push-notifications");
 
@@ -35,29 +54,37 @@ export async function initPushNotifications() {
   }
   if (permission.receive !== "granted") {
     console.log("Push notification permission denied");
-    return;
+    pendingRegistration = null;
+    return null;
   }
 
-  // Listen for registration
-  PushNotifications.addListener("registration", async (token) => {
-    console.log("Push token:", token.value);
-    localStorage.setItem(PUSH_TOKEN_KEY, token.value);
-    try {
-      await fetch("/api/notifications/push-register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: token.value,
-          platform: Capacitor.getPlatform(), // 'ios' | 'android'
-        }),
-      });
-    } catch (e) {
-      console.error("Failed to register push token:", e);
-    }
-  });
+  // Wait for the registration listener to fire
+  const token = await new Promise<string | null>((resolve) => {
+    PushNotifications.addListener("registration", async (reg) => {
+      console.log("Push token:", reg.value);
+      localStorage.setItem(PUSH_TOKEN_KEY, reg.value);
+      try {
+        await fetch("/api/notifications/push-register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: reg.value,
+            platform: Capacitor.getPlatform(), // 'ios' | 'android'
+          }),
+        });
+      } catch (e) {
+        console.error("Failed to register push token:", e);
+      }
+      resolve(reg.value);
+    });
 
-  PushNotifications.addListener("registrationError", (error) => {
-    console.error("Push registration error:", error);
+    PushNotifications.addListener("registrationError", (error) => {
+      console.error("Push registration error:", error);
+      resolve(null);
+    });
+
+    // Register with APNs (iOS) / FCM (Android)
+    PushNotifications.register();
   });
 
   // Handle received notifications when app is in foreground
@@ -73,7 +100,6 @@ export async function initPushNotifications() {
     }
   });
 
-  // Register with APNs (iOS) / FCM (Android)
-  await PushNotifications.register();
-  initialized = true;
+  if (!token) pendingRegistration = null;
+  return token;
 }

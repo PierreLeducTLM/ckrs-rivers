@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
-import { getPushToken, initPushNotifications } from "@/lib/capacitor/push";
+import { initPushNotifications } from "@/lib/capacitor/push";
 
 const SUB_TOKEN_KEY = "waterflow-sub-token";
 
@@ -47,10 +47,10 @@ export default function SubscribeButton({
       if (isNative) {
         setToggling(true);
         try {
-          // Ensure push is registered
-          await initPushNotifications();
-          const pushToken = getPushToken();
+          // Await registration — returns token once APNs/FCM completes
+          const pushToken = await initPushNotifications();
           if (!pushToken) {
+            console.error("Push registration failed or permission denied");
             setToggling(false);
             return;
           }
@@ -65,8 +65,8 @@ export default function SubscribeButton({
             }),
           });
           onToggled();
-        } catch {
-          // Silently fail
+        } catch (err) {
+          console.error("Subscribe toggle failed:", err);
         }
         setToggling(false);
         return;

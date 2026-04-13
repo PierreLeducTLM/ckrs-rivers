@@ -111,7 +111,51 @@
     "somethingWrong": "Something went wrong",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.",
-    "gotIt": "Got it"
+    "gotIt": "Got it",
+    "emailNotifications": "Email notifications",
+    "pushNotifications": "Push notifications",
+    "notificationTypes": "Notification Types",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "addEmail": "Add an email (optional)",
+    "saved": "Saved",
+    "saveFailed": "Failed to save preferences",
+    "noEmailHint": "Add an email to enable email notifications",
+    "channelToggles": "Channels",
+    "alertTypes": {
+      "its-on": {
+        "label": "River becomes runnable",
+        "description": "Notified when flow enters the paddling range"
+      },
+      "safety-warning": {
+        "label": "Safety — flow exceeds max",
+        "description": "Alerted when flow exceeds the safe paddling maximum"
+      },
+      "rain-bump": {
+        "label": "Heavy rain expected",
+        "description": "Significant rainfall (>15mm) forecasted in 48h"
+      },
+      "confidence-upgraded": {
+        "label": "Forecast confidence upgraded",
+        "description": "Forecast confidence has been upgraded to high"
+      },
+      "runnable-in-n-days": {
+        "label": "Runnable within lead time",
+        "description": "River predicted to become runnable within your advance notice window"
+      },
+      "rising-into-range": {
+        "label": "Rising into range",
+        "description": "Flow is rising and approaching the minimum runnable level"
+      },
+      "dropping-out": {
+        "label": "Dropping out of range",
+        "description": "Currently runnable but forecasted to drop out within 24h"
+      },
+      "weekend-forecast": {
+        "label": "Weekend forecast digest",
+        "description": "Weekly summary of your subscribed rivers for the weekend"
+      }
+    }
   },
   "favorites": {
     "add": "Add to favorites",

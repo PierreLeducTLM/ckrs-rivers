@@ -388,11 +388,12 @@ async function sendPushForAlerts(
   const stationIds = alerts.map((a) => a.stationId);
 
   // Find active push devices that have at least one of the alerted stations
+  // Include device preferences for per-device filtering
   const devices = await dbSql(
-    `SELECT token, platform FROM push_devices
+    `SELECT token, platform, preferences FROM push_devices
      WHERE active = true AND station_ids && $1`,
     [stationIds],
-  );
+  ) as Array<{ token: string; platform: string; preferences: Record<string, unknown> }>;
 
   if (devices.length === 0) return 0;
 
@@ -411,6 +412,16 @@ async function sendPushForAlerts(
 
   let sent = 0;
   for (const device of devices) {
+    // Check device-level pushEnabled preference
+    if (device.preferences?.pushEnabled === false) continue;
+
+    // Filter alerts by device-level enabledAlertTypes
+    const deviceEnabledTypes = device.preferences?.enabledAlertTypes as string[] | undefined;
+    const deviceAlerts = deviceEnabledTypes
+      ? alerts.filter((a) => deviceEnabledTypes.includes(a.alertType))
+      : alerts;
+    if (deviceAlerts.length === 0) continue;
+
     try {
       await messaging.send({
         token: device.token,
@@ -690,8 +701,14 @@ export const evaluateAlerts = task({
         const weekendOnly = (prefs.weekendOnly as boolean) ?? false;
         const digestMode = (prefs.digestMode as boolean) ?? false;
 
+        // Enabled alert types filter
+        const enabledAlertTypes = (prefs.enabledAlertTypes as string[] | undefined);
+
         for (const candidate of candidates) {
           if (isInCooldown(candidate.alertType, alertStates, now)) continue;
+
+          // Filter by enabled alert types
+          if (enabledAlertTypes && !enabledAlertTypes.includes(candidate.alertType)) continue;
 
           if (candidate.alertType === "runnable-in-n-days" && snapshot.forecastEntersRangeInDays != null) {
             if (snapshot.forecastEntersRangeInDays > leadTimeDays) continue;
@@ -746,15 +763,32 @@ export const evaluateAlerts = task({
       const finalAlerts = Array.from(bestByStation.values()).sort((a, b) => a.rank - b.rank);
       if (finalAlerts.length === 0) continue;
 
-      logger.info(`Subscriber ${subscriberId}: sending 1 email with ${finalAlerts.length} river alert(s)`, {
+      // Read subscriber preferences for channel gating
+      const subPrefsRows = await dbSql(
+        `SELECT preferences FROM subscribers WHERE id = $1`,
+        [subscriberId],
+      );
+      const subPrefs = subPrefsRows.length > 0 ? (subPrefsRows[0].preferences ?? {}) : {};
+      const emailEnabled = (subPrefs as Record<string, unknown>).emailEnabled !== false;
+      const pushEnabled = (subPrefs as Record<string, unknown>).pushEnabled !== false;
+
+      logger.info(`Subscriber ${subscriberId}: ${finalAlerts.length} river alert(s)`, {
         types: finalAlerts.map((a) => `${a.stationId}:${a.alertType}`),
+        emailEnabled,
+        pushEnabled,
       });
 
-      // Send ONE grouped email
-      const sent = await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token);
+      // Send ONE grouped email (skip if email disabled)
+      let sent = false;
+      if (emailEnabled) {
+        sent = await sendGroupedAlertEmail(bucket.email, finalAlerts, bucket.token);
+      }
 
-      // Send push notifications to matching devices
-      const pushCount = await sendPushForAlerts(finalAlerts, dbSql);
+      // Send push notifications to matching devices (skip if push disabled)
+      let pushCount = 0;
+      if (pushEnabled) {
+        pushCount = await sendPushForAlerts(finalAlerts, dbSql);
+      }
       totalPushes += pushCount;
 
       // Log + update state for each included alert

@@ -111,7 +111,51 @@
     "somethingWrong": "Une erreur est survenue",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Les notifications push arrivent bientot sur mobile. En attendant, vous pouvez vous abonner aux alertes par courriel depuis la version web.",
-    "gotIt": "Compris"
+    "gotIt": "Compris",
+    "emailNotifications": "Notifications par courriel",
+    "pushNotifications": "Notifications push",
+    "notificationTypes": "Types de notifications",
+    "selectAll": "Tout selectionner",
+    "deselectAll": "Tout deselectionner",
+    "addEmail": "Ajouter un courriel (optionnel)",
+    "saved": "Enregistre",
+    "saveFailed": "Echec de l'enregistrement des preferences",
+    "noEmailHint": "Ajoutez un courriel pour activer les notifications par courriel",
+    "channelToggles": "Canaux",
+    "alertTypes": {
+      "its-on": {
+        "label": "Riviere navigable",
+        "description": "Notifie quand le debit entre dans la plage de pagaie"
+      },
+      "safety-warning": {
+        "label": "Securite — debit depasse le max",
+        "description": "Alerte quand le debit depasse le maximum securitaire"
+      },
+      "rain-bump": {
+        "label": "Forte pluie prevue",
+        "description": "Precipitations significatives (>15mm) prevues dans 48h"
+      },
+      "confidence-upgraded": {
+        "label": "Confiance des previsions amelioree",
+        "description": "La confiance des previsions est passee a elevee"
+      },
+      "runnable-in-n-days": {
+        "label": "Navigable dans le delai de preavis",
+        "description": "Riviere prevue navigable dans votre fenetre de preavis"
+      },
+      "rising-into-range": {
+        "label": "En hausse vers la plage",
+        "description": "Le debit monte et approche le minimum navigable"
+      },
+      "dropping-out": {
+        "label": "Sortie de la plage",
+        "description": "Actuellement navigable mais prevu de sortir de la plage dans 24h"
+      },
+      "weekend-forecast": {
+        "label": "Resume des previsions du weekend",
+        "description": "Resume hebdomadaire de vos rivieres abonnees pour le weekend"
+      }
+    }
   },
   "favorites": {
     "add": "Ajouter aux favoris",

@@ -31,6 +31,14 @@ export function filterAlerts(
   ctx: FilterContext,
 ): AlertCandidate[] {
   return candidates.filter((c) => {
+    // 0. Enabled alert types filter
+    if (
+      ctx.preferences.enabledAlertTypes &&
+      !ctx.preferences.enabledAlertTypes.includes(c.alertType)
+    ) {
+      return false;
+    }
+
     // 1. Cooldown check
     if (isInCooldown(c.alertType, ctx.alertStates, ctx.now)) return false;
 

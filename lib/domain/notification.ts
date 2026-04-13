@@ -59,6 +59,12 @@ export const ALERT_COOLDOWN_MS: Record<AlertType, number> = {
 };
 
 // ---------------------------------------------------------------------------
+// All alert types constant (used as default & for UI iteration)
+// ---------------------------------------------------------------------------
+
+export const ALL_ALERT_TYPES: AlertType[] = AlertTypeSchema.options as unknown as AlertType[];
+
+// ---------------------------------------------------------------------------
 // Subscriber preferences
 // ---------------------------------------------------------------------------
 
@@ -72,6 +78,9 @@ export const SubscriberPreferencesSchema = z.object({
   digestMode: z.boolean().default(false),
   weekendOnly: z.boolean().default(false),
   channel: ChannelSchema.default("email"),
+  emailEnabled: z.boolean().default(true),
+  pushEnabled: z.boolean().default(true),
+  enabledAlertTypes: z.array(AlertTypeSchema).default([...AlertTypeSchema.options]),
 });
 export type SubscriberPreferences = z.infer<typeof SubscriberPreferencesSchema>;
 
