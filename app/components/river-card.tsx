@@ -34,7 +34,7 @@ export default function RiverCard({
   return (
     <Link
       href={`/rivers/${card.id}`}
-      className={`group relative rounded-xl bg-background p-6 shadow transition-shadow hover:shadow-lg ${
+      className={`group relative rounded-xl bg-background p-4 shadow transition-shadow hover:shadow-lg ${
         card.isGoodRange ? "border-2" : "border border-foreground/40"
       }`}
       style={
@@ -43,29 +43,52 @@ export default function RiverCard({
           : undefined
       }
     >
-      <div className="flex items-start gap-1.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <h2 className="truncate text-lg font-semibold leading-tight group-hover:underline">
-            {card.name}
-          </h2>
-          {card.rapidClass && (
-            <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
-              {card.rapidClass}
-            </span>
+      {/* Header row: title + flow value */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-base font-semibold leading-tight group-hover:underline">
+              {card.name}
+            </h2>
+            {card.rapidClass && (
+              <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
+                {card.rapidClass}
+              </span>
+            )}
+          </div>
+          {card.forecastAt && (
+            <RelativeTime
+              isoDate={card.forecastAt}
+              t={t}
+              className="mt-0.5 text-xs text-foreground/40"
+            />
           )}
         </div>
-        <SubscribeButton
-          stationId={card.id}
-          isSubscribed={isSubscribed}
-          onNeedEmail={onNeedEmail}
-          onToggled={onToggled}
-          isNative={isNative}
-        />
-        <FavoriteButton stationId={card.id} />
+        {card.lastFlow != null && (
+          <p
+            className="whitespace-nowrap text-2xl font-bold tabular-nums"
+            style={{ color: card.color }}
+          >
+            {card.lastFlow.toFixed(1)}
+            <span className="ml-0.5 text-xs font-medium text-foreground/50">
+              m&sup3;/s
+            </span>
+          </p>
+        )}
+        <div className="flex items-center gap-1">
+          <SubscribeButton
+            stationId={card.id}
+            isSubscribed={isSubscribed}
+            onNeedEmail={onNeedEmail}
+            onToggled={onToggled}
+            isNative={isNative}
+          />
+          <FavoriteButton stationId={card.id} />
+        </div>
       </div>
 
       {isAdmin && (
-        <p className="mt-1 text-sm text-foreground/50">
+        <p className="mt-0.5 text-xs text-foreground/50">
           Station {card.id}
           {card.catchmentArea !== undefined && (
             <span>
@@ -79,7 +102,7 @@ export default function RiverCard({
 
       {/* Sparkline */}
       {card.sparkData.length > 2 && (
-        <div className="-mx-1 mt-3">
+        <div className="-mx-1 mt-2">
           <SparklineChart
             data={card.sparkData}
             nowTs={card.nowTs}
@@ -187,40 +210,20 @@ export default function RiverCard({
           ) : null;
         })()}
 
-      {/* Flow value */}
+      {/* Status pill */}
       {card.lastFlow != null ? (
-        <div className="mt-3 flex items-baseline justify-between">
-          <p
-            className="text-3xl font-bold tabular-nums transition-all duration-300"
-            style={{ color: card.color }}
-          >
-            {card.lastFlow.toFixed(1)}
-            <span className="ml-1 text-sm font-medium text-foreground/50">
-              m&sup3;/s
-            </span>
-          </p>
-          {card.forecastAt && (
-            <RelativeTime
-              isoDate={card.forecastAt}
-              t={t}
-              className="text-xs text-foreground/40"
-            />
-          )}
+        <div className="mt-2">
+          <StatusPill card={card} t={t} />
         </div>
       ) : (
-        <div className="mt-4 rounded-lg bg-foreground/5 px-4 py-3">
-          <p className="text-sm text-foreground/40">{t("app.pressRefresh")}</p>
+        <div className="mt-2 rounded-lg bg-foreground/5 px-3 py-2">
+          <p className="text-xs text-foreground/40">{t("app.pressRefresh")}</p>
         </div>
       )}
 
-      {/* Status pill */}
-      <div className="mt-2">
-        <StatusPill card={card} t={t} />
-      </div>
-
       {/* Gradient bar */}
       {card.status !== "unknown" && card.lastFlow != null && (
-        <div className="mt-3">
+        <div className="mt-2">
           {/* Zone labels above bar */}
           <div className="mb-1 flex text-[9px] font-medium uppercase tracking-wide text-foreground/40">
             <span className="flex-1 text-left">{t("status.tooLow")}</span>
