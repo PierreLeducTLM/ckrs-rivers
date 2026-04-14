@@ -226,14 +226,6 @@ export default function RiverCard({
       {/* Gradient bar */}
       {card.status !== "unknown" && card.lastFlow != null && (
         <div className="mt-2">
-          {/* Zone labels above bar */}
-          <div className="mb-1 flex text-[9px] font-medium uppercase tracking-wide text-foreground/40">
-            <span className="flex-1 text-left">{t("status.tooLow")}</span>
-            <span className="flex-1 text-center text-emerald-600 dark:text-emerald-400">
-              {t("status.ideal")}
-            </span>
-            <span className="flex-1 text-right">{t("status.tooHigh")}</span>
-          </div>
           <div
             className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
