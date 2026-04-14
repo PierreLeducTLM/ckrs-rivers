@@ -8,7 +8,7 @@ import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
-import { weatherIcon, statusLabel } from "./utils";
+import { weatherIcon } from "./utils";
 
 interface RiverCardProps {
   card: StationCard;
@@ -43,19 +43,6 @@ export default function RiverCard({
           : undefined
       }
     >
-      {/* Status badge */}
-      {card.status !== "unknown" && (
-        <div className="absolute -top-2.5 right-4 flex items-center gap-1.5 rounded-full border border-foreground/10 bg-background px-2.5 py-0.5 text-xs font-semibold shadow-sm">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: card.color }}
-          />
-          <span style={{ color: card.color }}>
-            {statusLabel(card.status, t)}
-          </span>
-        </div>
-      )}
-
       <div className="flex items-start gap-1.5">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <h2 className="truncate text-lg font-semibold leading-tight group-hover:underline">
