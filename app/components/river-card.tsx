@@ -189,10 +189,13 @@ export default function RiverCard({
 
       {/* Flow value */}
       {card.lastFlow != null ? (
-        <div className="mt-2 flex items-baseline justify-between">
-          <p className="text-2xl font-bold tabular-nums">
-            {card.lastFlow.toFixed(1)}{" "}
-            <span className="text-sm font-normal text-foreground/60">
+        <div className="mt-3 flex items-baseline justify-between">
+          <p
+            className="text-3xl font-bold tabular-nums transition-all duration-300"
+            style={{ color: card.color }}
+          >
+            {card.lastFlow.toFixed(1)}
+            <span className="ml-1 text-sm font-medium text-foreground/50">
               m&sup3;/s
             </span>
           </p>
@@ -217,27 +220,39 @@ export default function RiverCard({
 
       {/* Gradient bar */}
       {card.status !== "unknown" && card.lastFlow != null && (
-        <div className="mt-2">
+        <div className="mt-3">
+          {/* Zone labels above bar */}
+          <div className="mb-1 flex text-[9px] font-medium uppercase tracking-wide text-foreground/40">
+            <span className="flex-1 text-left">{t("status.tooLow")}</span>
+            <span className="flex-1 text-center text-emerald-600 dark:text-emerald-400">
+              {t("status.ideal")}
+            </span>
+            <span className="flex-1 text-right">{t("status.tooHigh")}</span>
+          </div>
           <div
-            className="relative h-1.5 w-full overflow-hidden rounded-full"
+            className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
               background:
-                "linear-gradient(to right, #6A9FD8, #3B82F6 45%, #3A4FBF 60%, #5C3DAF 75%, #8B2E90 88%, #D32F2F)",
+                "linear-gradient(to right, #9ca3af 0%, #9ca3af 15%, #3b82f6 25%, #10b981 45%, #10b981 55%, #3b82f6 75%, #ef4444 85%, #ef4444 100%)",
             }}
           >
+            {/* Current position indicator */}
             <div
-              className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
+              className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-white shadow-lg transition-all duration-500 dark:border-zinc-900 ${
+                card.isGoodRange ? "animate-flow-pulse" : ""
+              }`}
               style={{
-                left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                backgroundColor: "#22c55e",
+                left: `${Math.max(2, Math.min(98, card.position * 100))}%`,
+                backgroundColor: card.color,
               }}
             />
           </div>
-          <div className="mt-1 flex justify-between text-[10px] text-foreground/40">
+          {/* Flow values below bar */}
+          <div className="mt-1 flex justify-between text-[10px] font-medium tabular-nums text-foreground/50">
             <span>
-              {card.paddling?.min != null ? `${card.paddling.min}` : ""}
+              {card.paddling?.min != null ? `${card.paddling.min}` : "0"}
             </span>
-            <span>
+            <span className="text-emerald-600 dark:text-emerald-400">
               {card.paddling?.ideal != null ? `${card.paddling.ideal}` : ""}
             </span>
             <span>

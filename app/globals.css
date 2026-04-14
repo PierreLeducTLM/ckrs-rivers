@@ -40,3 +40,16 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Subtle pulse animation for good flow status */
+@keyframes flow-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+.animate-flow-pulse {
+  animation: flow-pulse 2s ease-in-out infinite;
+}
