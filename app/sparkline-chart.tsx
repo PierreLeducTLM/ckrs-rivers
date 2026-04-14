@@ -33,7 +33,7 @@ export default function SparklineChart({ data, nowTs, paddling }: SparklineChart
   const yMax = Math.max(...allValues) * 1.1;
 
   return (
-    <ResponsiveContainer width="100%" height={60}>
+    <ResponsiveContainer width="100%" height={90}>
       <ComposedChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 2 }} style={{ pointerEvents: "none" }}>
         <defs>
           <linearGradient id="sparkConf" x1="0" y1="0" x2="0" y2="1">
