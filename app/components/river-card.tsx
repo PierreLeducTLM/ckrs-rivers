@@ -43,39 +43,19 @@ export default function RiverCard({
           : undefined
       }
     >
-      {/* Header row: title + flow value */}
+      {/* Header row: title + actions */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-2">
-            <h2 className="truncate text-base font-semibold leading-tight group-hover:underline">
-              {card.name}
-            </h2>
-            {card.rapidClass && (
-              <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
-                {card.rapidClass}
-              </span>
-            )}
-          </div>
-          {card.forecastAt && (
-            <RelativeTime
-              isoDate={card.forecastAt}
-              t={t}
-              className="mt-0.5 text-xs text-foreground/40"
-            />
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <h2 className="truncate text-base font-semibold leading-tight group-hover:underline">
+            {card.name}
+          </h2>
+          {card.rapidClass && (
+            <span className="flex-shrink-0 rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white dark:bg-zinc-200 dark:text-zinc-900">
+              {card.rapidClass}
+            </span>
           )}
         </div>
-        {card.lastFlow != null && (
-          <p
-            className="whitespace-nowrap text-2xl font-bold tabular-nums"
-            style={{ color: card.color }}
-          >
-            {card.lastFlow.toFixed(1)}
-            <span className="ml-0.5 text-xs font-medium text-foreground/50">
-              m&sup3;/s
-            </span>
-          </p>
-        )}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-shrink-0 items-center gap-1">
           <SubscribeButton
             stationId={card.id}
             isSubscribed={isSubscribed}
@@ -86,6 +66,28 @@ export default function RiverCard({
           <FavoriteButton stationId={card.id} />
         </div>
       </div>
+
+      {/* Flow value row */}
+      {card.lastFlow != null && (
+        <div className="mt-1 flex items-baseline justify-between">
+          <p
+            className="text-2xl font-bold tabular-nums"
+            style={{ color: card.color }}
+          >
+            {card.lastFlow.toFixed(1)}
+            <span className="ml-0.5 text-xs font-medium text-foreground/50">
+              m&sup3;/s
+            </span>
+          </p>
+          {card.forecastAt && (
+            <RelativeTime
+              isoDate={card.forecastAt}
+              t={t}
+              className="text-xs text-foreground/40"
+            />
+          )}
+        </div>
+      )}
 
       {isAdmin && (
         <p className="mt-0.5 text-xs text-foreground/50">
