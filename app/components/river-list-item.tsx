@@ -78,20 +78,22 @@ export default function RiverListItem({
         )}
 
         {/* Gradient bar (compact) */}
-        {card.status !== "unknown" && card.lastFlow != null && (
+        {card.lastFlow != null && (
           <div className="hidden w-24 flex-shrink-0 sm:block">
             <div
               className="relative h-1.5 w-full overflow-hidden rounded-full"
               style={{
                 background:
-                  "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                  card.status === "unknown"
+                    ? "#9CA3AF"
+                    : "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
               }}
             >
               <div
                 className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
                 style={{
                   left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                  backgroundColor: "#22c55e",
+                  backgroundColor: card.status === "unknown" ? "#6B7280" : "#22c55e",
                 }}
               />
             </div>

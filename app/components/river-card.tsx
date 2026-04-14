@@ -226,13 +226,15 @@ export default function RiverCard({
       )}
 
       {/* Gradient bar */}
-      {card.status !== "unknown" && card.lastFlow != null && (
+      {card.lastFlow != null && (
         <div className="mt-2">
           <div
             className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
               background:
-                "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                card.status === "unknown"
+                  ? "#9CA3AF"
+                  : "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
             }}
           >
             {/* Current position indicator */}
@@ -242,7 +244,7 @@ export default function RiverCard({
               }`}
               style={{
                 left: `${Math.max(2, Math.min(98, card.position * 100))}%`,
-                backgroundColor: card.color,
+                backgroundColor: card.status === "unknown" ? "#6B7280" : card.color,
               }}
             />
           </div>
