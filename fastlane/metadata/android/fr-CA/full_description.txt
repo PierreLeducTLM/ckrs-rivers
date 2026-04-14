@@ -1,0 +1,16 @@
+FlowCast offre des données de débit en temps réel et des prévisions aux pagayeurs d'eau vive, kayakistes et canoteurs.
+
+FONCTIONNALITÉS
+• Lectures de débit en direct provenant des stations hydrométriques publiques (USGS, Environnement Canada et plus)
+• Prévisions qui vous indiquent quand une rivière atteindra des niveaux navigables — « devrait être bon dans N jours »
+• Ajoutez vos rivières préférées en favoris pour un accès instantané
+• Notifications push lorsqu'une rivière favorite entre dans la plage navigable
+• Vue détaillée par station avec graphiques d'historique de débit
+• Interface épurée, rapide et pensée pour le mobile — conçue pour vérifier les niveaux en route vers la mise à l'eau
+
+Que vous chassiez une crue saisonnière, planifiiez une sortie de fin de semaine ou surveilliez simplement les niveaux de votre rivière préférée, FlowCast met les données dont vous avez besoin à portée d'un seul clic.
+
+CONFIDENTIALITÉ
+Nous ne vendons pas vos données. Les notifications sont optionnelles et liées uniquement à un jeton push — aucun compte requis.
+
+Fait par des pagayeurs, pour des pagayeurs.
