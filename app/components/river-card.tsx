@@ -69,16 +69,18 @@ export default function RiverCard({
 
       {/* Flow value row */}
       {card.lastFlow != null && (
-        <div className="mt-1 flex items-baseline justify-between">
-          <p
-            className="text-2xl font-bold tabular-nums"
-            style={{ color: card.color }}
-          >
-            {card.lastFlow.toFixed(1)}
-            <span className="ml-0.5 text-xs font-medium text-foreground/50">
+        <div className="mt-1 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold tabular-nums"
+              style={{ backgroundColor: card.color, color: "#fff" }}
+            >
+              {card.lastFlow.toFixed(0)}
+            </span>
+            <span className="text-xs font-medium text-foreground/50">
               m&sup3;/s
             </span>
-          </p>
+          </div>
           {card.forecastAt && (
             <RelativeTime
               isoDate={card.forecastAt}
@@ -230,7 +232,7 @@ export default function RiverCard({
             className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
               background:
-                "linear-gradient(to right, #9ca3af 0%, #9ca3af 15%, #3b82f6 25%, #10b981 45%, #10b981 55%, #3b82f6 75%, #ef4444 85%, #ef4444 100%)",
+                "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
             }}
           >
             {/* Current position indicator */}

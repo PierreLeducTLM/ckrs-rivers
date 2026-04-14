@@ -39,13 +39,12 @@ export function getPaddlingStatus(
 export function statusColor(position: number): string {
   if (position < 0) return "";
   const p = Math.max(0, Math.min(1, position));
-  // Blue-to-red via violet: min(0) → ideal(0.5) → max(1)
+  // Green from min to 80%, then transition to red for the last 20%
   const stops: [number, number, number, number][] = [
-    [0.0, 106, 159, 216], // #6A9FD8 — at min
-    [0.5, 59, 130, 246],  // #3B82F6 — ideal
-    [0.7, 58, 79, 191],   // #3A4FBF — above ideal (indigo)
-    [0.85, 92, 61, 175],  // #5C3DAF — approaching max (violet)
-    [1.0, 139, 46, 144],  // #8B2E90 — at max (magenta)
+    [0.0, 74, 222, 128],   // #4ADE80 — at min (green-400)
+    [0.5, 22, 163, 74],    // #16A34A — ideal (green-600)
+    [0.8, 22, 163, 74],    // #16A34A — still green at 80%
+    [1.0, 211, 47, 47],    // #D32F2F — red at max
   ];
   for (let i = 0; i < stops.length - 1; i++) {
     if (p <= stops[i + 1][0]) {
@@ -56,7 +55,7 @@ export function statusColor(position: number): string {
       return `rgb(${r},${g},${b})`;
     }
   }
-  return `rgb(139,46,144)`;
+  return `rgb(211,47,47)`;
 }
 
 /** Check if a status is considered "good" for paddling */

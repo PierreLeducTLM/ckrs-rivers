@@ -314,7 +314,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
                 height: 6,
                 width: "100%",
                 borderRadius: 3,
-                background: "linear-gradient(to right, #6A9FD8, #3B82F6 45%, #3A4FBF 60%, #5C3DAF 75%, #8B2E90 88%, #D32F2F)",
+                background: "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
               }}
             >
               <div
