@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
   server: {
-    url: "https://water-flow-eight.vercel.app/",
+    url: "https://www.flowcast.ca/",
     cleartext: false, // allow HTTP in dev — remove for production HTTPS
   },
   plugins: {

@@ -60,7 +60,7 @@ npm run store:all           # both of the above
 ```
 
 Screenshots are pulled from the live production URL
-(`https://water-flow-eight.vercel.app` by default; override with
+(`https://www.flowcast.ca/` by default; override with
 `STORE_SITE_URL=…`). Pages captured are defined in `scripts/generate-store-screenshots.ts`.
 
 ### Release checklist

@@ -16,7 +16,7 @@ import { chromium, devices } from "@playwright/test";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 
-const SITE_URL = process.env.STORE_SITE_URL ?? "https://water-flow-eight.vercel.app";
+const SITE_URL = process.env.STORE_SITE_URL ?? "https://www.flowcast.ca/";
 const LOCALE = process.env.STORE_LOCALE ?? "en-US";
 const OUT_DIR = join(
   process.cwd(),
