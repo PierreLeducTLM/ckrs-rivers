@@ -4,6 +4,7 @@ import ThemeInit from "./theme-init";
 import CapacitorInit from "./capacitor-init";
 import { I18nProvider } from "@/lib/i18n/provider";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeInit />
         <I18nProvider>
+          <Analytics/>
           <CapacitorInit />
           {children}
         </I18nProvider>
