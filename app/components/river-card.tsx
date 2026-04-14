@@ -226,25 +226,29 @@ export default function RiverCard({
       )}
 
       {/* Gradient bar */}
-      {card.status !== "unknown" && card.lastFlow != null && (
+      {card.lastFlow != null && (
         <div className="mt-2">
           <div
             className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
               background:
-                "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                card.isGoodRange || card.status === "too-high"
+                  ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                  : "#a1a1aa",
             }}
           >
-            {/* Current position indicator */}
-            <div
-              className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-white shadow-lg transition-all duration-500 dark:border-zinc-900 ${
-                card.isGoodRange ? "animate-flow-pulse" : ""
-              }`}
-              style={{
-                left: `${Math.max(2, Math.min(98, card.position * 100))}%`,
-                backgroundColor: card.color,
-              }}
-            />
+            {/* Current position indicator — hidden when too-low or unknown */}
+            {(card.isGoodRange || card.status === "too-high") && (
+              <div
+                className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-white shadow-lg transition-all duration-500 dark:border-zinc-900 ${
+                  card.isGoodRange ? "animate-flow-pulse" : ""
+                }`}
+                style={{
+                  left: `${Math.max(2, Math.min(98, card.position * 100))}%`,
+                  backgroundColor: card.color,
+                }}
+              />
+            )}
           </div>
           {/* Flow values below bar */}
           <div className="mt-1 flex justify-between text-[10px] font-medium tabular-nums text-foreground/50">

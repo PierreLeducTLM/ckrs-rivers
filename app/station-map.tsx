@@ -306,7 +306,7 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
         )}
 
         {/* Gradient bar */}
-        {card.status !== "unknown" && card.lastFlow != null && (
+        {card.lastFlow != null && (
           <div style={{ marginTop: 6 }}>
             <div
               style={{
@@ -314,23 +314,28 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
                 height: 6,
                 width: "100%",
                 borderRadius: 3,
-                background: "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                background:
+                  card.isGoodRange || card.status === "too-high"
+                    ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                    : "#a1a1aa",
               }}
             >
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: "#22c55e",
-                  border: "2px solid white",
-                  transform: "translate(-50%, -50%)",
-                  boxShadow: "0 1px 3px rgba(0,0,0,.3)",
-                }}
-              />
+              {(card.isGoodRange || card.status === "too-high") && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                    width: 12,
+                    height: 12,
+                    borderRadius: "50%",
+                    backgroundColor: card.color,
+                    border: "2px solid white",
+                    transform: "translate(-50%, -50%)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,.3)",
+                  }}
+                />
+              )}
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#9ca3af", marginTop: 2 }}>
               <span>{card.paddling?.min != null ? card.paddling.min : ""}</span>

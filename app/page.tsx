@@ -63,9 +63,9 @@ export default async function Home() {
     const data = dataMap.get(station.id);
     const paddling = paddlingMap.get(station.id);
     const { status, position } = getPaddlingStatus(data?.last_flow, paddling);
-    const color = status === "too-low" ? "#E07020"
+    const color = status === "too-low" ? "#a1a1aa"
       : status === "too-high" ? "#D32F2F"
-      : status === "unknown" ? "#E07020"
+      : status === "unknown" ? "#a1a1aa"
       : statusColor(position);
     const isGoodRange = status === "ideal" || status === "runnable";
 

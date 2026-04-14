@@ -146,22 +146,26 @@ export default function BottomSheet({ card, onClose, t }: BottomSheetProps) {
           )}
 
           {/* Gradient bar */}
-          {card.status !== "unknown" && card.lastFlow != null && (
+          {card.lastFlow != null && (
             <div className="mt-3">
               <div
                 className="relative h-1.5 w-full overflow-hidden rounded-full"
                 style={{
                   background:
-                    "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                    card.isGoodRange || card.status === "too-high"
+                      ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                      : "#a1a1aa",
                 }}
               >
-                <div
-                  className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
-                  style={{
-                    left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                    backgroundColor: "#22c55e",
-                  }}
-                />
+                {(card.isGoodRange || card.status === "too-high") && (
+                  <div
+                    className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
+                    style={{
+                      left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                      backgroundColor: card.color,
+                    }}
+                  />
+                )}
               </div>
               <div className="mt-1 flex justify-between text-[10px] text-foreground/40">
                 <span>

@@ -773,21 +773,26 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
               </div>
 
               {/* Gradient bar showing flow position between min → ideal → max */}
-              {card.status !== "unknown" && card.lastFlow != null && (
+              {card.lastFlow != null && (
                 <div className="mt-2">
                   <div
                     className="relative h-1.5 w-full overflow-hidden rounded-full"
                     style={{
-                      background: "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                      background:
+                        card.isGoodRange || card.status === "too-high"
+                          ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                          : "#a1a1aa",
                     }}
                   >
-                    <div
-                      className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
-                      style={{
-                        left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                        backgroundColor: card.color,
-                      }}
-                    />
+                    {(card.isGoodRange || card.status === "too-high") && (
+                      <div
+                        className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
+                        style={{
+                          left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                          backgroundColor: card.color,
+                        }}
+                      />
+                    )}
                   </div>
                   <div className="mt-1 flex justify-between text-[10px] text-foreground/40">
                     <span>{card.paddling?.min != null ? `${card.paddling.min}` : ""}</span>
@@ -847,21 +852,26 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                 )}
 
                 {/* Gradient bar (compact) */}
-                {card.status !== "unknown" && card.lastFlow != null && (
+                {card.lastFlow != null && (
                   <div className="hidden w-24 flex-shrink-0 sm:block">
                     <div
                       className="relative h-1.5 w-full overflow-hidden rounded-full"
                       style={{
-                        background: "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)",
+                        background:
+                          card.isGoodRange || card.status === "too-high"
+                            ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                            : "#a1a1aa",
                       }}
                     >
-                      <div
-                        className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
-                        style={{
-                          left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
-                          backgroundColor: card.color,
-                        }}
-                      />
+                      {(card.isGoodRange || card.status === "too-high") && (
+                        <div
+                          className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow dark:border-zinc-900"
+                          style={{
+                            left: `${Math.max(0, Math.min(100, card.position * 100))}%`,
+                            backgroundColor: card.color,
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
