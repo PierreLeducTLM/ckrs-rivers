@@ -194,11 +194,12 @@ async function refreshStation(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 1. CEHQ real-time (use station_number for CEHQ API, not internal id)
-    const { readings, dailyAverages } = await fetchRealtimeData(stationNumber);
+    const { readings } = await fetchRealtimeData(stationNumber);
     const observedHourly = observedToHourly(readings);
 
-    const lastDailyAvg = dailyAverages.size > 0
-      ? [...dailyAverages.entries()].sort(([a], [b]) => b.localeCompare(a))[0]
+    // Use the most recent hourly observed point (matches graph) instead of daily average
+    const lastObservedHourly = observedHourly.length > 0
+      ? observedHourly[observedHourly.length - 1]
       : null;
 
     // 2. CEHQ forecast
@@ -273,7 +274,7 @@ async function refreshStation(
 
     // 6. Cache
     const cacheData = {
-      lastFlow: lastDailyAvg ? { date: lastDailyAvg[0], flow: lastDailyAvg[1] } : null,
+      lastFlow: lastObservedHourly ? { date: lastObservedHourly.timestamp.slice(0, 10), flow: lastObservedHourly.flow } : null,
       forecastDays,
     };
 

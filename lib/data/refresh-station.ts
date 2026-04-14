@@ -90,9 +90,10 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
     const realtimeData = await getRealtimeData(cehqNumber);
     const observedHourly = observedToHourly(realtimeData.readings);
 
-    // Last observed flow
-    const lastDailyAvg = realtimeData.dailyAverages.size > 0
-      ? [...realtimeData.dailyAverages.entries()].sort(([a], [b]) => b.localeCompare(a))[0]
+    // Last observed flow — use the most recent hourly observed point (matches graph)
+    // instead of the daily average which smooths out intraday variation.
+    const lastObservedHourly = observedHourly.length > 0
+      ? observedHourly[observedHourly.length - 1]
       : null;
 
     // 2. Fetch CEHQ official forecast
@@ -200,7 +201,7 @@ export async function refreshStation(stationId: string): Promise<RefreshResult> 
 
     // 6. Cache everything
     const cacheData = {
-      lastFlow: lastDailyAvg ? { date: lastDailyAvg[0], flow: lastDailyAvg[1] } : null,
+      lastFlow: lastObservedHourly ? { date: lastObservedHourly.date, flow: lastObservedHourly.flow } : null,
       forecastDays,
     };
 
