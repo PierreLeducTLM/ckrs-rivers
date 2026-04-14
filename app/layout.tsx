@@ -5,6 +5,7 @@ import CapacitorInit from "./capacitor-init";
 import { I18nProvider } from "@/lib/i18n/provider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
         <ThemeInit />
         <I18nProvider>
           <Analytics/>
+          <SpeedInsights />
           <CapacitorInit />
           {children}
         </I18nProvider>
