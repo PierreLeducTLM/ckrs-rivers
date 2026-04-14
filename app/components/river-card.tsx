@@ -199,24 +199,22 @@ export default function RiverCard({
               m&sup3;/s
             </span>
           </p>
-          {card.forecastAt && (
-            <RelativeTime
-              isoDate={card.forecastAt}
-              t={t}
-              className="text-xs text-foreground/40"
-            />
-          )}
+          <div className="flex flex-col items-end gap-0.5">
+            <StatusPill card={card} t={t} />
+            {card.forecastAt && (
+              <RelativeTime
+                isoDate={card.forecastAt}
+                t={t}
+                className="text-xs text-foreground/40"
+              />
+            )}
+          </div>
         </div>
       ) : (
         <div className="mt-4 rounded-lg bg-foreground/5 px-4 py-3">
           <p className="text-sm text-foreground/40">{t("app.pressRefresh")}</p>
         </div>
       )}
-
-      {/* Status pill */}
-      <div className="mt-2">
-        <StatusPill card={card} t={t} />
-      </div>
 
       {/* Gradient bar */}
       {card.status !== "unknown" && card.lastFlow != null && (
