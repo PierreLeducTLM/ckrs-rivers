@@ -1,14 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import SparklineChart from "../sparkline-chart";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
-import { weatherIcon } from "./utils";
 
 interface RiverCardProps {
   card: StationCard;
@@ -29,8 +26,6 @@ export default function RiverCard({
   isNative,
   t,
 }: RiverCardProps) {
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-
   return (
     <Link
       href={`/rivers/${card.id}`}
@@ -103,116 +98,6 @@ export default function RiverCard({
           )}
         </p>
       )}
-
-      {/* Sparkline */}
-      {card.sparkData.length > 2 && (
-        <div className="-mx-1 mt-2">
-          <SparklineChart
-            data={card.sparkData}
-            nowTs={card.nowTs}
-            paddling={card.paddling}
-          />
-        </div>
-      )}
-
-      {/* Weather pictograms */}
-      {card.weatherDays.length > 0 &&
-        card.sparkData.length > 2 &&
-        (() => {
-          const total = card.sparkData.length;
-          const icons = card.weatherDays
-            .map((w) => {
-              const dayMid = new Date(w.date + "T12:00:00Z").getTime();
-              let closestIdx = 0;
-              let closestDiff = Infinity;
-              for (let i = 0; i < total; i++) {
-                const diff = Math.abs(card.sparkData[i].ts - dayMid);
-                if (diff < closestDiff) {
-                  closestDiff = diff;
-                  closestIdx = i;
-                }
-              }
-              const pct = (closestIdx / (total - 1)) * 100;
-              return { ...w, pct };
-            })
-            .filter((w) => w.pct >= 0 && w.pct <= 100);
-
-          const tipKey = (date: string) => `${card.id}:${date}`;
-
-          return icons.length > 0 ? (
-            <div className="relative -mx-1 h-5">
-              {icons.map((w) => {
-                const key = tipKey(w.date);
-                const isOpen = activeTooltip === key;
-                const dateLabel = new Date(
-                  w.date + "T00:00:00Z",
-                ).toLocaleDateString("en-CA", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                });
-                return (
-                  <span
-                    key={w.date}
-                    className="absolute -translate-x-1/2 text-sm leading-none"
-                    style={{ left: `${w.pct}%` }}
-                    onPointerEnter={() => setActiveTooltip(key)}
-                    onPointerLeave={() =>
-                      setActiveTooltip((v) => (v === key ? null : v))
-                    }
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setActiveTooltip((v) => (v === key ? null : key));
-                    }}
-                  >
-                    {weatherIcon(w)}
-                    {isOpen && (
-                      <span className="absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-2.5 py-1.5 text-[11px] text-white shadow-lg dark:bg-zinc-800">
-                        <span className="font-medium">{dateLabel}</span>
-                        <br />
-                        {(w.tempMin != null || w.tempMax != null) && (
-                          <>
-                            {w.tempMin != null && (
-                              <span className="text-blue-300">
-                                {w.tempMin.toFixed(0)}&deg;
-                              </span>
-                            )}
-                            {w.tempMin != null && w.tempMax != null && (
-                              <span className="text-zinc-400"> / </span>
-                            )}
-                            {w.tempMax != null && (
-                              <span className="text-red-300">
-                                {w.tempMax.toFixed(0)}&deg;
-                              </span>
-                            )}
-                          </>
-                        )}
-                        {w.precipitation > 0.1 && (
-                          <>
-                            <br />
-                            <span className="text-blue-300">
-                              {w.precipitation.toFixed(1)} {t("weather.rain")}
-                            </span>
-                          </>
-                        )}
-                        {w.snowfall > 0.1 && (
-                          <>
-                            <br />
-                            <span className="text-sky-200">
-                              {w.snowfall.toFixed(1)} {t("weather.snow")}
-                            </span>
-                          </>
-                        )}
-                        <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-800" />
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-            </div>
-          ) : null;
-        })()}
 
       {/* Status pill */}
       {card.lastFlow != null ? (
