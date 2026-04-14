@@ -9,7 +9,10 @@
     "lint": "eslint",
     "cap:sync": "npx cap sync",
     "cap:ios": "npx cap open ios",
-    "cap:android": "npx cap open android"
+    "cap:android": "npx cap open android",
+    "store:screenshots": "npx tsx scripts/generate-store-screenshots.ts",
+    "store:icon": "npx tsx scripts/generate-store-icon.ts",
+    "store:all": "npm run store:icon && npm run store:screenshots"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.1",
@@ -33,6 +36,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@trigger.dev/build": "^4.4.3",
     "@types/leaflet": "^1.9.21",
@@ -41,6 +45,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

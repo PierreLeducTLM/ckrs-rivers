@@ -49,6 +49,11 @@ next-env.d.ts
 # capacitor
 /www
 
+# playwright
+/playwright-report
+/test-results
+/blob-report
+
 # Android signing
 android/keystore.properties
 *.keystore

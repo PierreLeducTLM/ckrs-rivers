@@ -30,6 +30,53 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Mobile (Capacitor)
+
+This project wraps the web app for iOS and Android via Capacitor. After making
+web changes, build and sync the native projects before running on a device:
+
+```bash
+npm run build        # build the Next.js app
+npm run cap:sync     # copy web assets + update native deps (iOS & Android)
+npm run cap:android  # open the Android project in Android Studio
+npm run cap:ios      # open the iOS project in Xcode
+```
+
+`cap:sync` runs `npx cap sync`, which both copies the web build into the native
+projects and updates native plugin dependencies. Run it any time you change web
+code, install a Capacitor plugin, or pull changes that touch native config.
+
+## Play Store release
+
+All listing materials (texts, icon, screenshots, changelog) live under
+`fastlane/metadata/android/en-US/` in the fastlane-supply layout. Screenshots
+and the hi-res icon are regenerated automatically — everything else is
+hand-edited markdown/text.
+
+```bash
+npm run store:screenshots   # Playwright → production site on a Pixel 7 profile
+npm run store:icon          # resizes public/logo.png to 512×512
+npm run store:all           # both of the above
+```
+
+Screenshots are pulled from the live production URL
+(`https://water-flow-eight.vercel.app` by default; override with
+`STORE_SITE_URL=…`). Pages captured are defined in `scripts/generate-store-screenshots.ts`.
+
+### Release checklist
+
+1. Bump `versionCode` and `versionName` in `android/app/build.gradle`.
+2. `npm run build && npm run cap:sync`
+3. `npm run store:all` — regenerate icon + screenshots from production.
+4. Edit `fastlane/metadata/android/en-US/changelogs/default.txt` with this
+   release's notes.
+5. Review `short_description.txt` / `full_description.txt` if features changed.
+6. `npm run cap:android` — build a signed AAB in Android Studio.
+7. Upload the AAB + listing assets to Play Console.
+
+The feature graphic (`images/featureGraphic.png`, 1024×500) is still
+hand-designed — see `images/featureGraphic.README.md` for the brief.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
