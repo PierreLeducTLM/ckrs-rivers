@@ -5,7 +5,6 @@ import Link from "next/link";
 import SparklineChart from "../sparkline-chart";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
-import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
 import { weatherIcon } from "./utils";
@@ -212,11 +211,6 @@ export default function RiverCard({
           <p className="text-sm text-foreground/40">{t("app.pressRefresh")}</p>
         </div>
       )}
-
-      {/* Status pill */}
-      <div className="mt-2">
-        <StatusPill card={card} t={t} />
-      </div>
 
       {/* Gradient bar */}
       {card.status !== "unknown" && card.lastFlow != null && (
