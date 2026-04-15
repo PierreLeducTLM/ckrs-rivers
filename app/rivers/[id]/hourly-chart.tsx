@@ -148,11 +148,38 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
         })
       : "";
 
+  // Admin-only diagnostic: show why the corrected line is/isn't drawing.
+  let adminDebug: string | null = null;
+  if (isAdmin) {
+    const overlap = data.filter(
+      (d) =>
+        d.observed != null &&
+        d.cehqForecast != null &&
+        new Date(d.timestamp).getTime() <= nowTs &&
+        new Date(d.timestamp).getTime() >= nowTs - 6 * 60 * 60 * 1000,
+    ).length;
+    if (!correction) {
+      adminDebug = "correction prop not passed";
+    } else if (correction.ratio == null) {
+      adminDebug = `no correction · overlap in last 6h = ${overlap}`;
+    } else if (!correction.active) {
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed`;
+    } else {
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · overlap ${overlap}`;
+    }
+  }
+
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
         {t("chart.title")}
       </h2>
+
+      {adminDebug && (
+        <div className="mb-1 rounded bg-teal-50 px-2 py-0.5 font-mono text-[10px] text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+          bias-correction: {adminDebug}
+        </div>
+      )}
 
       {/* Out-of-range threshold markers */}
       {thresholds.some((t) => t.position === "above") && (
