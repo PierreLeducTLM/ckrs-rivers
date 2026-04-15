@@ -244,7 +244,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                     </p>
                   )}
                   {d.cehqCorrected !== null && (
-                    <p className="mt-0.5 text-purple-700 dark:text-purple-300">
+                    <p className="mt-0.5 text-teal-600 dark:text-teal-400">
                       {t("chart.cehqCorrectedLabel")}
                       <span className="font-semibold">{d.cehqCorrected.toFixed(1)} m&sup3;/s</span>
                       <span className="ml-1 text-[10px] text-zinc-500">({biasNote})</span>
@@ -318,9 +318,8 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
           {hasCorrectedLine && (
             <Line
               dataKey="cehqCorrected"
-              stroke="#7e22ce"
-              strokeWidth={2}
-              strokeDasharray="6 3"
+              stroke="#0d9488"
+              strokeWidth={2.5}
               dot={false}
               connectNulls={false}
               isAnimationActive={false}
@@ -354,10 +353,8 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             className="flex items-center gap-1.5"
             title={biasNote}
           >
-            <svg width="20" height="3" className="text-purple-800 dark:text-purple-300">
-              <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="6 3" />
-            </svg>
-            <span className="text-purple-800 dark:text-purple-300">
+            <span className="inline-block h-0.5 w-5 rounded bg-teal-600 dark:bg-teal-400" />
+            <span className="text-teal-700 dark:text-teal-400">
               {t("chart.cehqCorrected")}
               <span className="ml-1 text-[10px] text-zinc-500 dark:text-zinc-400">({biasNote})</span>
             </span>
