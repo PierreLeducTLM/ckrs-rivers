@@ -33,6 +33,12 @@ interface HourlyChartProps {
   data: HourlyChartPoint[];
   nowTimestamp: string;
   paddling?: PaddlingLevels;
+  /**
+   * Signed bias = recent avg(cehqForecast − observed). Subtracted from
+   * future forecast values to produce the "bias-corrected" line. When 0,
+   * the corrected line and its legend entry are suppressed.
+   */
+  bias?: number;
 }
 
 function formatTick(epoch: number): string {
@@ -44,17 +50,34 @@ function formatTick(epoch: number): string {
   return `${h.toString().padStart(2, "0")}:00`;
 }
 
-export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChartProps) {
+export default function HourlyChart({ data, nowTimestamp, paddling, bias = 0 }: HourlyChartProps) {
   const { t } = useTranslation();
-  // Add numeric timestamp for proportional x-axis spacing
-  // and a [low, high] tuple for the CEHQ confidence band
-  const chartData = data.map((d) => ({
-    ...d,
-    ts: new Date(d.timestamp).getTime(),
-    cehqRange: d.confidenceLow != null && d.confidenceHigh != null
-      ? [d.confidenceLow, d.confidenceHigh]
-      : undefined,
-  }));
+  const nowTs = new Date(nowTimestamp).getTime();
+
+  // Only draw the bias-corrected line when bias is meaningfully non-zero.
+  // Tiny biases (<0.05 m³/s) aren't visually useful and just clutter the chart.
+  const showCorrected = Math.abs(bias) >= 0.05;
+
+  // Add numeric timestamp for proportional x-axis spacing,
+  // a [low, high] tuple for the CEHQ confidence band, and the
+  // bias-corrected forecast (only for future points).
+  const chartData = data.map((d) => {
+    const ts = new Date(d.timestamp).getTime();
+    const cehqCorrected =
+      showCorrected && d.cehqForecast != null && ts > nowTs
+        ? d.cehqForecast - bias
+        : null;
+    return {
+      ...d,
+      ts,
+      cehqRange: d.confidenceLow != null && d.confidenceHigh != null
+        ? [d.confidenceLow, d.confidenceHigh]
+        : undefined,
+      cehqCorrected,
+    };
+  });
+
+  const hasCorrectedLine = showCorrected && chartData.some((d) => d.cehqCorrected !== null);
 
   // Compute tight Y bounds from actual flow data
   const flowValues = data.flatMap((d) =>
@@ -62,6 +85,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
       (v): v is number => v !== null && v !== undefined,
     ),
   );
+  if (hasCorrectedLine) {
+    for (const d of chartData) {
+      if (d.cehqCorrected != null) flowValues.push(d.cehqCorrected);
+    }
+  }
   const minDataFlow = flowValues.length > 0 ? Math.min(...flowValues) : 0;
   const maxDataFlow = flowValues.length > 0 ? Math.max(...flowValues) : 1;
 
@@ -108,7 +136,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
     ticks.push(t);
   }
 
-  const nowTs = new Date(nowTimestamp).getTime();
+  // Pre-formatted bias note shown in the tooltip + legend hover title.
+  const biasSign = bias > 0 ? "−" : "+"; // subtract positive bias -> minus sign
+  const biasNote = hasCorrectedLine
+    ? t("chart.biasNote", { sign: biasSign, value: Math.abs(bias).toFixed(1) })
+    : "";
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -181,7 +213,9 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
           <Tooltip
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
-              const d = payload[0]?.payload as (HourlyChartPoint & { ts: number }) | undefined;
+              const d = payload[0]?.payload as
+                | (HourlyChartPoint & { ts: number; cehqCorrected: number | null })
+                | undefined;
               if (!d) return null;
               return (
                 <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
@@ -204,6 +238,13 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
                   {d.cehqForecast !== null && (
                     <p className="mt-0.5 text-purple-500">
                       {t("chart.cehqLabel")}<span className="font-semibold">{d.cehqForecast.toFixed(1)} m&sup3;/s</span>
+                    </p>
+                  )}
+                  {d.cehqCorrected !== null && (
+                    <p className="mt-0.5 text-purple-700 dark:text-purple-300">
+                      {t("chart.cehqCorrectedLabel")}
+                      <span className="font-semibold">{d.cehqCorrected.toFixed(1)} m&sup3;/s</span>
+                      <span className="ml-1 text-[10px] text-zinc-500">({biasNote})</span>
                     </p>
                   )}
                   {d.confidenceLow !== null && d.confidenceHigh !== null && (
@@ -269,6 +310,19 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
             connectNulls
             isAnimationActive={false}
           />
+
+          {/* Bias-corrected CEHQ forecast (only rendered when bias is non-trivial) */}
+          {hasCorrectedLine && (
+            <Line
+              dataKey="cehqCorrected"
+              stroke="#7e22ce"
+              strokeWidth={2}
+              strokeDasharray="6 3"
+              dot={false}
+              connectNulls={false}
+              isAnimationActive={false}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
 
@@ -291,6 +345,20 @@ export default function HourlyChart({ data, nowTimestamp, paddling }: HourlyChar
               {t("chart.q25q75")}
             </span>
           </>
+        )}
+        {hasCorrectedLine && (
+          <span
+            className="flex items-center gap-1.5"
+            title={biasNote}
+          >
+            <svg width="20" height="3" className="text-purple-800 dark:text-purple-300">
+              <line x1="0" y1="1.5" x2="20" y2="1.5" stroke="currentColor" strokeWidth="2" strokeDasharray="6 3" />
+            </svg>
+            <span className="text-purple-800 dark:text-purple-300">
+              {t("chart.cehqCorrected")}
+              <span className="ml-1 text-[10px] text-zinc-500 dark:text-zinc-400">({biasNote})</span>
+            </span>
+          </span>
         )}
         {thresholds.map((t) => (
           <span key={t.label} className="flex items-center gap-1.5">

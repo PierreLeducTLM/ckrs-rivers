@@ -189,10 +189,13 @@
     "title": "Debit et previsions CEHQ",
     "observed": "Observe",
     "cehqForecast": "Prevision CEHQ",
+    "cehqCorrected": "Corrige",
     "q25q75": "Q25\u2013Q75",
     "observedLabel": "Observe : ",
     "cehqLabel": "CEHQ : ",
-    "rangeLabel": "Plage : "
+    "cehqCorrectedLabel": "Corrige : ",
+    "rangeLabel": "Plage : ",
+    "biasNote": "Ajuste de {sign}{value} m\u00b3/s selon les obs recentes"
   },
   "map": {
     "station": "Station",

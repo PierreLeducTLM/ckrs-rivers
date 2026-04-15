@@ -54,24 +54,76 @@ export function statusLabel(
  */
 const MIN_CONSECUTIVE_HOURS = 3;
 
-type ForecastPoint = { ts: number; cehqForecast: number | null };
+/**
+ * Window (in hours) used to compute the CEHQ forecast bias from the most
+ * recent overlap between observed and forecast. Shorter = more reactive,
+ * longer = more robust.
+ */
+const BIAS_LOOKBACK_HOURS = 6;
+
+/**
+ * Minimum number of overlap samples required before we trust the bias.
+ * Below this, we fall back to zero (no correction).
+ */
+const BIAS_MIN_SAMPLES = 2;
+
+type ForecastPoint = {
+  ts: number;
+  observed: number | null;
+  cehqForecast: number | null;
+};
+
+/**
+ * Compute the signed bias (cehqForecast − observed) averaged over the last
+ * BIAS_LOOKBACK_HOURS where both values are present. Returns 0 when there
+ * isn't enough overlap, and clamps the result to ±50% of the recent
+ * observed median as a safety rail against anomalous readings.
+ *
+ * Positive bias = CEHQ over-predicts vs. reality → subtract to correct.
+ */
+export function computeForecastBias(
+  points: ForecastPoint[],
+  nowTs: number,
+): number {
+  const cutoff = nowTs - BIAS_LOOKBACK_HOURS * 60 * 60 * 1000;
+  const diffs: number[] = [];
+  const recentObs: number[] = [];
+  for (const p of points) {
+    if (p.ts > nowTs || p.ts < cutoff) continue;
+    if (p.observed == null || p.cehqForecast == null) continue;
+    diffs.push(p.cehqForecast - p.observed);
+    recentObs.push(p.observed);
+  }
+  if (diffs.length < BIAS_MIN_SAMPLES) return 0;
+  const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  const sorted = [...recentObs].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const cap = Math.abs(median) * 0.5;
+  if (cap === 0) return 0;
+  return Math.max(-cap, Math.min(cap, mean));
+}
 
 /**
  * Scan hourly forecast points for the first future run of ≥ MIN_CONSECUTIVE_HOURS
  * consecutive points matching `predicate`. Returns hoursAhead of the run's first
  * point (rounded), or null if no such run exists within the provided points.
+ *
+ * `bias` is subtracted from `cehqForecast` before status classification,
+ * so a positive bias (CEHQ over-predicting) pushes runnable-in estimates later.
  */
 function findFirstSustainedPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
   predicate: (status: ReturnType<typeof getPaddlingStatus>["status"]) => boolean,
+  bias: number = 0,
 ): { hoursAhead: number } | null {
   let runStart: number | null = null;
   let runLen = 0;
   for (const p of points) {
     if (p.ts <= nowTs || p.cehqForecast == null) continue;
-    const { status } = getPaddlingStatus(p.cehqForecast, paddling);
+    const correctedFlow = p.cehqForecast - bias;
+    const { status } = getPaddlingStatus(correctedFlow, paddling);
     if (predicate(status)) {
       if (runStart == null) runStart = p.ts;
       runLen += 1;
@@ -92,16 +144,18 @@ export function findFirstSustainedGoodPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
+  bias: number = 0,
 ): { hoursAhead: number } | null {
-  return findFirstSustainedPoint(points, nowTs, paddling, (s) => isGoodRange(s));
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => isGoodRange(s), bias);
 }
 
 export function findFirstSustainedBadPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
+  bias: number = 0,
 ): { hoursAhead: number } | null {
-  return findFirstSustainedPoint(points, nowTs, paddling, (s) => !isGoodRange(s));
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => !isGoodRange(s), bias);
 }
 
 export function computeCardStatusInfo(
@@ -119,8 +173,10 @@ export function computeCardStatusInfo(
   if (card.status === "ideal") return { key: "detail.ideal" };
   if (card.status === "runnable") return { key: "detail.goodToGo" };
 
+  const bias = computeForecastBias(card.sparkData, card.nowTs);
+
   if (card.status === "too-low" || card.status === "too-high") {
-    const hit = findFirstSustainedGoodPoint(card.sparkData, card.nowTs, paddling);
+    const hit = findFirstSustainedGoodPoint(card.sparkData, card.nowTs, paddling, bias);
     if (hit) {
       if (hit.hoursAhead <= 24) {
         return { key: "detail.runnableInHours", param: hit.hoursAhead };
@@ -136,7 +192,7 @@ export function computeCardStatusInfo(
   }
 
   if (card.isGoodRange) {
-    const hit = findFirstSustainedBadPoint(card.sparkData, card.nowTs, paddling);
+    const hit = findFirstSustainedBadPoint(card.sparkData, card.nowTs, paddling, bias);
     if (hit && hit.hoursAhead <= 48) {
       return { key: "detail.droppingOutHours", param: hit.hoursAhead };
     }
@@ -209,10 +265,11 @@ export function idealSortKey(card: StationCard): {
   // Group 2: forecast will become good — soonest first
   if (paddling) {
     const now = card.nowTs;
+    const bias = computeForecastBias(card.sparkData, now);
     for (const point of card.sparkData) {
       const flow = point.cehqForecast;
       if (flow == null || point.ts <= now) continue;
-      const { status } = getPaddlingStatus(flow, paddling);
+      const { status } = getPaddlingStatus(flow - bias, paddling);
       if (isGoodRange(status)) {
         return { group: 2, score: point.ts - now };
       }
