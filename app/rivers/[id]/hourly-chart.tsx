@@ -171,20 +171,19 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
     const ageStr = lastObsAgeH != null ? ` · last obs ${lastObsAgeH}h ago` : "";
     const dbg = correction?.debug;
     const innerStr = dbg
-      ? ` · [inner obs=${dbg.obsCount} fc=${dbg.fcCount}` +
-        (dbg.obsMedian != null ? ` obsMed=${dbg.obsMedian.toFixed(1)}` : "") +
-        (dbg.fcMedian != null ? ` fcMed=${dbg.fcMedian.toFixed(1)}` : "") +
+      ? ` · [lastObs=${dbg.obsMedian != null ? dbg.obsMedian.toFixed(1) : "—"}` +
+        ` firstFc=${dbg.fcMedian != null ? dbg.fcMedian.toFixed(1) : "—"}` +
         (dbg.rawRatio != null ? ` raw=${dbg.rawRatio.toFixed(3)}` : "") +
         ` why=${dbg.reason}]`
       : "";
     if (!correction) {
       adminDebug = "correction prop not passed";
     } else if (correction.ratio == null) {
-      adminDebug = `no correction · chart obs=${recentObs} fc=${nearFc} (24h window)${ageStr}${innerStr}`;
+      adminDebug = `no correction · chart obs=${recentObs} fc=${nearFc}${ageStr}${innerStr}`;
     } else if (!correction.active) {
       adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed${ageStr}${innerStr}`;
     } else {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · chart obs=${recentObs} fc=${nearFc}${ageStr}${innerStr}`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h${ageStr}${innerStr}`;
     }
   }
 

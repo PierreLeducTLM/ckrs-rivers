@@ -55,22 +55,12 @@ export function statusLabel(
 const MIN_CONSECUTIVE_HOURS = 3;
 
 /**
- * Window (in hours) used to compute the CEHQ forecast bias. We take the
- * median of observed readings in the last BIAS_LOOKBACK_HOURS before now,
- * and the median of CEHQ forecast points in the next BIAS_LOOKBACK_HOURS
- * after now, then compare.
- *
- * Set to 24h to tolerate CEHQ real-time publishing lag + cache staleness —
- * observed readings can legitimately be 6–12h behind wall-clock time even
- * when the cache is fresh.
+ * Maximum allowable staleness (hours) of the most-recent observed point
+ * before we suppress the correction. Beyond this, any bias signal is too
+ * old to be meaningful. Must be generous enough to cover CEHQ real-time
+ * publishing lag + cache refresh cadence (typically 6–12h combined).
  */
-const BIAS_LOOKBACK_HOURS = 24;
-
-/**
- * Minimum number of overlap samples required before we trust the bias.
- * Below this, we fall back to no correction.
- */
-const BIAS_MIN_SAMPLES = 2;
+const MAX_OBS_STALENESS_HOURS = 24;
 
 /**
  * E-folding time (hours) for the correction's exponential decay back to
@@ -149,76 +139,61 @@ export function applyForecastCorrection(
   return rawFlow * effectiveRatio;
 }
 
-/** Median of a non-empty number array. */
-function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
-}
-
 /**
- * Build a correction by comparing the median of recent observed flow against
- * the median of near-term CEHQ forecast flow.
+ * Build a correction by comparing the single most recent observed flow
+ * against the single earliest upcoming CEHQ forecast flow.
  *
- * Why not "observed/forecast at matching past timestamps"? Because CEHQ's
- * public forecast endpoint (`/JSON/{stationId}.json`) only publishes
- * forward-looking points — there are no past forecast values to pair with
- * past observed values, so that approach silently produces no correction
- * on most stations.
+ * Rationale: maximum reactivity to current state. If the observed reading
+ * genuinely reflects what's happening right now, we want the correction
+ * to mirror that immediately. The ±3% dead-band + [0.3, 2.0] clamp +
+ * 24h exponential decay limit the damage from any single-point outlier —
+ * a glitched reading produces one wrong correction that's washed out as
+ * soon as a valid reading lands on the next cache refresh (~15 min).
  *
- * Instead we compare "where the river actually is right now" (median of
- * last BIAS_LOOKBACK_HOURS of observed) to "where CEHQ says it's about to
- * be" (median of next BIAS_LOOKBACK_HOURS of forecast). The divergence
- * between those is a legitimate bias signal.
- *
- * Caveat: this method can't perfectly separate bias from genuine flow
- * evolution. If the river is truly rising fast, observed_median (past)
- * will be below forecast_median (future) for natural reasons — not bias.
- * Mitigated by (a) medians (robust to spikes), (b) ±3% dead-band,
- * (c) [0.3, 2.0] clamp, (d) 24h exponential decay that wipes out
- * erroneous corrections within a few days.
+ * Why not median-smoothing? Median over a 24h window will ignore a genuine
+ * rapid rise that shows up only in the most recent reading — exactly the
+ * situation where we most need the correction to react.
  */
 export function buildForecastCorrection(
   points: ForecastPoint[],
   nowTs: number,
 ): ForecastCorrection {
-  const windowMs = BIAS_LOOKBACK_HOURS * 60 * 60 * 1000;
-  const pastCutoff = nowTs - windowMs;
-  const futureCutoff = nowTs + windowMs;
+  const maxStaleMs = MAX_OBS_STALENESS_HOURS * 60 * 60 * 1000;
 
-  const recentObserved: number[] = [];
-  const nearForecast: number[] = [];
-
+  // Latest observed point within the staleness window.
+  let latestObserved: { ts: number; flow: number } | null = null;
   for (const p of points) {
-    if (p.ts <= nowTs && p.ts >= pastCutoff && p.observed != null) {
-      recentObserved.push(p.observed);
+    if (p.ts > nowTs || p.observed == null) continue;
+    if (p.ts < nowTs - maxStaleMs) continue;
+    if (latestObserved == null || p.ts > latestObserved.ts) {
+      latestObserved = { ts: p.ts, flow: p.observed };
     }
-    if (p.ts > nowTs && p.ts <= futureCutoff && p.cehqForecast != null && p.cehqForecast > 0) {
-      nearForecast.push(p.cehqForecast);
+  }
+
+  // Earliest upcoming forecast point.
+  let earliestForecast: { ts: number; flow: number } | null = null;
+  for (const p of points) {
+    if (p.ts <= nowTs || p.cehqForecast == null || p.cehqForecast <= 0) continue;
+    if (earliestForecast == null || p.ts < earliestForecast.ts) {
+      earliestForecast = { ts: p.ts, flow: p.cehqForecast };
     }
   }
 
   const debugBase = {
-    obsCount: recentObserved.length,
-    fcCount: nearForecast.length,
+    obsCount: latestObserved ? 1 : 0,
+    fcCount: earliestForecast ? 1 : 0,
   };
 
-  if (recentObserved.length < BIAS_MIN_SAMPLES) {
-    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "too few observed" } };
+  if (!latestObserved) {
+    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "no recent observed" } };
   }
-  if (nearForecast.length < BIAS_MIN_SAMPLES) {
-    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "too few forecast" } };
-  }
-
-  const obsMedian = median(recentObserved);
-  const fcMedian = median(nearForecast);
-  if (fcMedian <= 0) {
-    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian, fcMedian, rawRatio: null, reason: "fcMedian <= 0" } };
+  if (!earliestForecast) {
+    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "no upcoming forecast" } };
   }
 
-  const rawRatio = obsMedian / fcMedian;
+  const obsValue = latestObserved.flow;
+  const fcValue = earliestForecast.flow;
+  const rawRatio = obsValue / fcValue;
   const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], rawRatio));
   const active = Math.abs(ratio - 1) >= RATIO_ACTIVE_THRESHOLD;
 
@@ -228,8 +203,8 @@ export function buildForecastCorrection(
     active,
     debug: {
       ...debugBase,
-      obsMedian,
-      fcMedian,
+      obsMedian: obsValue,
+      fcMedian: fcValue,
       rawRatio,
       reason: active ? "active" : "within dead-band",
     },
