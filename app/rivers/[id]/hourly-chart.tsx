@@ -13,6 +13,7 @@ import {
 } from "recharts";
 import { useTranslation } from "@/lib/i18n/provider";
 import { applyForecastCorrection, type ForecastCorrection } from "@/app/components/utils";
+import { useAdmin } from "@/app/use-admin";
 
 export interface HourlyChartPoint {
   timestamp: string;
@@ -52,10 +53,12 @@ function formatTick(epoch: number): string {
 
 export default function HourlyChart({ data, nowTimestamp, paddling, correction }: HourlyChartProps) {
   const { t } = useTranslation();
+  const isAdmin = useAdmin();
   const nowTs = new Date(nowTimestamp).getTime();
 
-  // Whether to draw the bias-corrected line.
-  const showCorrected = correction?.active ?? false;
+  // Whether to draw the bias-corrected line. Admin-only for now while we
+  // validate the correction's behaviour against real-world flow evolution.
+  const showCorrected = isAdmin && (correction?.active ?? false);
 
   // Add numeric timestamp for proportional x-axis spacing,
   // a [low, high] tuple for the CEHQ confidence band, and the
