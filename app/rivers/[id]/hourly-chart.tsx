@@ -13,7 +13,6 @@ import {
 } from "recharts";
 import { useTranslation } from "@/lib/i18n/provider";
 import { applyForecastCorrection, type ForecastCorrection } from "@/app/components/utils";
-import { useAdmin } from "@/app/use-admin";
 
 export interface HourlyChartPoint {
   timestamp: string;
@@ -37,7 +36,8 @@ interface HourlyChartProps {
   paddling?: PaddlingLevels;
   /**
    * Time-decaying multiplicative correction derived from recent observed/forecast
-   * overlap. When inactive, the corrected line and its legend entry are suppressed.
+   * overlap. When active, future CEHQ forecast values (and their Q25–Q75 band)
+   * are adjusted in place — no separate line is drawn.
    */
   correction?: ForecastCorrection;
 }
@@ -53,46 +53,48 @@ function formatTick(epoch: number): string {
 
 export default function HourlyChart({ data, nowTimestamp, paddling, correction }: HourlyChartProps) {
   const { t } = useTranslation();
-  const isAdmin = useAdmin();
   const nowTs = new Date(nowTimestamp).getTime();
 
-  // Whether to draw the bias-corrected line. Admin-only for now while we
-  // validate the correction's behaviour against real-world flow evolution.
-  const showCorrected = isAdmin && (correction?.active ?? false);
-
-  // Add numeric timestamp for proportional x-axis spacing,
-  // a [low, high] tuple for the CEHQ confidence band, and the
-  // bias-corrected forecast (only for future points; decays back to CEHQ).
+  // When a correction is active, adjust future CEHQ forecast values (and
+  // their Q25–Q75 band) in place so the single purple line already reflects
+  // "where CEHQ says we'll be, after bias-correction".
+  const applyCorrection = correction?.active ?? false;
   const chartData = data.map((d) => {
     const ts = new Date(d.timestamp).getTime();
-    let cehqCorrected: number | null = null;
-    if (showCorrected && d.cehqForecast != null && ts > nowTs && correction) {
+    let cehqForecast = d.cehqForecast;
+    let confidenceLow = d.confidenceLow;
+    let confidenceHigh = d.confidenceHigh;
+    if (applyCorrection && correction && ts > nowTs) {
       const hoursAhead = (ts - nowTs) / (60 * 60 * 1000);
-      cehqCorrected = applyForecastCorrection(d.cehqForecast, hoursAhead, correction);
+      if (cehqForecast != null) {
+        cehqForecast = applyForecastCorrection(cehqForecast, hoursAhead, correction);
+      }
+      if (confidenceLow != null) {
+        confidenceLow = applyForecastCorrection(confidenceLow, hoursAhead, correction);
+      }
+      if (confidenceHigh != null) {
+        confidenceHigh = applyForecastCorrection(confidenceHigh, hoursAhead, correction);
+      }
     }
     return {
       ...d,
       ts,
-      cehqRange: d.confidenceLow != null && d.confidenceHigh != null
-        ? [d.confidenceLow, d.confidenceHigh]
-        : undefined,
-      cehqCorrected,
+      cehqForecast,
+      confidenceLow,
+      confidenceHigh,
+      cehqRange:
+        confidenceLow != null && confidenceHigh != null
+          ? [confidenceLow, confidenceHigh]
+          : undefined,
     };
   });
 
-  const hasCorrectedLine = showCorrected && chartData.some((d) => d.cehqCorrected !== null);
-
-  // Compute tight Y bounds from actual flow data
-  const flowValues = data.flatMap((d) =>
+  // Compute tight Y bounds from the (possibly corrected) flow data.
+  const flowValues = chartData.flatMap((d) =>
     [d.observed, d.predicted, d.confidenceLow, d.confidenceHigh, d.cehqForecast].filter(
       (v): v is number => v !== null && v !== undefined,
     ),
   );
-  if (hasCorrectedLine) {
-    for (const d of chartData) {
-      if (d.cehqCorrected != null) flowValues.push(d.cehqCorrected);
-    }
-  }
   const minDataFlow = flowValues.length > 0 ? Math.min(...flowValues) : 0;
   const maxDataFlow = flowValues.length > 0 ? Math.max(...flowValues) : 1;
 
@@ -139,65 +141,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
     ticks.push(t);
   }
 
-  // Pre-formatted bias note: e.g. "Recent obs ×0.66 (fades over 24h)".
-  const biasNote =
-    hasCorrectedLine && correction?.ratio != null
-      ? t("chart.biasNote", {
-          ratio: correction.ratio.toFixed(2),
-          hours: String(Math.round(correction.decayHours)),
-        })
-      : "";
-
-  // Admin-only diagnostic: show why the corrected line is/isn't drawing.
-  let adminDebug: string | null = null;
-  if (isAdmin) {
-    const windowMs = 24 * 60 * 60 * 1000;
-    const recentObs = data.filter((d) => {
-      const ts = new Date(d.timestamp).getTime();
-      return d.observed != null && ts <= nowTs && ts >= nowTs - windowMs;
-    }).length;
-    const nearFc = data.filter((d) => {
-      const ts = new Date(d.timestamp).getTime();
-      return d.cehqForecast != null && ts > nowTs && ts <= nowTs + windowMs;
-    }).length;
-    // Also show how stale the most recent observed point is.
-    const lastObsTs = data
-      .filter((d) => d.observed != null)
-      .map((d) => new Date(d.timestamp).getTime())
-      .filter((ts) => ts <= nowTs)
-      .sort((a, b) => b - a)[0];
-    const lastObsAgeH =
-      lastObsTs != null ? Math.round((nowTs - lastObsTs) / (60 * 60 * 1000)) : null;
-    const ageStr = lastObsAgeH != null ? ` · last obs ${lastObsAgeH}h ago` : "";
-    const dbg = correction?.debug;
-    const innerStr = dbg
-      ? ` · [lastObs=${dbg.obsMedian != null ? dbg.obsMedian.toFixed(1) : "—"}` +
-        ` firstFc=${dbg.fcMedian != null ? dbg.fcMedian.toFixed(1) : "—"}` +
-        (dbg.rawRatio != null ? ` raw=${dbg.rawRatio.toFixed(3)}` : "") +
-        ` why=${dbg.reason}]`
-      : "";
-    if (!correction) {
-      adminDebug = "correction prop not passed";
-    } else if (correction.ratio == null) {
-      adminDebug = `no correction · chart obs=${recentObs} fc=${nearFc}${ageStr}${innerStr}`;
-    } else if (!correction.active) {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed${ageStr}${innerStr}`;
-    } else {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h${ageStr}${innerStr}`;
-    }
-  }
-
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
         {t("chart.title")}
       </h2>
-
-      {adminDebug && (
-        <div className="mb-1 rounded bg-teal-50 px-2 py-0.5 font-mono text-[10px] text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-          bias-correction: {adminDebug}
-        </div>
-      )}
 
       {/* Out-of-range threshold markers */}
       {thresholds.some((t) => t.position === "above") && (
@@ -265,7 +213,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const d = payload[0]?.payload as
-                | (HourlyChartPoint & { ts: number; cehqCorrected: number | null })
+                | (HourlyChartPoint & { ts: number })
                 | undefined;
               if (!d) return null;
               return (
@@ -289,13 +237,6 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                   {d.cehqForecast !== null && (
                     <p className="mt-0.5 text-purple-500">
                       {t("chart.cehqLabel")}<span className="font-semibold">{d.cehqForecast.toFixed(1)} m&sup3;/s</span>
-                    </p>
-                  )}
-                  {d.cehqCorrected !== null && (
-                    <p className="mt-0.5 text-teal-600 dark:text-teal-400">
-                      {t("chart.cehqCorrectedLabel")}
-                      <span className="font-semibold">{d.cehqCorrected.toFixed(1)} m&sup3;/s</span>
-                      <span className="ml-1 text-[10px] text-zinc-500">({biasNote})</span>
                     </p>
                   )}
                   {d.confidenceLow !== null && d.confidenceHigh !== null && (
@@ -351,7 +292,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             isAnimationActive={false}
           />
 
-          {/* CEHQ official forecast */}
+          {/* CEHQ official forecast (bias-corrected in place when a correction is active) */}
           <Line
             dataKey="cehqForecast"
             stroke="#a855f7"
@@ -361,18 +302,6 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             connectNulls
             isAnimationActive={false}
           />
-
-          {/* Bias-corrected CEHQ forecast (only rendered when bias is non-trivial) */}
-          {hasCorrectedLine && (
-            <Line
-              dataKey="cehqCorrected"
-              stroke="#0d9488"
-              strokeWidth={2.5}
-              dot={false}
-              connectNulls={false}
-              isAnimationActive={false}
-            />
-          )}
         </ComposedChart>
       </ResponsiveContainer>
 
@@ -395,18 +324,6 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
               {t("chart.q25q75")}
             </span>
           </>
-        )}
-        {hasCorrectedLine && (
-          <span
-            className="flex items-center gap-1.5"
-            title={biasNote}
-          >
-            <span className="inline-block h-0.5 w-5 rounded bg-teal-600 dark:bg-teal-400" />
-            <span className="text-teal-700 dark:text-teal-400">
-              {t("chart.cehqCorrected")}
-              <span className="ml-1 text-[10px] text-zinc-500 dark:text-zinc-400">({biasNote})</span>
-            </span>
-          </span>
         )}
         {thresholds.map((t) => (
           <span key={t.label} className="flex items-center gap-1.5">

@@ -104,15 +104,6 @@ export interface ForecastCorrection {
   decayHours: number;
   /** True when the correction is meaningful enough to surface in UI. */
   active: boolean;
-  /** Admin-only diagnostics. Not used in rendering logic. */
-  debug?: {
-    obsCount: number;
-    fcCount: number;
-    obsMedian: number | null;
-    fcMedian: number | null;
-    rawRatio: number | null;
-    reason: string;
-  };
 }
 
 /** Identity correction (no-op). */
@@ -179,21 +170,9 @@ export function buildForecastCorrection(
     }
   }
 
-  const debugBase = {
-    obsCount: latestObserved ? 1 : 0,
-    fcCount: earliestForecast ? 1 : 0,
-  };
+  if (!latestObserved || !earliestForecast) return NO_CORRECTION;
 
-  if (!latestObserved) {
-    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "no recent observed" } };
-  }
-  if (!earliestForecast) {
-    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "no upcoming forecast" } };
-  }
-
-  const obsValue = latestObserved.flow;
-  const fcValue = earliestForecast.flow;
-  const rawRatio = obsValue / fcValue;
+  const rawRatio = latestObserved.flow / earliestForecast.flow;
   const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], rawRatio));
   const active = Math.abs(ratio - 1) >= RATIO_ACTIVE_THRESHOLD;
 
@@ -201,13 +180,6 @@ export function buildForecastCorrection(
     ratio,
     decayHours: CORRECTION_DECAY_HOURS,
     active,
-    debug: {
-      ...debugBase,
-      obsMedian: obsValue,
-      fcMedian: fcValue,
-      rawRatio,
-      reason: active ? "active" : "within dead-band",
-    },
   };
 }
 
