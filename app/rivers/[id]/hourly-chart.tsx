@@ -151,23 +151,32 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
   // Admin-only diagnostic: show why the corrected line is/isn't drawing.
   let adminDebug: string | null = null;
   if (isAdmin) {
-    const sixHoursMs = 6 * 60 * 60 * 1000;
+    const windowMs = 24 * 60 * 60 * 1000;
     const recentObs = data.filter((d) => {
       const ts = new Date(d.timestamp).getTime();
-      return d.observed != null && ts <= nowTs && ts >= nowTs - sixHoursMs;
+      return d.observed != null && ts <= nowTs && ts >= nowTs - windowMs;
     }).length;
     const nearFc = data.filter((d) => {
       const ts = new Date(d.timestamp).getTime();
-      return d.cehqForecast != null && ts > nowTs && ts <= nowTs + sixHoursMs;
+      return d.cehqForecast != null && ts > nowTs && ts <= nowTs + windowMs;
     }).length;
+    // Also show how stale the most recent observed point is.
+    const lastObsTs = data
+      .filter((d) => d.observed != null)
+      .map((d) => new Date(d.timestamp).getTime())
+      .filter((ts) => ts <= nowTs)
+      .sort((a, b) => b - a)[0];
+    const lastObsAgeH =
+      lastObsTs != null ? Math.round((nowTs - lastObsTs) / (60 * 60 * 1000)) : null;
+    const ageStr = lastObsAgeH != null ? ` · last obs ${lastObsAgeH}h ago` : "";
     if (!correction) {
       adminDebug = "correction prop not passed";
     } else if (correction.ratio == null) {
-      adminDebug = `no correction · obs=${recentObs} fc=${nearFc} (need ≥2 each)`;
+      adminDebug = `no correction · obs=${recentObs} fc=${nearFc} (need ≥2 each, 24h window)${ageStr}`;
     } else if (!correction.active) {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed${ageStr}`;
     } else {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · obs=${recentObs} fc=${nearFc}`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · obs=${recentObs} fc=${nearFc}${ageStr}`;
     }
   }
 

@@ -55,11 +55,16 @@ export function statusLabel(
 const MIN_CONSECUTIVE_HOURS = 3;
 
 /**
- * Window (in hours) used to compute the CEHQ forecast bias from the most
- * recent overlap between observed and forecast. Shorter = more reactive,
- * longer = more robust.
+ * Window (in hours) used to compute the CEHQ forecast bias. We take the
+ * median of observed readings in the last BIAS_LOOKBACK_HOURS before now,
+ * and the median of CEHQ forecast points in the next BIAS_LOOKBACK_HOURS
+ * after now, then compare.
+ *
+ * Set to 24h to tolerate CEHQ real-time publishing lag + cache staleness —
+ * observed readings can legitimately be 6–12h behind wall-clock time even
+ * when the cache is fresh.
  */
-const BIAS_LOOKBACK_HOURS = 6;
+const BIAS_LOOKBACK_HOURS = 24;
 
 /**
  * Minimum number of overlap samples required before we trust the bias.
