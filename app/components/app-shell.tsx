@@ -14,6 +14,7 @@ import SettingsMenu from "./settings-menu";
 import MyRiversTab from "./my-rivers-tab";
 import ExploreTab from "./explore-tab";
 import MapTab from "./map-tab";
+import ChatTab from "./chat-tab";
 import type { StationCard } from "./types";
 
 const PULL_THRESHOLD = 60;
@@ -278,6 +279,8 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
       {activeTab === "map" && (
         <MapTab cards={visible} isAdmin={isAdmin} />
       )}
+
+      {activeTab === "chat" && <ChatTab />}
 
       {/* Bottom navigation */}
       <BottomNav />

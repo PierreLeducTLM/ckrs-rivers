@@ -13,7 +13,28 @@
   "tabs": {
     "myRivers": "Mes Rivieres",
     "explore": "Explorer",
-    "map": "Carte"
+    "map": "Carte",
+    "chat": "Clavardage"
+  },
+  "chat": {
+    "title": "Clavardage",
+    "subtitle": "Posez des questions sur les rivieres, debits et conditions",
+    "experimental": "Experimental",
+    "placeholder": "Posez une question sur les rivieres pres de vous...",
+    "send": "Envoyer",
+    "stop": "Arreter",
+    "emptyHeading": "Que voulez-vous pagayer?",
+    "emptySubtext": "Essayez une de ces suggestions :",
+    "starter1": "Quelles rivieres pres de moi sont bonnes a pagayer maintenant?",
+    "starter2": "Quelle sera la meilleure riviere cette fin de semaine?",
+    "starter3": "Laquelle de mes rivieres favorites a le meilleur debit?",
+    "starter4": "J'ai 2 heures de route — que devrais-je pagayer?",
+    "error": "Une erreur est survenue. Reessayez.",
+    "thinking": "Reflexion...",
+    "usingTool": "Consultation de {tool}...",
+    "locationGranted": "Localisation utilisee",
+    "locationDenied": "Localisation indisponible — dites-moi ou vous etes",
+    "assistantLabel": "FlowCast"
   },
   "myRivers": {
     "empty": "Aucune riviere favorite",

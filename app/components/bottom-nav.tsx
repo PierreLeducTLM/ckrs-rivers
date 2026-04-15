@@ -7,6 +7,7 @@ const TABS: { id: TabId; labelKey: string }[] = [
   { id: "my-rivers", labelKey: "tabs.myRivers" },
   { id: "explore", labelKey: "tabs.explore" },
   { id: "map", labelKey: "tabs.map" },
+  { id: "chat", labelKey: "tabs.chat" },
 ];
 
 function TabIcon({ id, active }: { id: TabId; active: boolean }) {
@@ -29,6 +30,12 @@ function TabIcon({ id, active }: { id: TabId; active: boolean }) {
         <svg className={cls} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+        </svg>
+      );
+    case "chat":
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-4 4v-4z" />
         </svg>
       );
   }

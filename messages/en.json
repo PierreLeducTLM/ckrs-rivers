@@ -13,7 +13,28 @@
   "tabs": {
     "myRivers": "My Rivers",
     "explore": "Explore",
-    "map": "Map"
+    "map": "Map",
+    "chat": "Chat"
+  },
+  "chat": {
+    "title": "Chat",
+    "subtitle": "Ask about rivers, flows, and conditions",
+    "experimental": "Experimental",
+    "placeholder": "Ask about rivers near you...",
+    "send": "Send",
+    "stop": "Stop",
+    "emptyHeading": "What would you like to paddle?",
+    "emptySubtext": "Try one of these to get started:",
+    "starter1": "Which rivers near me are good to paddle right now?",
+    "starter2": "What will be the best river this weekend?",
+    "starter3": "Which of my favorite rivers has the best flow?",
+    "starter4": "I have 2 hours to drive — what should I paddle?",
+    "error": "Something went wrong. Try again.",
+    "thinking": "Thinking...",
+    "usingTool": "Looking up {tool}...",
+    "locationGranted": "Using your location",
+    "locationDenied": "Location unavailable — tell me where you are",
+    "assistantLabel": "FlowCast"
   },
   "myRivers": {
     "empty": "No favorite rivers yet",

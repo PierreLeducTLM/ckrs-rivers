@@ -5,7 +5,7 @@ import type { StatusFilter } from "./filter-chips";
 
 export type ClassFilter = "all" | "I" | "II" | "III" | "IV" | "V";
 
-export type TabId = "my-rivers" | "explore" | "map";
+export type TabId = "my-rivers" | "explore" | "map" | "chat";
 
 const TAB_STORAGE_KEY = "waterflow-active-tab";
 const FAVORITES_STORAGE_KEY = "waterflow-favorites";
@@ -26,7 +26,12 @@ function getInitialTab(): TabId {
   try {
     // Check saved tab preference
     const saved = localStorage.getItem(TAB_STORAGE_KEY);
-    if (saved === "my-rivers" || saved === "explore" || saved === "map") {
+    if (
+      saved === "my-rivers" ||
+      saved === "explore" ||
+      saved === "map" ||
+      saved === "chat"
+    ) {
       return saved;
     }
     // First launch: if no favorites, start on Explore
