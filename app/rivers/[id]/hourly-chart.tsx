@@ -169,14 +169,22 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
     const lastObsAgeH =
       lastObsTs != null ? Math.round((nowTs - lastObsTs) / (60 * 60 * 1000)) : null;
     const ageStr = lastObsAgeH != null ? ` · last obs ${lastObsAgeH}h ago` : "";
+    const dbg = correction?.debug;
+    const innerStr = dbg
+      ? ` · [inner obs=${dbg.obsCount} fc=${dbg.fcCount}` +
+        (dbg.obsMedian != null ? ` obsMed=${dbg.obsMedian.toFixed(1)}` : "") +
+        (dbg.fcMedian != null ? ` fcMed=${dbg.fcMedian.toFixed(1)}` : "") +
+        (dbg.rawRatio != null ? ` raw=${dbg.rawRatio.toFixed(3)}` : "") +
+        ` why=${dbg.reason}]`
+      : "";
     if (!correction) {
       adminDebug = "correction prop not passed";
     } else if (correction.ratio == null) {
-      adminDebug = `no correction · obs=${recentObs} fc=${nearFc} (need ≥2 each, 24h window)${ageStr}`;
+      adminDebug = `no correction · chart obs=${recentObs} fc=${nearFc} (24h window)${ageStr}${innerStr}`;
     } else if (!correction.active) {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed${ageStr}`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed${ageStr}${innerStr}`;
     } else {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · obs=${recentObs} fc=${nearFc}${ageStr}`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · chart obs=${recentObs} fc=${nearFc}${ageStr}${innerStr}`;
     }
   }
 

@@ -114,6 +114,15 @@ export interface ForecastCorrection {
   decayHours: number;
   /** True when the correction is meaningful enough to surface in UI. */
   active: boolean;
+  /** Admin-only diagnostics. Not used in rendering logic. */
+  debug?: {
+    obsCount: number;
+    fcCount: number;
+    obsMedian: number | null;
+    fcMedian: number | null;
+    rawRatio: number | null;
+    reason: string;
+  };
 }
 
 /** Identity correction (no-op). */
@@ -191,12 +200,23 @@ export function buildForecastCorrection(
     }
   }
 
-  if (recentObserved.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
-  if (nearForecast.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
+  const debugBase = {
+    obsCount: recentObserved.length,
+    fcCount: nearForecast.length,
+  };
+
+  if (recentObserved.length < BIAS_MIN_SAMPLES) {
+    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "too few observed" } };
+  }
+  if (nearForecast.length < BIAS_MIN_SAMPLES) {
+    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian: null, fcMedian: null, rawRatio: null, reason: "too few forecast" } };
+  }
 
   const obsMedian = median(recentObserved);
   const fcMedian = median(nearForecast);
-  if (fcMedian <= 0) return NO_CORRECTION;
+  if (fcMedian <= 0) {
+    return { ...NO_CORRECTION, debug: { ...debugBase, obsMedian, fcMedian, rawRatio: null, reason: "fcMedian <= 0" } };
+  }
 
   const rawRatio = obsMedian / fcMedian;
   const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], rawRatio));
@@ -206,6 +226,13 @@ export function buildForecastCorrection(
     ratio,
     decayHours: CORRECTION_DECAY_HOURS,
     active,
+    debug: {
+      ...debugBase,
+      obsMedian,
+      fcMedian,
+      rawRatio,
+      reason: active ? "active" : "within dead-band",
+    },
   };
 }
 
