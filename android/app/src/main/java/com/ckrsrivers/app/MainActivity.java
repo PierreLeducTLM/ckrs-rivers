@@ -1,4 +1,4 @@
-package com.flowcast.app;
+package com.ckrsrivers.app;
 
 import com.getcapacitor.BridgeActivity;
 
