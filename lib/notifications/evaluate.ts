@@ -16,6 +16,11 @@ import {
   type TrendDirection,
 } from "@/lib/domain/notification";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import {
+  applyForecastCorrection,
+  buildForecastCorrection,
+  type ForecastCorrection,
+} from "@/lib/forecast-correction";
 
 // ---------------------------------------------------------------------------
 // Forecast data shapes (from forecast_cache JSON columns)
@@ -62,9 +67,22 @@ export function computeSnapshot(
 ): StationSnapshot {
   const currentFlow = data.lastFlow?.flow ?? null;
   const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
+  const nowMs = now.getTime();
+
+  // Bias correction from recent observed vs upcoming forecast; applied to
+  // every forecast value before status classification so alerts use the
+  // same corrected predictions as the chart and status pills.
+  const correction = buildForecastCorrection(
+    data.hourlyData.map((p) => ({
+      ts: new Date(p.timestamp).getTime(),
+      observed: p.observed,
+      cehqForecast: p.cehqForecast,
+    })),
+    nowMs,
+  );
 
   // Count consecutive runnable forecast days
-  const runnableWindowDays = countRunnableWindow(data.forecastDays, paddling);
+  const runnableWindowDays = countRunnableWindow(data.forecastDays, paddling, correction, nowMs);
 
   // Compute trend from recent hourly data
   const trendDirection = computeTrend(data.hourlyData);
@@ -74,6 +92,8 @@ export function computeSnapshot(
     data.forecastDays,
     paddling,
     paddlingStatus,
+    correction,
+    nowMs,
   );
 
   // When does the forecast exit runnable range?
@@ -82,6 +102,8 @@ export function computeSnapshot(
     data.hourlyData,
     paddling,
     paddlingStatus,
+    correction,
+    nowMs,
   );
 
   // Precipitation next 48 hours
@@ -212,18 +234,28 @@ export function detectAlerts(
 // Helper functions
 // ---------------------------------------------------------------------------
 
+/** Hours-from-now midpoint for a daily forecast entry (`YYYY-MM-DD`). */
+function dayMidpointHoursAhead(date: string, nowMs: number): number {
+  const midpointMs = new Date(`${date}T12:00:00Z`).getTime();
+  return (midpointMs - nowMs) / 3600_000;
+}
+
 function countRunnableWindow(
   forecastDays: ForecastDay[],
   paddling: PaddlingLevels | undefined,
+  correction: ForecastCorrection,
+  nowMs: number,
 ): number {
   if (!paddling) return 0;
   let count = 0;
   for (const day of forecastDays) {
-    const { status } = getPaddlingStatus(day.flow, paddling);
+    const h = dayMidpointHoursAhead(day.date, nowMs);
+    const corrected = applyForecastCorrection(day.flow, h, correction);
+    const { status } = getPaddlingStatus(corrected, paddling);
     if (isGoodRange(status)) {
       count++;
     } else if (count > 0) {
-      break; // Stop at first non-runnable day after runnable days
+      break;
     }
   }
   return count;
@@ -253,13 +285,17 @@ function forecastEntersRange(
   forecastDays: ForecastDay[],
   paddling: PaddlingLevels | undefined,
   currentStatus: PaddlingStatus,
+  correction: ForecastCorrection,
+  nowMs: number,
 ): { enters: boolean; entersInDays: number | null } {
   if (!paddling || isGoodRange(currentStatus)) {
     return { enters: false, entersInDays: null };
   }
 
   for (let i = 0; i < forecastDays.length; i++) {
-    const { status } = getPaddlingStatus(forecastDays[i].flow, paddling);
+    const h = dayMidpointHoursAhead(forecastDays[i].date, nowMs);
+    const corrected = applyForecastCorrection(forecastDays[i].flow, h, correction);
+    const { status } = getPaddlingStatus(corrected, paddling);
     if (isGoodRange(status)) {
       return { enters: true, entersInDays: i + 1 };
     }
@@ -272,31 +308,33 @@ function forecastExitsRange(
   hourlyData: HourlyPoint[],
   paddling: PaddlingLevels | undefined,
   currentStatus: PaddlingStatus,
+  correction: ForecastCorrection,
+  nowMs: number,
 ): { exits: boolean; exitsInHours: number | null } {
   if (!paddling || !isGoodRange(currentStatus)) {
     return { exits: false, exitsInHours: null };
   }
 
-  // Check forecast days — each day is ~24h
+  // Daily check first
   for (let i = 0; i < forecastDays.length; i++) {
-    const { status } = getPaddlingStatus(forecastDays[i].flow, paddling);
+    const h = dayMidpointHoursAhead(forecastDays[i].date, nowMs);
+    const corrected = applyForecastCorrection(forecastDays[i].flow, h, correction);
+    const { status } = getPaddlingStatus(corrected, paddling);
     if (!isGoodRange(status)) {
-      // Estimate hours: the day index * 24
       return { exits: true, exitsInHours: (i + 1) * 24 };
     }
   }
 
-  // Also check hourly forecast data for more precision
-  const now = Date.now();
+  // Hourly refinement
   for (const point of hourlyData) {
     const flow = point.cehqForecast;
     if (flow == null) continue;
     const ts = new Date(point.timestamp).getTime();
-    if (ts <= now) continue;
-
-    const { status } = getPaddlingStatus(flow, paddling);
+    if (ts <= nowMs) continue;
+    const hoursAhead = (ts - nowMs) / 3600_000;
+    const corrected = applyForecastCorrection(flow, hoursAhead, correction);
+    const { status } = getPaddlingStatus(corrected, paddling);
     if (!isGoodRange(status)) {
-      const hoursAhead = (ts - now) / (1000 * 60 * 60);
       return { exits: true, exitsInHours: hoursAhead };
     }
   }

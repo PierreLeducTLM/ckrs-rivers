@@ -1,6 +1,21 @@
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 import type { PaddlingLevels } from "@/lib/data/rivers";
 import type { StationCard } from "./types";
+import {
+  applyForecastCorrection,
+  buildForecastCorrection,
+  NO_CORRECTION,
+  type ForecastCorrection,
+  type ForecastPoint,
+} from "@/lib/forecast-correction";
+
+// Re-export so existing callers (page.tsx, hourly-chart.tsx) keep working.
+export {
+  applyForecastCorrection,
+  buildForecastCorrection,
+  NO_CORRECTION,
+  type ForecastCorrection,
+};
 
 export function timeAgo(
   isoDate: string,
@@ -53,135 +68,6 @@ export function statusLabel(
  * from flipping the status pill.
  */
 const MIN_CONSECUTIVE_HOURS = 3;
-
-/**
- * Maximum allowable staleness (hours) of the most-recent observed point
- * before we suppress the correction. Beyond this, any bias signal is too
- * old to be meaningful. Must be generous enough to cover CEHQ real-time
- * publishing lag + cache refresh cadence (typically 6–12h combined).
- */
-const MAX_OBS_STALENESS_HOURS = 24;
-
-/**
- * E-folding time (hours) for the correction's exponential decay back to
- * "no correction". After 24h ~37% of the correction remains; after 72h ~5%.
- * Reflects that today's forecast bias is a poor predictor of next week's.
- */
-const CORRECTION_DECAY_HOURS = 24;
-
-/** Lower/upper clamp on the recent observed/forecast ratio (safety rail). */
-const RATIO_BOUNDS: [number, number] = [0.3, 2.0];
-
-/** Show the corrected line / apply correction only if the ratio deviates this much from 1. */
-const RATIO_ACTIVE_THRESHOLD = 0.03;
-
-type ForecastPoint = {
-  ts: number;
-  observed: number | null;
-  cehqForecast: number | null;
-};
-
-/**
- * Plain-data (serializable) record describing a time-decaying multiplicative
- * correction from recent CEHQ-vs-observed overlap. Applied via
- * `applyForecastCorrection`:
- *
- *   correctedFlow = rawFlow × (1 + (ratio − 1) × exp(−hoursAhead / τ))
- *
- * - hoursAhead = 0 → full correction (rawFlow × ratio)
- * - hoursAhead = τ (24h) → ~37% of the correction remains
- * - hoursAhead → ∞ → no correction (rawFlow × 1)
- *
- * Multiplicative form keeps relative error stable across flow magnitudes.
- * Decay reflects that the recent bias signal weakens as the forecast horizon
- * extends. Kept as plain data so it crosses the Server→Client Component prop
- * boundary cleanly.
- */
-export interface ForecastCorrection {
-  /** Recent observed/forecast ratio (clamped). Null when no overlap. */
-  ratio: number | null;
-  /** E-folding time for the decay back to ratio=1, in hours. */
-  decayHours: number;
-  /** True when the correction is meaningful enough to surface in UI. */
-  active: boolean;
-}
-
-/** Identity correction (no-op). */
-export const NO_CORRECTION: ForecastCorrection = {
-  ratio: null,
-  decayHours: CORRECTION_DECAY_HOURS,
-  active: false,
-};
-
-/**
- * Apply a ForecastCorrection to a raw CEHQ forecast value at `hoursAhead`
- * from now. No-op when correction is inactive or `hoursAhead < 0`.
- */
-export function applyForecastCorrection(
-  rawFlow: number,
-  hoursAhead: number,
-  correction: ForecastCorrection,
-): number {
-  if (!correction.active || correction.ratio == null || hoursAhead < 0) {
-    return rawFlow;
-  }
-  const effectiveRatio =
-    1 + (correction.ratio - 1) * Math.exp(-hoursAhead / correction.decayHours);
-  return rawFlow * effectiveRatio;
-}
-
-/**
- * Build a correction by comparing the single most recent observed flow
- * against the single earliest upcoming CEHQ forecast flow.
- *
- * Rationale: maximum reactivity to current state. If the observed reading
- * genuinely reflects what's happening right now, we want the correction
- * to mirror that immediately. The ±3% dead-band + [0.3, 2.0] clamp +
- * 24h exponential decay limit the damage from any single-point outlier —
- * a glitched reading produces one wrong correction that's washed out as
- * soon as a valid reading lands on the next cache refresh (~15 min).
- *
- * Why not median-smoothing? Median over a 24h window will ignore a genuine
- * rapid rise that shows up only in the most recent reading — exactly the
- * situation where we most need the correction to react.
- */
-export function buildForecastCorrection(
-  points: ForecastPoint[],
-  nowTs: number,
-): ForecastCorrection {
-  const maxStaleMs = MAX_OBS_STALENESS_HOURS * 60 * 60 * 1000;
-
-  // Latest observed point within the staleness window.
-  let latestObserved: { ts: number; flow: number } | null = null;
-  for (const p of points) {
-    if (p.ts > nowTs || p.observed == null) continue;
-    if (p.ts < nowTs - maxStaleMs) continue;
-    if (latestObserved == null || p.ts > latestObserved.ts) {
-      latestObserved = { ts: p.ts, flow: p.observed };
-    }
-  }
-
-  // Earliest upcoming forecast point.
-  let earliestForecast: { ts: number; flow: number } | null = null;
-  for (const p of points) {
-    if (p.ts <= nowTs || p.cehqForecast == null || p.cehqForecast <= 0) continue;
-    if (earliestForecast == null || p.ts < earliestForecast.ts) {
-      earliestForecast = { ts: p.ts, flow: p.cehqForecast };
-    }
-  }
-
-  if (!latestObserved || !earliestForecast) return NO_CORRECTION;
-
-  const rawRatio = latestObserved.flow / earliestForecast.flow;
-  const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], rawRatio));
-  const active = Math.abs(ratio - 1) >= RATIO_ACTIVE_THRESHOLD;
-
-  return {
-    ratio,
-    decayHours: CORRECTION_DECAY_HOURS,
-    active,
-  };
-}
 
 /**
  * Scan hourly forecast points for the first future run of ≥ MIN_CONSECUTIVE_HOURS

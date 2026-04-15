@@ -175,6 +175,74 @@ const ALERT_RANK: Record<string, number> = {
 };
 
 // ---------------------------------------------------------------------------
+// Bias correction (inlined from lib/forecast-correction.ts — Trigger.dev
+// bundling requires everything inline, no @/ aliases)
+// ---------------------------------------------------------------------------
+
+const BIAS_MAX_OBS_STALENESS_HOURS = 24;
+const BIAS_DECAY_HOURS = 24;
+const BIAS_RATIO_MIN = 0.3;
+const BIAS_RATIO_MAX = 2.0;
+const BIAS_ACTIVE_THRESHOLD = 0.03;
+
+interface ForecastCorrection {
+  ratio: number | null;
+  decayHours: number;
+  active: boolean;
+}
+
+const NO_CORRECTION: ForecastCorrection = {
+  ratio: null,
+  decayHours: BIAS_DECAY_HOURS,
+  active: false,
+};
+
+function buildForecastCorrection(
+  hourlyData: HourlyPoint[],
+  nowMs: number,
+): ForecastCorrection {
+  const maxStaleMs = BIAS_MAX_OBS_STALENESS_HOURS * 3600_000;
+
+  let latestObs: { ts: number; flow: number } | null = null;
+  let earliestFc: { ts: number; flow: number } | null = null;
+
+  for (const p of hourlyData) {
+    const ts = new Date(p.timestamp).getTime();
+    if (ts <= nowMs && ts >= nowMs - maxStaleMs && p.observed != null) {
+      if (!latestObs || ts > latestObs.ts) latestObs = { ts, flow: p.observed };
+    }
+    if (ts > nowMs && p.cehqForecast != null && p.cehqForecast > 0) {
+      if (!earliestFc || ts < earliestFc.ts) earliestFc = { ts, flow: p.cehqForecast };
+    }
+  }
+
+  if (!latestObs || !earliestFc) return NO_CORRECTION;
+
+  const rawRatio = latestObs.flow / earliestFc.flow;
+  const ratio = Math.max(BIAS_RATIO_MIN, Math.min(BIAS_RATIO_MAX, rawRatio));
+  const active = Math.abs(ratio - 1) >= BIAS_ACTIVE_THRESHOLD;
+
+  return { ratio, decayHours: BIAS_DECAY_HOURS, active };
+}
+
+function applyCorrection(
+  rawFlow: number,
+  hoursAhead: number,
+  correction: ForecastCorrection,
+): number {
+  if (!correction.active || correction.ratio == null || hoursAhead < 0) return rawFlow;
+  const effectiveRatio =
+    1 + (correction.ratio - 1) * Math.exp(-hoursAhead / correction.decayHours);
+  return rawFlow * effectiveRatio;
+}
+
+/** Hours-from-now midpoint for a daily forecast entry (`YYYY-MM-DD`). */
+function dayMidpointHoursAhead(date: string, nowMs: number): number {
+  const midpointMs = new Date(`${date}T12:00:00Z`).getTime();
+  return (midpointMs - nowMs) / 3600_000;
+}
+
+// ---------------------------------------------------------------------------
 // Snapshot computation
 // ---------------------------------------------------------------------------
 
@@ -189,11 +257,20 @@ function computeSnapshot(
   const forecastDays = cache.forecast_json?.forecastDays ?? [];
   const hourlyData = cache.hourly_json ?? [];
   const weatherDays = cache.weather_json ?? [];
+  const nowMs = now.getTime();
 
-  // Runnable window
+  // Bias correction derived from recent observed vs. upcoming forecast.
+  // Same signal used by the chart/status-pill — keeps all prediction-derived
+  // UI and alerts in agreement.
+  const correction = buildForecastCorrection(hourlyData, nowMs);
+
+  // Runnable window (daily). Correct each day's flow with decay keyed to
+  // the day's midpoint relative to now.
   let runnableWindowDays = 0;
   for (const day of forecastDays) {
-    if (isGoodRange(getPaddlingStatus(day.flow, paddling))) runnableWindowDays++;
+    const h = dayMidpointHoursAhead(day.date, nowMs);
+    const correctedFlow = applyCorrection(day.flow, h, correction);
+    if (isGoodRange(getPaddlingStatus(correctedFlow, paddling))) runnableWindowDays++;
     else if (runnableWindowDays > 0) break;
   }
 
@@ -209,12 +286,14 @@ function computeSnapshot(
     }
   }
 
-  // Forecast enters range
+  // Forecast enters range — apply correction per-day.
   let forecastEntersRange = false;
   let forecastEntersRangeInDays: number | null = null;
   if (!isGoodRange(paddlingStatus)) {
     for (let i = 0; i < forecastDays.length; i++) {
-      if (isGoodRange(getPaddlingStatus(forecastDays[i].flow, paddling))) {
+      const h = dayMidpointHoursAhead(forecastDays[i].date, nowMs);
+      const correctedFlow = applyCorrection(forecastDays[i].flow, h, correction);
+      if (isGoodRange(getPaddlingStatus(correctedFlow, paddling))) {
         forecastEntersRange = true;
         forecastEntersRangeInDays = i + 1;
         break;
@@ -222,27 +301,29 @@ function computeSnapshot(
     }
   }
 
-  // Forecast exits range (check hourly first for precision, fallback to daily)
+  // Forecast exits range — hourly first for precision, daily fallback.
+  // Both paths apply the correction before the threshold check.
   let forecastExitsRange = false;
   let forecastExitsRangeInHours: number | null = null;
   if (isGoodRange(paddlingStatus)) {
-    // Hourly check for sub-24h precision
-    const nowMs = now.getTime();
     for (const point of hourlyData) {
       const flow = point.cehqForecast;
       if (flow == null) continue;
       const ts = new Date(point.timestamp).getTime();
       if (ts <= nowMs) continue;
-      if (!isGoodRange(getPaddlingStatus(flow, paddling))) {
+      const hoursAhead = (ts - nowMs) / 3600_000;
+      const correctedFlow = applyCorrection(flow, hoursAhead, correction);
+      if (!isGoodRange(getPaddlingStatus(correctedFlow, paddling))) {
         forecastExitsRange = true;
-        forecastExitsRangeInHours = (ts - nowMs) / (1000 * 60 * 60);
+        forecastExitsRangeInHours = hoursAhead;
         break;
       }
     }
-    // Daily fallback if hourly didn't find an exit
     if (!forecastExitsRange) {
       for (let i = 0; i < forecastDays.length; i++) {
-        if (!isGoodRange(getPaddlingStatus(forecastDays[i].flow, paddling))) {
+        const h = dayMidpointHoursAhead(forecastDays[i].date, nowMs);
+        const correctedFlow = applyCorrection(forecastDays[i].flow, h, correction);
+        if (!isGoodRange(getPaddlingStatus(correctedFlow, paddling))) {
           forecastExitsRange = true;
           forecastExitsRangeInHours = (i + 1) * 24;
           break;
