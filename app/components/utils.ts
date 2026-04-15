@@ -135,27 +135,66 @@ export function applyForecastCorrection(
   return rawFlow * effectiveRatio;
 }
 
+/** Median of a non-empty number array. */
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+
 /**
- * Build a correction from recent overlap between observed and CEHQ forecast.
- * Computes mean(observed/cehqForecast) over the last BIAS_LOOKBACK_HOURS,
- * clamps to RATIO_BOUNDS, and returns a plain-data correction record.
+ * Build a correction by comparing the median of recent observed flow against
+ * the median of near-term CEHQ forecast flow.
+ *
+ * Why not "observed/forecast at matching past timestamps"? Because CEHQ's
+ * public forecast endpoint (`/JSON/{stationId}.json`) only publishes
+ * forward-looking points — there are no past forecast values to pair with
+ * past observed values, so that approach silently produces no correction
+ * on most stations.
+ *
+ * Instead we compare "where the river actually is right now" (median of
+ * last BIAS_LOOKBACK_HOURS of observed) to "where CEHQ says it's about to
+ * be" (median of next BIAS_LOOKBACK_HOURS of forecast). The divergence
+ * between those is a legitimate bias signal.
+ *
+ * Caveat: this method can't perfectly separate bias from genuine flow
+ * evolution. If the river is truly rising fast, observed_median (past)
+ * will be below forecast_median (future) for natural reasons — not bias.
+ * Mitigated by (a) medians (robust to spikes), (b) ±3% dead-band,
+ * (c) [0.3, 2.0] clamp, (d) 24h exponential decay that wipes out
+ * erroneous corrections within a few days.
  */
 export function buildForecastCorrection(
   points: ForecastPoint[],
   nowTs: number,
 ): ForecastCorrection {
-  const cutoff = nowTs - BIAS_LOOKBACK_HOURS * 60 * 60 * 1000;
-  const ratios: number[] = [];
-  for (const p of points) {
-    if (p.ts > nowTs || p.ts < cutoff) continue;
-    if (p.observed == null || p.cehqForecast == null) continue;
-    if (p.cehqForecast <= 0) continue; // avoid divide-by-zero
-    ratios.push(p.observed / p.cehqForecast);
-  }
-  if (ratios.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
+  const windowMs = BIAS_LOOKBACK_HOURS * 60 * 60 * 1000;
+  const pastCutoff = nowTs - windowMs;
+  const futureCutoff = nowTs + windowMs;
 
-  const mean = ratios.reduce((a, b) => a + b, 0) / ratios.length;
-  const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], mean));
+  const recentObserved: number[] = [];
+  const nearForecast: number[] = [];
+
+  for (const p of points) {
+    if (p.ts <= nowTs && p.ts >= pastCutoff && p.observed != null) {
+      recentObserved.push(p.observed);
+    }
+    if (p.ts > nowTs && p.ts <= futureCutoff && p.cehqForecast != null && p.cehqForecast > 0) {
+      nearForecast.push(p.cehqForecast);
+    }
+  }
+
+  if (recentObserved.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
+  if (nearForecast.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
+
+  const obsMedian = median(recentObserved);
+  const fcMedian = median(nearForecast);
+  if (fcMedian <= 0) return NO_CORRECTION;
+
+  const rawRatio = obsMedian / fcMedian;
+  const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], rawRatio));
   const active = Math.abs(ratio - 1) >= RATIO_ACTIVE_THRESHOLD;
 
   return {

@@ -151,21 +151,23 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
   // Admin-only diagnostic: show why the corrected line is/isn't drawing.
   let adminDebug: string | null = null;
   if (isAdmin) {
-    const overlap = data.filter(
-      (d) =>
-        d.observed != null &&
-        d.cehqForecast != null &&
-        new Date(d.timestamp).getTime() <= nowTs &&
-        new Date(d.timestamp).getTime() >= nowTs - 6 * 60 * 60 * 1000,
-    ).length;
+    const sixHoursMs = 6 * 60 * 60 * 1000;
+    const recentObs = data.filter((d) => {
+      const ts = new Date(d.timestamp).getTime();
+      return d.observed != null && ts <= nowTs && ts >= nowTs - sixHoursMs;
+    }).length;
+    const nearFc = data.filter((d) => {
+      const ts = new Date(d.timestamp).getTime();
+      return d.cehqForecast != null && ts > nowTs && ts <= nowTs + sixHoursMs;
+    }).length;
     if (!correction) {
       adminDebug = "correction prop not passed";
     } else if (correction.ratio == null) {
-      adminDebug = `no correction · overlap in last 6h = ${overlap}`;
+      adminDebug = `no correction · obs=${recentObs} fc=${nearFc} (need ≥2 each)`;
     } else if (!correction.active) {
       adminDebug = `ratio ${correction.ratio.toFixed(3)} within ±3% of 1 — no correction needed`;
     } else {
-      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · overlap ${overlap}`;
+      adminDebug = `ratio ${correction.ratio.toFixed(3)} · decay ${correction.decayHours}h · obs=${recentObs} fc=${nearFc}`;
     }
   }
 
