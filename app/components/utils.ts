@@ -63,9 +63,22 @@ const BIAS_LOOKBACK_HOURS = 6;
 
 /**
  * Minimum number of overlap samples required before we trust the bias.
- * Below this, we fall back to zero (no correction).
+ * Below this, we fall back to no correction.
  */
 const BIAS_MIN_SAMPLES = 2;
+
+/**
+ * E-folding time (hours) for the correction's exponential decay back to
+ * "no correction". After 24h ~37% of the correction remains; after 72h ~5%.
+ * Reflects that today's forecast bias is a poor predictor of next week's.
+ */
+const CORRECTION_DECAY_HOURS = 24;
+
+/** Lower/upper clamp on the recent observed/forecast ratio (safety rail). */
+const RATIO_BOUNDS: [number, number] = [0.3, 2.0];
+
+/** Show the corrected line / apply correction only if the ratio deviates this much from 1. */
+const RATIO_ACTIVE_THRESHOLD = 0.03;
 
 type ForecastPoint = {
   ts: number;
@@ -74,33 +87,82 @@ type ForecastPoint = {
 };
 
 /**
- * Compute the signed bias (cehqForecast − observed) averaged over the last
- * BIAS_LOOKBACK_HOURS where both values are present. Returns 0 when there
- * isn't enough overlap, and clamps the result to ±50% of the recent
- * observed median as a safety rail against anomalous readings.
+ * Plain-data (serializable) record describing a time-decaying multiplicative
+ * correction from recent CEHQ-vs-observed overlap. Applied via
+ * `applyForecastCorrection`:
  *
- * Positive bias = CEHQ over-predicts vs. reality → subtract to correct.
+ *   correctedFlow = rawFlow × (1 + (ratio − 1) × exp(−hoursAhead / τ))
+ *
+ * - hoursAhead = 0 → full correction (rawFlow × ratio)
+ * - hoursAhead = τ (24h) → ~37% of the correction remains
+ * - hoursAhead → ∞ → no correction (rawFlow × 1)
+ *
+ * Multiplicative form keeps relative error stable across flow magnitudes.
+ * Decay reflects that the recent bias signal weakens as the forecast horizon
+ * extends. Kept as plain data so it crosses the Server→Client Component prop
+ * boundary cleanly.
  */
-export function computeForecastBias(
+export interface ForecastCorrection {
+  /** Recent observed/forecast ratio (clamped). Null when no overlap. */
+  ratio: number | null;
+  /** E-folding time for the decay back to ratio=1, in hours. */
+  decayHours: number;
+  /** True when the correction is meaningful enough to surface in UI. */
+  active: boolean;
+}
+
+/** Identity correction (no-op). */
+export const NO_CORRECTION: ForecastCorrection = {
+  ratio: null,
+  decayHours: CORRECTION_DECAY_HOURS,
+  active: false,
+};
+
+/**
+ * Apply a ForecastCorrection to a raw CEHQ forecast value at `hoursAhead`
+ * from now. No-op when correction is inactive or `hoursAhead < 0`.
+ */
+export function applyForecastCorrection(
+  rawFlow: number,
+  hoursAhead: number,
+  correction: ForecastCorrection,
+): number {
+  if (!correction.active || correction.ratio == null || hoursAhead < 0) {
+    return rawFlow;
+  }
+  const effectiveRatio =
+    1 + (correction.ratio - 1) * Math.exp(-hoursAhead / correction.decayHours);
+  return rawFlow * effectiveRatio;
+}
+
+/**
+ * Build a correction from recent overlap between observed and CEHQ forecast.
+ * Computes mean(observed/cehqForecast) over the last BIAS_LOOKBACK_HOURS,
+ * clamps to RATIO_BOUNDS, and returns a plain-data correction record.
+ */
+export function buildForecastCorrection(
   points: ForecastPoint[],
   nowTs: number,
-): number {
+): ForecastCorrection {
   const cutoff = nowTs - BIAS_LOOKBACK_HOURS * 60 * 60 * 1000;
-  const diffs: number[] = [];
-  const recentObs: number[] = [];
+  const ratios: number[] = [];
   for (const p of points) {
     if (p.ts > nowTs || p.ts < cutoff) continue;
     if (p.observed == null || p.cehqForecast == null) continue;
-    diffs.push(p.cehqForecast - p.observed);
-    recentObs.push(p.observed);
+    if (p.cehqForecast <= 0) continue; // avoid divide-by-zero
+    ratios.push(p.observed / p.cehqForecast);
   }
-  if (diffs.length < BIAS_MIN_SAMPLES) return 0;
-  const mean = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-  const sorted = [...recentObs].sort((a, b) => a - b);
-  const median = sorted[Math.floor(sorted.length / 2)];
-  const cap = Math.abs(median) * 0.5;
-  if (cap === 0) return 0;
-  return Math.max(-cap, Math.min(cap, mean));
+  if (ratios.length < BIAS_MIN_SAMPLES) return NO_CORRECTION;
+
+  const mean = ratios.reduce((a, b) => a + b, 0) / ratios.length;
+  const ratio = Math.max(RATIO_BOUNDS[0], Math.min(RATIO_BOUNDS[1], mean));
+  const active = Math.abs(ratio - 1) >= RATIO_ACTIVE_THRESHOLD;
+
+  return {
+    ratio,
+    decayHours: CORRECTION_DECAY_HOURS,
+    active,
+  };
 }
 
 /**
@@ -108,21 +170,22 @@ export function computeForecastBias(
  * consecutive points matching `predicate`. Returns hoursAhead of the run's first
  * point (rounded), or null if no such run exists within the provided points.
  *
- * `bias` is subtracted from `cehqForecast` before status classification,
- * so a positive bias (CEHQ over-predicting) pushes runnable-in estimates later.
+ * `correction` (if provided and active) adjusts each future forecast value
+ * before status classification, with the adjustment fading over time.
  */
 function findFirstSustainedPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
   predicate: (status: ReturnType<typeof getPaddlingStatus>["status"]) => boolean,
-  bias: number = 0,
+  correction: ForecastCorrection = NO_CORRECTION,
 ): { hoursAhead: number } | null {
   let runStart: number | null = null;
   let runLen = 0;
   for (const p of points) {
     if (p.ts <= nowTs || p.cehqForecast == null) continue;
-    const correctedFlow = p.cehqForecast - bias;
+    const hoursAhead = (p.ts - nowTs) / (60 * 60 * 1000);
+    const correctedFlow = applyForecastCorrection(p.cehqForecast, hoursAhead, correction);
     const { status } = getPaddlingStatus(correctedFlow, paddling);
     if (predicate(status)) {
       if (runStart == null) runStart = p.ts;
@@ -144,18 +207,18 @@ export function findFirstSustainedGoodPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
-  bias: number = 0,
+  correction: ForecastCorrection = NO_CORRECTION,
 ): { hoursAhead: number } | null {
-  return findFirstSustainedPoint(points, nowTs, paddling, (s) => isGoodRange(s), bias);
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => isGoodRange(s), correction);
 }
 
 export function findFirstSustainedBadPoint(
   points: ForecastPoint[],
   nowTs: number,
   paddling: PaddlingLevels,
-  bias: number = 0,
+  correction: ForecastCorrection = NO_CORRECTION,
 ): { hoursAhead: number } | null {
-  return findFirstSustainedPoint(points, nowTs, paddling, (s) => !isGoodRange(s), bias);
+  return findFirstSustainedPoint(points, nowTs, paddling, (s) => !isGoodRange(s), correction);
 }
 
 export function computeCardStatusInfo(
@@ -173,10 +236,10 @@ export function computeCardStatusInfo(
   if (card.status === "ideal") return { key: "detail.ideal" };
   if (card.status === "runnable") return { key: "detail.goodToGo" };
 
-  const bias = computeForecastBias(card.sparkData, card.nowTs);
+  const correction = buildForecastCorrection(card.sparkData, card.nowTs);
 
   if (card.status === "too-low" || card.status === "too-high") {
-    const hit = findFirstSustainedGoodPoint(card.sparkData, card.nowTs, paddling, bias);
+    const hit = findFirstSustainedGoodPoint(card.sparkData, card.nowTs, paddling, correction);
     if (hit) {
       if (hit.hoursAhead <= 24) {
         return { key: "detail.runnableInHours", param: hit.hoursAhead };
@@ -192,7 +255,7 @@ export function computeCardStatusInfo(
   }
 
   if (card.isGoodRange) {
-    const hit = findFirstSustainedBadPoint(card.sparkData, card.nowTs, paddling, bias);
+    const hit = findFirstSustainedBadPoint(card.sparkData, card.nowTs, paddling, correction);
     if (hit && hit.hoursAhead <= 48) {
       return { key: "detail.droppingOutHours", param: hit.hoursAhead };
     }
@@ -265,11 +328,13 @@ export function idealSortKey(card: StationCard): {
   // Group 2: forecast will become good — soonest first
   if (paddling) {
     const now = card.nowTs;
-    const bias = computeForecastBias(card.sparkData, now);
+    const correction = buildForecastCorrection(card.sparkData, now);
     for (const point of card.sparkData) {
       const flow = point.cehqForecast;
       if (flow == null || point.ts <= now) continue;
-      const { status } = getPaddlingStatus(flow - bias, paddling);
+      const hoursAhead = (point.ts - now) / (60 * 60 * 1000);
+      const corrected = applyForecastCorrection(flow, hoursAhead, correction);
+      const { status } = getPaddlingStatus(corrected, paddling);
       if (isGoodRange(status)) {
         return { group: 2, score: point.ts - now };
       }

@@ -12,6 +12,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { useTranslation } from "@/lib/i18n/provider";
+import { applyForecastCorrection, type ForecastCorrection } from "@/app/components/utils";
 
 export interface HourlyChartPoint {
   timestamp: string;
@@ -34,11 +35,10 @@ interface HourlyChartProps {
   nowTimestamp: string;
   paddling?: PaddlingLevels;
   /**
-   * Signed bias = recent avg(cehqForecast − observed). Subtracted from
-   * future forecast values to produce the "bias-corrected" line. When 0,
-   * the corrected line and its legend entry are suppressed.
+   * Time-decaying multiplicative correction derived from recent observed/forecast
+   * overlap. When inactive, the corrected line and its legend entry are suppressed.
    */
-  bias?: number;
+  correction?: ForecastCorrection;
 }
 
 function formatTick(epoch: number): string {
@@ -50,23 +50,23 @@ function formatTick(epoch: number): string {
   return `${h.toString().padStart(2, "0")}:00`;
 }
 
-export default function HourlyChart({ data, nowTimestamp, paddling, bias = 0 }: HourlyChartProps) {
+export default function HourlyChart({ data, nowTimestamp, paddling, correction }: HourlyChartProps) {
   const { t } = useTranslation();
   const nowTs = new Date(nowTimestamp).getTime();
 
-  // Only draw the bias-corrected line when bias is meaningfully non-zero.
-  // Tiny biases (<0.05 m³/s) aren't visually useful and just clutter the chart.
-  const showCorrected = Math.abs(bias) >= 0.05;
+  // Whether to draw the bias-corrected line.
+  const showCorrected = correction?.active ?? false;
 
   // Add numeric timestamp for proportional x-axis spacing,
   // a [low, high] tuple for the CEHQ confidence band, and the
-  // bias-corrected forecast (only for future points).
+  // bias-corrected forecast (only for future points; decays back to CEHQ).
   const chartData = data.map((d) => {
     const ts = new Date(d.timestamp).getTime();
-    const cehqCorrected =
-      showCorrected && d.cehqForecast != null && ts > nowTs
-        ? d.cehqForecast - bias
-        : null;
+    let cehqCorrected: number | null = null;
+    if (showCorrected && d.cehqForecast != null && ts > nowTs && correction) {
+      const hoursAhead = (ts - nowTs) / (60 * 60 * 1000);
+      cehqCorrected = applyForecastCorrection(d.cehqForecast, hoursAhead, correction);
+    }
     return {
       ...d,
       ts,
@@ -136,11 +136,14 @@ export default function HourlyChart({ data, nowTimestamp, paddling, bias = 0 }: 
     ticks.push(t);
   }
 
-  // Pre-formatted bias note shown in the tooltip + legend hover title.
-  const biasSign = bias > 0 ? "−" : "+"; // subtract positive bias -> minus sign
-  const biasNote = hasCorrectedLine
-    ? t("chart.biasNote", { sign: biasSign, value: Math.abs(bias).toFixed(1) })
-    : "";
+  // Pre-formatted bias note: e.g. "Recent obs ×0.66 (fades over 24h)".
+  const biasNote =
+    hasCorrectedLine && correction?.ratio != null
+      ? t("chart.biasNote", {
+          ratio: correction.ratio.toFixed(2),
+          hours: String(Math.round(correction.decayHours)),
+        })
+      : "";
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">

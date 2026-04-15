@@ -12,7 +12,7 @@ import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
 import {
-  computeForecastBias,
+  buildForecastCorrection,
   findFirstSustainedBadPoint,
   findFirstSustainedGoodPoint,
 } from "@/app/components/utils";
@@ -179,7 +179,7 @@ export default async function RiverPage({
   const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
   let statusInfo: { key: string; param?: number } | null = null;
 
-  // Bias between recent CEHQ forecast and observed flow. Used both for the
+  // Recent observed-vs-forecast ratio, decayed over 24h. Used both for the
   // "Should be good in X" text and to render a bias-corrected line on the chart.
   const biasHourlyPoints = hourlyData.map((p) => ({
     ts: new Date(p.timestamp).getTime(),
@@ -187,7 +187,7 @@ export default async function RiverPage({
     cehqForecast: p.cehqForecast ?? null,
   }));
   const nowTsForBias = Date.now();
-  const forecastBias = computeForecastBias(biasHourlyPoints, nowTsForBias);
+  const forecastCorrection = buildForecastCorrection(biasHourlyPoints, nowTsForBias);
 
   if (paddling && (paddling.min != null || paddling.ideal != null || paddling.max != null)) {
     const paddlingLevels = {
@@ -203,7 +203,7 @@ export default async function RiverPage({
     } else if (paddlingStatus === "runnable") {
       statusInfo = { key: "detail.goodToGo" };
     } else if (paddlingStatus === "too-low" || paddlingStatus === "too-high") {
-      const hit = findFirstSustainedGoodPoint(hourlyPoints, nowTs, paddlingLevels, forecastBias);
+      const hit = findFirstSustainedGoodPoint(hourlyPoints, nowTs, paddlingLevels, forecastCorrection);
       if (hit) {
         if (hit.hoursAhead <= 24) {
           statusInfo = { key: "detail.runnableInHours", param: hit.hoursAhead };
@@ -221,7 +221,7 @@ export default async function RiverPage({
     }
 
     if (isGoodRange(paddlingStatus)) {
-      const hit = findFirstSustainedBadPoint(hourlyPoints, nowTs, paddlingLevels, forecastBias);
+      const hit = findFirstSustainedBadPoint(hourlyPoints, nowTs, paddlingLevels, forecastCorrection);
       if (hit && hit.hoursAhead <= 48) {
         statusInfo = { key: "detail.droppingOutHours", param: hit.hoursAhead };
       }
@@ -333,7 +333,7 @@ export default async function RiverPage({
         {/* Hourly flow chart */}
         {chartData.length > 0 && (
           <section className="mt-6">
-            <HourlyChart data={chartData} nowTimestamp={nowTimestamp} paddling={paddling} bias={forecastBias} />
+            <HourlyChart data={chartData} nowTimestamp={nowTimestamp} paddling={paddling} correction={forecastCorrection} />
           </section>
         )}
 

@@ -195,7 +195,7 @@
     "cehqLabel": "CEHQ: ",
     "cehqCorrectedLabel": "Corrected: ",
     "rangeLabel": "Range: ",
-    "biasNote": "Adjusted {sign}{value} m\u00b3/s from recent obs"
+    "biasNote": "Recent obs \u00d7{ratio} (fades over {hours}h)"
   },
   "map": {
     "station": "Station",
