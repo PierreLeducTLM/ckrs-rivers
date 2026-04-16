@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ComposedChart,
   Area,
@@ -10,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Brush,
 } from "recharts";
 import { useTranslation } from "@/lib/i18n/provider";
 import { applyForecastCorrection, type ForecastCorrection } from "@/app/components/utils";
@@ -141,6 +143,21 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
     ticks.push(t);
   }
 
+  // Brush-controlled zoom/pan range (indices into chartData).
+  const lastIndex = Math.max(0, chartData.length - 1);
+  const [brushRange, setBrushRange] = useState<[number, number]>([0, lastIndex]);
+
+  // Reset brush when the data length changes (e.g., after a refresh).
+  useEffect(() => {
+    setBrushRange([0, lastIndex]);
+  }, [lastIndex]);
+
+  const safeStart = Math.min(brushRange[0], lastIndex);
+  const safeEnd = Math.min(Math.max(brushRange[1], safeStart), lastIndex);
+  const visibleTsMin = chartData[safeStart]?.ts ?? tsMin;
+  const visibleTsMax = chartData[safeEnd]?.ts ?? tsMax;
+  const visibleTicks = ticks.filter((t) => t >= visibleTsMin && t <= visibleTsMax);
+
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -165,7 +182,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
         </div>
       )}
 
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={340}>
         <ComposedChart
           data={chartData}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
@@ -187,8 +204,9 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             dataKey="ts"
             type="number"
             scale="time"
-            domain={[tsMin, tsMax]}
-            ticks={ticks}
+            domain={[visibleTsMin, visibleTsMax]}
+            ticks={visibleTicks}
+            allowDataOverflow
             tickFormatter={formatTick}
             tick={{ fontSize: 10, fill: "currentColor", opacity: 0.5 }}
             tickLine={false}
@@ -210,6 +228,8 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
           />
 
           <Tooltip
+            allowEscapeViewBox={{ x: false, y: true }}
+            wrapperStyle={{ pointerEvents: "none" }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const d = payload[0]?.payload as
@@ -217,7 +237,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                 | undefined;
               if (!d) return null;
               return (
-                <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800 pointer-coarse:-translate-y-[calc(100%_+_2.5rem)]">
                   <p className="font-medium text-zinc-900 dark:text-zinc-100">
                     {new Date(d.timestamp).toLocaleString("en-CA", {
                       weekday: "short",
@@ -301,6 +321,25 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             dot={false}
             connectNulls
             isAnimationActive={false}
+          />
+
+          {/* Zoom/pan brush — drag handles to zoom, drag middle to pan */}
+          <Brush
+            dataKey="ts"
+            height={22}
+            travellerWidth={14}
+            stroke="#a1a1aa"
+            fill="transparent"
+            startIndex={safeStart}
+            endIndex={safeEnd}
+            tickFormatter={(v) => (typeof v === "number" ? formatTick(v) : "")}
+            onChange={(range) => {
+              const start = range?.startIndex;
+              const end = range?.endIndex;
+              if (typeof start === "number" && typeof end === "number") {
+                setBrushRange([start, end]);
+              }
+            }}
           />
         </ComposedChart>
       </ResponsiveContainer>
