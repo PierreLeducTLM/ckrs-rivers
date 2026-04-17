@@ -7,6 +7,7 @@ import SearchBar from "./search-bar";
 import FilterChips from "./filter-chips";
 import RapidClassFilter, { matchesClassFilter } from "./rapid-class-filter";
 import RiverListItem from "./river-list-item";
+import TimeTravelToggle from "./time-travel-toggle";
 import type { StationCard } from "./types";
 import { statusPriority, normalizeSearch } from "./utils";
 
@@ -102,7 +103,10 @@ export default function ExploreTab({
 
         {/* Filters row */}
         <div className="mt-3 flex flex-col gap-2">
-          <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
+          <div className="flex items-center justify-between gap-2">
+            <FilterChips value={statusFilter} onChange={setStatusFilter} t={t} />
+            <TimeTravelToggle />
+          </div>
           <RapidClassFilter value={classFilter} onChange={setClassFilter} t={t} />
 
           {/* Region dropdown — commented out for now, will reactivate later

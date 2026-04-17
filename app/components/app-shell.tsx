@@ -15,6 +15,7 @@ import MyRiversTab from "./my-rivers-tab";
 import ExploreTab from "./explore-tab";
 import MapTab from "./map-tab";
 import ChatTab from "./chat-tab";
+import TimeTravelBanner from "./time-travel-banner";
 import type { StationCard } from "./types";
 
 const PULL_THRESHOLD = 60;
@@ -252,6 +253,11 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
         </div>
         <SettingsMenu />
       </div>
+
+      {/* Time travel banner (sticky under header when active) */}
+      {activeTab !== "map" && activeTab !== "chat" && (
+        <TimeTravelBanner cards={visible} />
+      )}
 
       {/* Tab content */}
       {activeTab === "my-rivers" && (

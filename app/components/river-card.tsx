@@ -5,7 +5,9 @@ import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
+import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
+import { computeDisplayState, statusLabel } from "./utils";
 
 interface RiverCardProps {
   card: StationCard;
@@ -26,15 +28,25 @@ export default function RiverCard({
   isNative,
   t,
 }: RiverCardProps) {
+  const { timeTravelTs } = useTab();
+  const projected =
+    timeTravelTs != null ? computeDisplayState(card, timeTravelTs) : null;
+  const displayFlow = projected ? projected.flow : card.lastFlow;
+  const displayColor = projected ? projected.color : card.color;
+  const displayStatus = projected ? projected.status : card.status;
+  const displayPosition = projected ? projected.position : card.position;
+  const displayIsGood = projected ? projected.isGoodRange : card.isGoodRange;
+  const isProjected = projected != null;
+
   return (
     <Link
       href={`/rivers/${card.id}`}
       className={`group relative rounded-xl bg-background p-4 shadow transition-shadow hover:shadow-lg ${
-        card.isGoodRange ? "border-2" : "border border-foreground/40"
-      }`}
+        displayIsGood ? "border-2" : "border border-foreground/40"
+      } ${isProjected ? "ring-2 ring-amber-400/40" : ""}`}
       style={
-        card.isGoodRange
-          ? { borderColor: card.color, boxShadow: `0 0 12px ${card.color}25` }
+        displayIsGood
+          ? { borderColor: displayColor, boxShadow: `0 0 12px ${displayColor}25` }
           : undefined
       }
     >
@@ -63,25 +75,31 @@ export default function RiverCard({
       </div>
 
       {/* Flow value row */}
-      {card.lastFlow != null && (
+      {displayFlow != null && (
         <div className="mt-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold tabular-nums"
-              style={{ backgroundColor: card.color, color: "#fff" }}
+              style={{ backgroundColor: displayColor, color: "#fff" }}
             >
-              {card.lastFlow.toFixed(0)}
+              {displayFlow.toFixed(0)}
             </span>
             <span className="text-xs font-medium text-foreground/50">
               m&sup3;/s
             </span>
           </div>
-          {card.forecastAt && (
-            <RelativeTime
-              isoDate={card.forecastAt}
-              t={t}
-              className="text-xs text-foreground/40"
-            />
+          {isProjected ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+              {t("timeTravel.projected")}
+            </span>
+          ) : (
+            card.forecastAt && (
+              <RelativeTime
+                isoDate={card.forecastAt}
+                t={t}
+                className="text-xs text-foreground/40"
+              />
+            )
           )}
         </div>
       )}
@@ -100,9 +118,18 @@ export default function RiverCard({
       )}
 
       {/* Status pill */}
-      {card.lastFlow != null ? (
+      {displayFlow != null ? (
         <div className="mt-2">
-          <StatusPill card={card} t={t} />
+          {isProjected ? (
+            <span
+              className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+              style={{ backgroundColor: `${displayColor}22`, color: displayColor }}
+            >
+              {statusLabel(displayStatus, t)}
+            </span>
+          ) : (
+            <StatusPill card={card} t={t} />
+          )}
         </div>
       ) : (
         <div className="mt-2 rounded-lg bg-foreground/5 px-3 py-2">
@@ -111,26 +138,26 @@ export default function RiverCard({
       )}
 
       {/* Gradient bar */}
-      {card.lastFlow != null && (
+      {displayFlow != null && (
         <div className="mt-2">
           <div
             className="relative h-2 w-full overflow-hidden rounded-full"
             style={{
               background:
-                card.isGoodRange || card.status === "too-high"
+                displayIsGood || displayStatus === "too-high"
                   ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
                   : "#a1a1aa",
             }}
           >
             {/* Current position indicator — hidden when too-low or unknown */}
-            {(card.isGoodRange || card.status === "too-high") && (
+            {(displayIsGood || displayStatus === "too-high") && (
               <div
                 className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-white shadow-lg transition-all duration-500 dark:border-zinc-900 ${
-                  card.isGoodRange ? "animate-flow-pulse" : ""
+                  displayIsGood && !isProjected ? "animate-flow-pulse" : ""
                 }`}
                 style={{
-                  left: `${Math.max(2, Math.min(98, card.position * 100))}%`,
-                  backgroundColor: card.color,
+                  left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
+                  backgroundColor: displayColor,
                 }}
               />
             )}

@@ -1,5 +1,6 @@
-import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import { getPaddlingStatus, isGoodRange, statusColor } from "@/lib/notifications/paddling-status";
 import type { PaddlingLevels } from "@/lib/data/rivers";
+import type { PaddlingStatus } from "@/lib/domain/notification";
 import type { StationCard } from "./types";
 import {
   applyForecastCorrection,
@@ -255,4 +256,113 @@ export function normalizeSearch(s: string): string {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+// ---------------------------------------------------------------------------
+// Time-travel projection helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Linear-interpolate a forecast flow at `ts` from an hourly `sparkData` array.
+ * Applies the same bias correction the charts use so projected flows match the
+ * hourly chart view. Returns null when no bracketing forecast points exist.
+ */
+export function getFlowAtTime(
+  sparkData: StationCard["sparkData"],
+  ts: number,
+  nowTs: number,
+  correction: ForecastCorrection = NO_CORRECTION,
+): number | null {
+  const forecastPoints = sparkData.filter((p) => p.cehqForecast != null);
+  if (forecastPoints.length === 0) return null;
+
+  // Clamp to first/last available forecast point
+  if (ts <= forecastPoints[0].ts) {
+    const p = forecastPoints[0];
+    const hoursAhead = (p.ts - nowTs) / (60 * 60 * 1000);
+    return applyForecastCorrection(p.cehqForecast as number, hoursAhead, correction);
+  }
+  const last = forecastPoints[forecastPoints.length - 1];
+  if (ts >= last.ts) {
+    const hoursAhead = (last.ts - nowTs) / (60 * 60 * 1000);
+    return applyForecastCorrection(last.cehqForecast as number, hoursAhead, correction);
+  }
+
+  // Find the two bracketing points and linearly interpolate
+  for (let i = 0; i < forecastPoints.length - 1; i++) {
+    const a = forecastPoints[i];
+    const b = forecastPoints[i + 1];
+    if (ts >= a.ts && ts <= b.ts) {
+      const span = b.ts - a.ts;
+      const t = span > 0 ? (ts - a.ts) / span : 0;
+      const aFlow = applyForecastCorrection(
+        a.cehqForecast as number,
+        (a.ts - nowTs) / (60 * 60 * 1000),
+        correction,
+      );
+      const bFlow = applyForecastCorrection(
+        b.cehqForecast as number,
+        (b.ts - nowTs) / (60 * 60 * 1000),
+        correction,
+      );
+      return aFlow + (bFlow - aFlow) * t;
+    }
+  }
+
+  return null;
+}
+
+export interface DisplayState {
+  flow: number | null;
+  status: PaddlingStatus;
+  position: number;
+  color: string;
+  isGoodRange: boolean;
+}
+
+/**
+ * Derive the visual state a card should render at the given timestamp.
+ * Returns null when projection is not possible (no forecast data).
+ */
+export function computeDisplayState(
+  card: StationCard,
+  ts: number,
+): DisplayState | null {
+  const correction = buildForecastCorrection(card.sparkData, card.nowTs);
+  const flow = getFlowAtTime(card.sparkData, ts, card.nowTs, correction);
+  if (flow == null) return null;
+
+  const paddling: PaddlingLevels | undefined = card.paddling ?? undefined;
+  const { status, position } = getPaddlingStatus(flow, paddling);
+  const color =
+    status === "too-low"
+      ? "#a1a1aa"
+      : status === "too-high"
+        ? "#D32F2F"
+        : status === "unknown"
+          ? "#a1a1aa"
+          : statusColor(position);
+
+  return {
+    flow,
+    status,
+    position,
+    color,
+    isGoodRange: isGoodRange(status),
+  };
+}
+
+/**
+ * Maximum forecast timestamp across all cards (i.e. slider's upper bound).
+ * Returns null when no cards have any forecast points.
+ */
+export function getForecastEndTs(cards: StationCard[]): number | null {
+  let maxTs: number | null = null;
+  for (const card of cards) {
+    for (const p of card.sparkData) {
+      if (p.cehqForecast == null) continue;
+      if (maxTs == null || p.ts > maxTs) maxTs = p.ts;
+    }
+  }
+  return maxTs;
 }

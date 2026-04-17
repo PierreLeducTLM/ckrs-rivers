@@ -17,6 +17,8 @@ interface TabContextValue {
   setStatusFilter: (filter: StatusFilter) => void;
   classFilter: ClassFilter;
   setClassFilter: (filter: ClassFilter) => void;
+  timeTravelTs: number | null;
+  setTimeTravelTs: (ts: number | null) => void;
 }
 
 const TabContext = createContext<TabContextValue | null>(null);
@@ -47,6 +49,7 @@ export function TabProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTabState] = useState<TabId>("my-rivers");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [classFilter, setClassFilter] = useState<ClassFilter>("all");
+  const [timeTravelTs, setTimeTravelTs] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -65,7 +68,18 @@ export function TabProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <TabContext.Provider value={{ activeTab, setActiveTab, statusFilter, setStatusFilter, classFilter, setClassFilter }}>
+    <TabContext.Provider
+      value={{
+        activeTab,
+        setActiveTab,
+        statusFilter,
+        setStatusFilter,
+        classFilter,
+        setClassFilter,
+        timeTravelTs,
+        setTimeTravelTs,
+      }}
+    >
       {children}
     </TabContext.Provider>
   );
@@ -75,7 +89,16 @@ export function useTab(): TabContextValue {
   const ctx = useContext(TabContext);
   if (!ctx) {
     // Fallback for pre-mount render
-    return { activeTab: "my-rivers", setActiveTab: () => {}, statusFilter: "all", setStatusFilter: () => {}, classFilter: "all", setClassFilter: () => {} };
+    return {
+      activeTab: "my-rivers",
+      setActiveTab: () => {},
+      statusFilter: "all",
+      setStatusFilter: () => {},
+      classFilter: "all",
+      setClassFilter: () => {},
+      timeTravelTs: null,
+      setTimeTravelTs: () => {},
+    };
   }
   return ctx;
 }

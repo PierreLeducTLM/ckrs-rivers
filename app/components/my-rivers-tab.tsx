@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/provider";
 import RiverCard from "./river-card";
 import RiverListItem from "./river-list-item";
 import SortControl, { type SortMode } from "./sort-control";
+import TimeTravelToggle from "./time-travel-toggle";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
 import { idealSortKey, statusPriority } from "./utils";
@@ -132,8 +133,10 @@ export default function MyRiversTab({
   return (
     <div>
       {/* Header controls */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <SortControl value={sort} onChange={handleSortChange} t={t} />
+        <div className="flex items-center gap-2">
+        <TimeTravelToggle />
         <div className="inline-flex rounded-lg border border-brand/20 p-0.5">
           <button
             onClick={() => toggleView("card")}
@@ -178,6 +181,7 @@ export default function MyRiversTab({
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </button>
+        </div>
         </div>
       </div>
 
