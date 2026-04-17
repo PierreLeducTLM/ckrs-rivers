@@ -42,11 +42,14 @@ export default function RiverCard({
     <Link
       href={`/rivers/${card.id}`}
       className={`group relative rounded-xl bg-background p-4 shadow transition-shadow hover:shadow-lg ${
-        displayIsGood ? "border-2" : "border border-foreground/40"
+        displayStatus !== "unknown" ? "border-2" : "border border-foreground/40"
       } ${isProjected ? "ring-2 ring-amber-400/40" : ""}`}
       style={
-        displayIsGood
-          ? { borderColor: displayColor, boxShadow: `0 0 12px ${displayColor}25` }
+        displayStatus !== "unknown"
+          ? {
+              borderColor: displayColor,
+              boxShadow: displayIsGood ? `0 0 12px ${displayColor}25` : undefined,
+            }
           : undefined
       }
     >
