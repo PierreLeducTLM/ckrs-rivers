@@ -44,6 +44,15 @@
     "sortStatus": "Par statut",
     "sortName": "Par nom"
   },
+  "timeTravel": {
+    "toggle": "Voyage dans le temps",
+    "banner": "Voyage dans le temps",
+    "now": "Maintenant",
+    "exit": "Quitter le voyage dans le temps",
+    "projected": "Projete",
+    "hoursFromNow": "+{n}h",
+    "daysFromNow": "+{n}j"
+  },
   "explore": {
     "searchPlaceholder": "Rechercher des rivieres...",
     "allRegions": "Toutes les regions",

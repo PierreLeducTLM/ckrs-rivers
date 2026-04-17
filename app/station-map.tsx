@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { MapContainer, TileLayer, LayersControl, CircleMarker, Polyline, Popup, useMap, useMapEvents } from "react-leaflet";
 import Link from "next/link";
 import L from "leaflet";
@@ -9,6 +9,8 @@ import SparklineChart from "./sparkline-chart";
 import type { StationCard } from "./components/types";
 import { useTranslation } from "@/lib/i18n/provider";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import { useTab } from "./components/tab-context";
+import { computeDisplayState } from "./components/utils";
 
 const MAP_LAYER_KEY = "waterflow-map-layer";
 const MAP_VIEW_KEY = "waterflow-map-view";
@@ -386,6 +388,7 @@ interface StationMapProps {
 
 export default function StationMap({ cards, isAdmin = false, onMarkerTap, className }: StationMapProps) {
   const { t } = useTranslation();
+  const { timeTravelTs } = useTab();
   const [savedLayer] = useState(() => {
     if (typeof window === "undefined") return t("map.street");
     return localStorage.getItem(MAP_LAYER_KEY) ?? t("map.street");
@@ -393,6 +396,23 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
   const isSatellite = savedLayer === "Satellite";
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const handleZoom = useCallback((z: number) => setZoom(z), []);
+
+  // Project cards to the selected future time when time-travel is active.
+  const displayCards = useMemo(() => {
+    if (timeTravelTs == null) return cards;
+    return cards.map((c) => {
+      const proj = computeDisplayState(c, timeTravelTs);
+      if (!proj) return c;
+      return {
+        ...c,
+        lastFlow: proj.flow,
+        color: proj.color,
+        status: proj.status,
+        position: proj.position,
+        isGoodRange: proj.isGoodRange,
+      };
+    });
+  }, [cards, timeTravelTs]);
 
   // Helper: render popup or attach click handler based on mode
   const markerContent = (card: StationCard) => {
@@ -430,7 +450,7 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
         </LayersControl>
         <RestoreOrFitBounds cards={cards} />
         <ZoomTracker onZoom={handleZoom} />
-        {cards.map((card) => {
+        {displayCards.map((card) => {
           const hasPath = card.riverPath && card.riverPath.length > 1;
 
           if (hasPath) {

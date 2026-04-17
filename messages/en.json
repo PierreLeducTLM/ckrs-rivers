@@ -44,6 +44,15 @@
     "sortStatus": "By Status",
     "sortName": "By Name"
   },
+  "timeTravel": {
+    "toggle": "Time travel",
+    "banner": "Time travel",
+    "now": "Now",
+    "exit": "Exit time travel",
+    "projected": "Projected",
+    "hoursFromNow": "+{n}h",
+    "daysFromNow": "+{n}d"
+  },
   "explore": {
     "searchPlaceholder": "Search rivers...",
     "allRegions": "All Regions",
