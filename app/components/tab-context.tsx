@@ -9,6 +9,7 @@ export type TabId = "my-rivers" | "explore" | "map" | "chat";
 
 const TAB_STORAGE_KEY = "waterflow-active-tab";
 const FAVORITES_STORAGE_KEY = "waterflow-favorites";
+const TIME_TRAVEL_STORAGE_KEY = "waterflow-time-travel-ts";
 
 interface TabContextValue {
   activeTab: TabId;
@@ -49,7 +50,7 @@ export function TabProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTabState] = useState<TabId>("my-rivers");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [classFilter, setClassFilter] = useState<ClassFilter>("all");
-  const [timeTravelTs, setTimeTravelTs] = useState<number | null>(null);
+  const [timeTravelTs, setTimeTravelTsState] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -60,6 +61,17 @@ export function TabProvider({ children }: { children: ReactNode }) {
   const setActiveTab = useCallback((tab: TabId) => {
     setActiveTabState(tab);
     localStorage.setItem(TAB_STORAGE_KEY, tab);
+  }, []);
+
+  const setTimeTravelTs = useCallback((ts: number | null) => {
+    setTimeTravelTsState(ts);
+    if (ts != null) {
+      try {
+        localStorage.setItem(TIME_TRAVEL_STORAGE_KEY, String(ts));
+      } catch {
+        // ignore storage errors
+      }
+    }
   }, []);
 
   // Prevent flash of wrong tab before hydration

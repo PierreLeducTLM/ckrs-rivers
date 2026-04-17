@@ -3,14 +3,29 @@
 import { useTranslation } from "@/lib/i18n/provider";
 import { useTab } from "./tab-context";
 
+const TIME_TRAVEL_STORAGE_KEY = "waterflow-time-travel-ts";
+
 export default function TimeTravelToggle() {
   const { t } = useTranslation();
   const { timeTravelTs, setTimeTravelTs } = useTab();
   const active = timeTravelTs != null;
 
   const handleClick = () => {
-    if (active) setTimeTravelTs(null);
-    else setTimeTravelTs(Date.now());
+    if (active) {
+      setTimeTravelTs(null);
+      return;
+    }
+    let next = Date.now();
+    try {
+      const saved = localStorage.getItem(TIME_TRAVEL_STORAGE_KEY);
+      const parsed = saved ? Number(saved) : NaN;
+      if (Number.isFinite(parsed) && parsed > next) {
+        next = parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    setTimeTravelTs(next);
   };
 
   return (
