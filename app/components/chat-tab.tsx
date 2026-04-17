@@ -18,8 +18,15 @@ import ChatRiverCard, {
 } from "./chat-river-card";
 
 const FAVORITES_KEY = "waterflow-favorites";
+const STATED_LOCATION_KEY = "flowcast-stated-location";
 
 interface UserLocation {
+  lat: number;
+  lon: number;
+}
+
+interface StatedLocation {
+  label: string;
   lat: number;
   lon: number;
 }
@@ -34,6 +41,26 @@ function readFavoriteIds(): string[] {
     return parsed.filter((v): v is string => typeof v === "string");
   } catch {
     return [];
+  }
+}
+
+function readStatedLocation(): StatedLocation | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STATED_LOCATION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StatedLocation>;
+    if (
+      typeof parsed?.label === "string" &&
+      parsed.label.length > 0 &&
+      typeof parsed.lat === "number" &&
+      typeof parsed.lon === "number"
+    ) {
+      return { label: parsed.label, lat: parsed.lat, lon: parsed.lon };
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
 
@@ -61,14 +88,21 @@ export default function ChatTab() {
   // Load favorites + location once on mount. Both feed the POST body.
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [statedLocation, setStatedLocation] = useState<StatedLocation | null>(null);
   const favoritesRef = useRef<string[]>([]);
   const locationRef = useRef<UserLocation | null>(null);
+  const statedLocationRef = useRef<StatedLocation | null>(null);
   const localeRef = useRef<"en" | "fr">(locale);
+  const processedLocationPartsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const favs = readFavoriteIds();
     setFavoriteIds(favs);
     favoritesRef.current = favs;
+
+    const stored = readStatedLocation();
+    setStatedLocation(stored);
+    statedLocationRef.current = stored;
 
     const onFavoritesChanged = () => {
       const updated = readFavoriteIds();
@@ -102,6 +136,9 @@ export default function ChatTab() {
           favoriteIds: favoritesRef.current,
           userLat: locationRef.current?.lat,
           userLon: locationRef.current?.lon,
+          statedLocationLabel: statedLocationRef.current?.label,
+          statedLat: statedLocationRef.current?.lat,
+          statedLon: statedLocationRef.current?.lon,
           locale: localeRef.current,
         }),
       }),
@@ -110,6 +147,45 @@ export default function ChatTab() {
   /* eslint-enable react-hooks/refs */
 
   const { messages, sendMessage, status, stop, error } = useChat({ transport });
+
+  // Watch for setUserLocation tool outputs and persist them. The tool is a
+  // silent side effect in the UI (see buildBlocks); its payload updates the
+  // header, the ref, and localStorage so subsequent turns send coordinates.
+  useEffect(() => {
+    for (const m of messages) {
+      if (m.role !== "assistant") continue;
+      for (let i = 0; i < m.parts.length; i++) {
+        const part = m.parts[i] as {
+          type: string;
+          state?: string;
+          output?: unknown;
+        };
+        if (part.type !== "tool-setUserLocation") continue;
+        if (part.state !== "output-available") continue;
+        const key = `${m.id}:${i}`;
+        if (processedLocationPartsRef.current.has(key)) continue;
+        const out = part.output as Partial<StatedLocation> | undefined;
+        if (
+          !out ||
+          typeof out.label !== "string" ||
+          out.label.length === 0 ||
+          typeof out.lat !== "number" ||
+          typeof out.lon !== "number"
+        ) {
+          continue;
+        }
+        const next: StatedLocation = { label: out.label, lat: out.lat, lon: out.lon };
+        processedLocationPartsRef.current.add(key);
+        statedLocationRef.current = next;
+        setStatedLocation(next);
+        try {
+          localStorage.setItem(STATED_LOCATION_KEY, JSON.stringify(next));
+        } catch {
+          /* ignore quota errors */
+        }
+      }
+    }
+  }, [messages]);
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -166,7 +242,13 @@ export default function ChatTab() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
         </svg>
-        <span>{userLocation ? t("chat.locationGranted") : t("chat.locationDenied")}</span>
+        <span>
+          {userLocation
+            ? t("chat.locationGranted")
+            : statedLocation
+              ? statedLocation.label
+              : t("chat.locationDenied")}
+        </span>
       </div>
 
       {/* Message list */}
@@ -310,6 +392,11 @@ function buildBlocks(message: UIMessage): Block[] {
     if (typeof part.type === "string" && part.type.startsWith("tool-")) {
       const tp = part as { type: string; state: string; output?: unknown };
       flushText();
+      // setUserLocation is a silent side effect — the header updates, but we
+      // don't want a card or a tool-indicator bubble in the message list.
+      if (tp.type === "tool-setUserLocation") {
+        continue;
+      }
       if (tp.state === "output-available") {
         const cards = extractCardsFromToolOutput(tp.output);
         if (cards.length > 0) {

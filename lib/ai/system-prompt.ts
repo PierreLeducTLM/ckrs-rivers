@@ -19,6 +19,7 @@ export interface SystemPromptContext {
   locale: "en" | "fr";
   favoriteIds: string[];
   userLocation: { lat: number; lon: number } | null;
+  statedLocation: { label: string; lat: number; lon: number } | null;
   now: Date;
 }
 
@@ -41,11 +42,18 @@ function buildPrefix(ctx: SystemPromptContext): string {
         )}. When they mention "my favorites" or "my rivers", call getFavoriteStationsStatus with these ids.`
       : `The user has no favorite stations saved yet.`;
 
-  const locationLine = ctx.userLocation
-    ? `The user's current location is approximately lat=${ctx.userLocation.lat.toFixed(
-        4,
-      )}, lon=${ctx.userLocation.lon.toFixed(4)}. Use this for "near me" queries via getStationsNearLocation.`
-    : `The user's location is not available. If they ask about "near me" without providing a city or region, politely ask where they are located.`;
+  let locationLine: string;
+  if (ctx.userLocation) {
+    locationLine = `The user's current location is approximately lat=${ctx.userLocation.lat.toFixed(
+      4,
+    )}, lon=${ctx.userLocation.lon.toFixed(4)} (from browser geolocation). Use this for "near me" queries via getStationsNearLocation.`;
+  } else if (ctx.statedLocation) {
+    locationLine = `The user has told us they are in ${ctx.statedLocation.label} (lat=${ctx.statedLocation.lat.toFixed(
+      4,
+    )}, lon=${ctx.statedLocation.lon.toFixed(4)}). Use these coordinates for "near me" queries via getStationsNearLocation. Do NOT call setUserLocation again unless they explicitly change their location.`;
+  } else {
+    locationLine = `The user's location is not available (browser geolocation was denied or unavailable). If they ask about "near me" without providing a city, politely ask where they are located. When they reply with a place name, call setUserLocation({ label, lat, lon }) FIRST — before any other tool — using your best-known coordinates for that place. This lets the UI confirm the location to the user. Then proceed with their original question using getStationsNearLocation with the same coordinates.`;
+  }
 
   return [
     "You are FlowCast Assistant, a whitewater paddling advisor for rivers in Québec, Canada.",
@@ -85,6 +93,7 @@ function buildPrefix(ctx: SystemPromptContext): string {
     "- getStationForecast(stationId): current flow + trend + multi-day forecast with paddling status per day",
     "- getStationsNearLocation(lat, lon, radiusKm?, limit?): distance-sorted list with current flow/status",
     "- getFavoriteStationsStatus(stationIds): status + best upcoming day for each favorite",
+    "- setUserLocation(label, lat, lon): record the user's location when they tell you where they are (only when browser geolocation is unavailable)",
   ].join("\n");
 }
 

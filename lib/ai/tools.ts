@@ -357,6 +357,33 @@ const getFavoriteStationsStatus = tool({
 });
 
 // ---------------------------------------------------------------------------
+// Tool: setUserLocation
+// ---------------------------------------------------------------------------
+
+const setUserLocation = tool({
+  description:
+    "Record the user's location when they tell you where they are (e.g. 'I'm in " +
+    "Montreal', 'je suis a Quebec'). ONLY call this when the user has explicitly " +
+    "stated their location in the current message AND the system prompt says their " +
+    "browser location is not available. Provide the place name in the user's own " +
+    "wording plus your best-known lat/lon for that place. The client uses the " +
+    "returned values to update the chat header and to route subsequent 'near me' " +
+    "queries. Do not call this tool to guess the user's location from unrelated " +
+    "context.",
+  inputSchema: z.object({
+    label: z
+      .string()
+      .min(1)
+      .describe("Short display label for the location, as the user referred to it (e.g. 'Montreal')"),
+    lat: z.number().min(-90).max(90).describe("Latitude in decimal degrees"),
+    lon: z.number().min(-180).max(180).describe("Longitude in decimal degrees"),
+  }),
+  execute: async ({ label, lat, lon }) => {
+    return { label, lat, lon };
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Export set
 // ---------------------------------------------------------------------------
 
@@ -364,4 +391,5 @@ export const chatTools = {
   getStationForecast,
   getStationsNearLocation,
   getFavoriteStationsStatus,
+  setUserLocation,
 };

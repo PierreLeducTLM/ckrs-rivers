@@ -26,6 +26,9 @@ interface RequestBody {
   favoriteIds?: string[];
   userLat?: number;
   userLon?: number;
+  statedLocationLabel?: string;
+  statedLat?: number;
+  statedLon?: number;
   locale?: "en" | "fr";
 }
 
@@ -49,6 +52,9 @@ export async function POST(req: Request) {
     favoriteIds = [],
     userLat,
     userLon,
+    statedLocationLabel,
+    statedLat,
+    statedLon,
     locale = "fr",
   } = body;
 
@@ -57,11 +63,20 @@ export async function POST(req: Request) {
       ? { lat: userLat, lon: userLon }
       : null;
 
+  const statedLocation =
+    typeof statedLocationLabel === "string" &&
+    statedLocationLabel.length > 0 &&
+    typeof statedLat === "number" &&
+    typeof statedLon === "number"
+      ? { label: statedLocationLabel, lat: statedLat, lon: statedLon }
+      : null;
+
   try {
     const system = await buildSystemMessages({
       locale,
       favoriteIds,
       userLocation,
+      statedLocation,
       now: new Date(),
     });
 
