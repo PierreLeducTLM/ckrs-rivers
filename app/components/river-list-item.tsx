@@ -42,11 +42,14 @@ export default function RiverListItem({
     <Link
       href={`/rivers/${card.id}`}
       className={`group flex flex-col gap-1 rounded-lg bg-background px-4 py-3 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center sm:gap-4 ${
-        displayIsGood ? "border-2" : "border border-foreground/40"
+        displayStatus !== "unknown" ? "border-2" : "border border-foreground/40"
       } ${isProjected ? "ring-2 ring-amber-400/40" : ""}`}
       style={
-        displayIsGood
-          ? { borderColor: displayColor, boxShadow: `0 0 8px ${displayColor}20` }
+        displayStatus !== "unknown"
+          ? {
+              borderColor: displayColor,
+              boxShadow: displayIsGood ? `0 0 8px ${displayColor}20` : undefined,
+            }
           : undefined
       }
     >
