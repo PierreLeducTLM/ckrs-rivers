@@ -41,8 +41,8 @@
     "emptySubtext": "Explore rivers and tap the star to add them here",
     "exploreCta": "Explore Rivers",
     "sortIdeal": "By Ideal Level",
-    "sortStatus": "By Status",
-    "sortName": "By Name"
+    "sortManual": "Custom",
+    "reorderHandle": "Drag to reorder"
   },
   "timeTravel": {
     "toggle": "Time travel",
