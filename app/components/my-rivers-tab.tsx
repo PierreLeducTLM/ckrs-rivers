@@ -215,7 +215,16 @@ export default function MyRiversTab({
             {(handle) => renderCard(card, handle)}
           </SortableRiver>
         ) : (
-          <div key={card.id}>{renderCard(card)}</div>
+          <RiverCard
+            key={card.id}
+            card={card}
+            isAdmin={isAdmin}
+            isSubscribed={subscribedStationIds.has(card.id)}
+            onNeedEmail={onNeedEmail}
+            onToggled={onToggled}
+            isNative={isNative}
+            t={t}
+          />
         ),
       )}
     </div>
@@ -229,7 +238,16 @@ export default function MyRiversTab({
             {(handle) => renderListItem(card, handle)}
           </SortableRiver>
         ) : (
-          <div key={card.id}>{renderListItem(card)}</div>
+          <RiverListItem
+            key={card.id}
+            card={card}
+            isAdmin={isAdmin}
+            isSubscribed={subscribedStationIds.has(card.id)}
+            onNeedEmail={onNeedEmail}
+            onToggled={onToggled}
+            isNative={isNative}
+            t={t}
+          />
         ),
       )}
     </div>
