@@ -13,7 +13,7 @@ import {
 import {
   SortableContext,
   arrayMove,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useTranslation } from "@/lib/i18n/provider";
 import RiverCard from "./river-card";
@@ -300,7 +300,7 @@ export default function MyRiversTab({
         >
           <SortableContext
             items={favoriteCards.map((c) => c.id)}
-            strategy={verticalListSortingStrategy}
+            strategy={rectSortingStrategy}
           >
             {visibleList}
           </SortableContext>
