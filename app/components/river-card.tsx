@@ -148,7 +148,7 @@ export default function RiverCard({
             style={{
               background:
                 displayIsGood || displayStatus === "too-high"
-                  ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 80%, #D32F2F)"
+                  ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 70%, #FACC15 80%, #D32F2F)"
                   : "#a1a1aa",
             }}
           >

@@ -39,11 +39,12 @@ export function getPaddlingStatus(
 export function statusColor(position: number): string {
   if (position < 0) return "";
   const p = Math.max(0, Math.min(1, position));
-  // Green from min to 80%, then transition to red for the last 20%
+  // Green up to 70%, yellow warning zone at 70–80%, red transition 80–100%
   const stops: [number, number, number, number][] = [
     [0.0, 74, 222, 128],   // #4ADE80 — at min (green-400)
     [0.5, 22, 163, 74],    // #16A34A — ideal (green-600)
-    [0.8, 22, 163, 74],    // #16A34A — still green at 80%
+    [0.7, 22, 163, 74],    // #16A34A — still green at 70% (yellow zone start)
+    [0.8, 250, 204, 21],   // #FACC15 — yellow (yellow-400) where red transition begins
     [1.0, 211, 47, 47],    // #D32F2F — red at max
   ];
   for (let i = 0; i < stops.length - 1; i++) {
