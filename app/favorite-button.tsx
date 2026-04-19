@@ -5,23 +5,36 @@ import { useTranslation } from "@/lib/i18n/provider";
 
 const STORAGE_KEY = "waterflow-favorites";
 
-function getFavorites(): Set<string> {
-  if (typeof window === "undefined") return new Set();
+function getFavoritesList(): string[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? new Set(JSON.parse(raw)) : new Set();
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === "string") : [];
   } catch {
-    return new Set();
+    return [];
   }
 }
 
-function saveFavorites(favs: Set<string>) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...favs]));
+function saveFavoritesList(list: string[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
-/** Exported so the parent can read favorites for sorting */
+/** Exported so the parent can read favorites for sorting / membership. */
 export function readFavorites(): Set<string> {
-  return getFavorites();
+  return new Set(getFavoritesList());
+}
+
+/** Exported so the parent can read favorites in their persisted order. */
+export function readFavoritesList(): string[] {
+  return getFavoritesList();
+}
+
+/** Replace the full ordered list (used by manual reordering). */
+export function writeFavoritesList(list: string[]) {
+  saveFavoritesList(list);
+  window.dispatchEvent(new Event("favorites-changed"));
 }
 
 export default function FavoriteButton({ stationId }: { stationId: string }) {
@@ -31,22 +44,21 @@ export default function FavoriteButton({ stationId }: { stationId: string }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsFav(getFavorites().has(stationId));
+    setIsFav(getFavoritesList().includes(stationId));
     setMounted(true);
   }, [stationId]);
 
   const toggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const favs = getFavorites();
-    if (favs.has(stationId)) {
-      favs.delete(stationId);
+    const list = getFavoritesList();
+    if (list.includes(stationId)) {
+      saveFavoritesList(list.filter((id) => id !== stationId));
       setIsFav(false);
     } else {
-      favs.add(stationId);
+      saveFavoritesList([stationId, ...list.filter((id) => id !== stationId)]);
       setIsFav(true);
     }
-    saveFavorites(favs);
     // Dispatch a storage event so sibling components can react
     window.dispatchEvent(new Event("favorites-changed"));
   };

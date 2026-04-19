@@ -41,7 +41,7 @@ export default function RiverCard({
   return (
     <Link
       href={`/rivers/${card.id}`}
-      className={`group relative rounded-xl bg-background p-4 shadow transition-shadow hover:shadow-lg ${
+      className={`group relative block w-full rounded-xl bg-background p-4 shadow transition-shadow hover:shadow-lg ${
         displayStatus !== "unknown" ? "border-2" : "border border-foreground/40"
       } ${isProjected ? "ring-2 ring-amber-400/40" : ""}`}
       style={
