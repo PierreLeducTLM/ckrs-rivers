@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
@@ -17,6 +18,7 @@ interface RiverCardProps {
   onToggled: () => void;
   isNative: boolean;
   t: (key: string, params?: Record<string, string | number>) => string;
+  dragHandle?: ReactNode;
 }
 
 export default function RiverCard({
@@ -27,6 +29,7 @@ export default function RiverCard({
   onToggled,
   isNative,
   t,
+  dragHandle,
 }: RiverCardProps) {
   const { timeTravelTs } = useTab();
   const projected =
@@ -66,6 +69,7 @@ export default function RiverCard({
           )}
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
+          {dragHandle}
           <SubscribeButton
             stationId={card.id}
             isSubscribed={isSubscribed}

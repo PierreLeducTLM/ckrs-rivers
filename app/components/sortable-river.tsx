@@ -6,11 +6,11 @@ import { CSS } from "@dnd-kit/utilities";
 
 interface SortableRiverProps {
   id: string;
-  children: ReactNode;
   t: (key: string) => string;
+  children: (handle: ReactNode) => ReactNode;
 }
 
-export default function SortableRiver({ id, children, t }: SortableRiverProps) {
+export default function SortableRiver({ id, t, children }: SortableRiverProps) {
   const {
     attributes,
     listeners,
@@ -27,33 +27,32 @@ export default function SortableRiver({ id, children, t }: SortableRiverProps) {
     opacity: isDragging ? 0.85 : 1,
   };
 
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex min-w-0 items-stretch gap-2"
+  const handle = (
+    <button
+      {...attributes}
+      {...listeners}
+      aria-label={t("myRivers.reorderHandle")}
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
+      className="cursor-grab touch-none rounded p-0.5 text-foreground/30 transition-colors hover:text-foreground/60 active:cursor-grabbing"
     >
-      <button
-        {...attributes}
-        {...listeners}
-        aria-label={t("myRivers.reorderHandle")}
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        className="flex w-7 flex-shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-foreground/30 transition-colors hover:bg-foreground/5 hover:text-foreground/60 active:cursor-grabbing"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-          <circle cx="9" cy="6" r="1.6" />
-          <circle cx="15" cy="6" r="1.6" />
-          <circle cx="9" cy="12" r="1.6" />
-          <circle cx="15" cy="12" r="1.6" />
-          <circle cx="9" cy="18" r="1.6" />
-          <circle cx="15" cy="18" r="1.6" />
-        </svg>
-      </button>
-      <div className="min-w-0 flex-1">{children}</div>
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="9" cy="6" r="1.6" />
+        <circle cx="15" cy="6" r="1.6" />
+        <circle cx="9" cy="12" r="1.6" />
+        <circle cx="15" cy="12" r="1.6" />
+        <circle cx="9" cy="18" r="1.6" />
+        <circle cx="15" cy="18" r="1.6" />
+      </svg>
+    </button>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(handle)}
     </div>
   );
 }

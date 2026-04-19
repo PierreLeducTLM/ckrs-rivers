@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -181,9 +181,8 @@ export default function MyRiversTab({
 
   const isManual = sort === "manual";
 
-  const renderCard = (card: StationCard) => (
+  const renderCard = (card: StationCard, handle: ReactNode = null) => (
     <RiverCard
-      key={card.id}
       card={card}
       isAdmin={isAdmin}
       isSubscribed={subscribedStationIds.has(card.id)}
@@ -191,12 +190,12 @@ export default function MyRiversTab({
       onToggled={onToggled}
       isNative={isNative}
       t={t}
+      dragHandle={handle}
     />
   );
 
-  const renderListItem = (card: StationCard) => (
+  const renderListItem = (card: StationCard, handle: ReactNode = null) => (
     <RiverListItem
-      key={card.id}
       card={card}
       isAdmin={isAdmin}
       isSubscribed={subscribedStationIds.has(card.id)}
@@ -204,6 +203,7 @@ export default function MyRiversTab({
       onToggled={onToggled}
       isNative={isNative}
       t={t}
+      dragHandle={handle}
     />
   );
 
@@ -212,10 +212,10 @@ export default function MyRiversTab({
       {favoriteCards.map((card) =>
         isManual ? (
           <SortableRiver key={card.id} id={card.id} t={t}>
-            {renderCard(card)}
+            {(handle) => renderCard(card, handle)}
           </SortableRiver>
         ) : (
-          renderCard(card)
+          <div key={card.id}>{renderCard(card)}</div>
         ),
       )}
     </div>
@@ -226,10 +226,10 @@ export default function MyRiversTab({
       {favoriteCards.map((card) =>
         isManual ? (
           <SortableRiver key={card.id} id={card.id} t={t}>
-            {renderListItem(card)}
+            {(handle) => renderListItem(card, handle)}
           </SortableRiver>
         ) : (
-          renderListItem(card)
+          <div key={card.id}>{renderListItem(card)}</div>
         ),
       )}
     </div>
