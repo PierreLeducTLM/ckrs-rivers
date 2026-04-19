@@ -18,22 +18,24 @@ export function getPaddlingStatus(
   if (min != null && flow < min) return { status: "too-low", position: 0 };
   if (max != null && flow > max) return { status: "too-high", position: 1 };
 
+  // Compute bar position (0 at min, 0.5 at ideal, 1 at max).
+  let position = 0.5;
   if (min != null && ideal != null && flow <= ideal) {
     const range = ideal - min;
-    const pos = range > 0 ? ((flow - min) / range) * 0.5 : 0.25;
-    return { status: "runnable", position: pos };
-  }
-  if (ideal != null && max != null && flow >= ideal) {
+    position = range > 0 ? ((flow - min) / range) * 0.5 : 0.25;
+  } else if (ideal != null && max != null && flow >= ideal) {
     const range = max - ideal;
-    const pos = range > 0 ? 0.5 + ((flow - ideal) / range) * 0.5 : 0.75;
-    return { status: "ideal", position: pos };
-  }
-  if (min != null && max != null) {
-    const pos = (flow - min) / (max - min);
-    return { status: "runnable", position: pos };
+    position = range > 0 ? 0.5 + ((flow - ideal) / range) * 0.5 : 0.75;
+  } else if (min != null && max != null) {
+    position = (flow - min) / (max - min);
   }
 
-  return { status: "runnable", position: 0.5 };
+  // Classify: "ideal" when flow is within ±20% of the ideal level,
+  // otherwise "runnable" (good to go) while still within [min, max].
+  if (ideal != null && Math.abs(flow - ideal) <= Math.abs(ideal) * 0.2) {
+    return { status: "ideal", position };
+  }
+  return { status: "runnable", position };
 }
 
 export function statusColor(position: number): string {
