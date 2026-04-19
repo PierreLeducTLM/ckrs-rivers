@@ -207,11 +207,13 @@ export function statusPriority(s: string): number {
 /**
  * Compute a sort key for the "by ideal level" sort mode.
  *
- * Group 1: Rivers currently paddleable (ideal/runnable) — ordered by
- *          absolute distance from the ideal paddling level (closest first).
- * Group 2: Rivers not currently paddleable but forecast to become good —
+ * Group 1: Rivers in the green zone (position ≤ 0.7) — ordered by
+ *          distance from the ideal position (closest first).
+ * Group 2: Rivers in the yellow/red zone (position > 0.7) — ordered by
+ *          position ascending (yellow before red, lower flows first).
+ * Group 3: Rivers not currently paddleable but forecast to become good —
  *          ordered by time until they become good (soonest first).
- * Group 3: All other rivers (no forecast window, unknown, missing levels).
+ * Group 4: All other rivers (no forecast window, unknown, missing levels).
  */
 export function idealSortKey(card: StationCard): {
   group: number;
@@ -220,17 +222,23 @@ export function idealSortKey(card: StationCard): {
   const paddling = card.paddling;
   const lastFlow = card.lastFlow;
 
-  // Group 1: currently paddleable — distance from ideal
+  // Groups 1 & 2: currently paddleable — split by yellow-zone threshold (0.7)
   if (
     (card.status === "ideal" || card.status === "runnable") &&
     paddling &&
     paddling.ideal != null &&
     lastFlow != null
   ) {
-    return { group: 1, score: Math.abs(lastFlow - paddling.ideal) };
+    const { position } = getPaddlingStatus(lastFlow, paddling);
+    if (position <= 0.7) {
+      // Green zone: closest to ideal first
+      return { group: 1, score: Math.abs(position - 0.5) };
+    }
+    // Yellow/red zone: lower position first (yellow → red)
+    return { group: 2, score: position };
   }
 
-  // Group 2: forecast will become good — soonest first
+  // Group 3: forecast will become good — soonest first
   if (paddling) {
     const now = card.nowTs;
     const correction = buildForecastCorrection(card.sparkData, now);
@@ -241,13 +249,13 @@ export function idealSortKey(card: StationCard): {
       const corrected = applyForecastCorrection(flow, hoursAhead, correction);
       const { status } = getPaddlingStatus(corrected, paddling);
       if (isGoodRange(status)) {
-        return { group: 2, score: point.ts - now };
+        return { group: 3, score: point.ts - now };
       }
     }
   }
 
-  // Group 3: no imminent window
-  return { group: 3, score: statusPriority(card.status) };
+  // Group 4: no imminent window
+  return { group: 4, score: statusPriority(card.status) };
 }
 
 /** Normalize a string for accent-insensitive search */
