@@ -139,7 +139,12 @@ export function computeCardStatusInfo(
   if (card.status === "unknown") return null;
 
   if (card.status === "ideal") return { key: "detail.ideal" };
-  if (card.status === "runnable") return { key: "detail.goodToGo" };
+  if (card.status === "runnable") {
+    // Yellow shoulder (position 0.7–1.0) = runnable but pushing the upper
+    // edge of the range. Warn the paddler while still saying "go".
+    if (card.position > 0.7) return { key: "detail.runningHigh" };
+    return { key: "detail.goodToGo" };
+  }
 
   const correction = buildForecastCorrection(card.sparkData, card.nowTs);
 
@@ -173,6 +178,7 @@ export const STATUS_PILL_COLORS: Record<string, { bg: string; text: string }> =
   {
     "detail.ideal": { bg: "rgba(16,185,129,0.12)", text: "#059669" },
     "detail.goodToGo": { bg: "rgba(59,130,246,0.12)", text: "#2563eb" },
+    "detail.runningHigh": { bg: "rgba(234,179,8,0.15)", text: "#a16207" },
     "detail.tooLow": { bg: "rgba(113,113,122,0.12)", text: "#71717a" },
     "detail.tooHigh": { bg: "rgba(239,68,68,0.12)", text: "#dc2626" },
     "detail.runnableInHours": {

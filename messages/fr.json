@@ -193,6 +193,7 @@
     "refreshing": "Actualisation...",
     "goodToGo": "C'est bon, on y va!",
     "ideal": "Conditions ideales!",
+    "runningHigh": "\u00c7a pompe \u2014 vas-y, mais reste alerte!",
     "tooLow": "Trop bas pour pagayer",
     "tooHigh": "Trop haut \u2014 soyez prudent",
     "runnableInHours": "Devrait etre bon dans ~{n}h",
