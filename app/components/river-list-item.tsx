@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
@@ -18,7 +17,6 @@ interface RiverListItemProps {
   onToggled?: () => void;
   isNative?: boolean;
   t: (key: string, params?: Record<string, string | number>) => string;
-  dragHandle?: ReactNode;
 }
 
 export default function RiverListItem({
@@ -29,7 +27,6 @@ export default function RiverListItem({
   onToggled,
   isNative = false,
   t,
-  dragHandle,
 }: RiverListItemProps) {
   const { timeTravelTs } = useTab();
   const projected =
@@ -158,7 +155,6 @@ export default function RiverListItem({
         )}
 
         <div className="ml-auto flex flex-shrink-0 gap-0.5">
-          {dragHandle}
           {onNeedEmail && onToggled && (
             <SubscribeButton
               stationId={card.id}

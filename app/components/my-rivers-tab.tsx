@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -123,10 +123,13 @@ export default function MyRiversTab({
     });
   }, [cards, favoriteSet, favoriteOrder, sort]);
 
+  // With the whole card draggable, activation constraints make sure a
+  // quick tap/click still navigates to the river detail page. Only a
+  // deliberate drag (mouse: 10px movement; touch: 250ms press) starts reorder.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 120, tolerance: 8 },
+      activationConstraint: { delay: 250, tolerance: 5 },
     }),
   );
 
@@ -181,7 +184,7 @@ export default function MyRiversTab({
 
   const isManual = sort === "manual";
 
-  const renderCard = (card: StationCard, handle: ReactNode = null) => (
+  const renderCard = (card: StationCard) => (
     <RiverCard
       card={card}
       isAdmin={isAdmin}
@@ -190,11 +193,10 @@ export default function MyRiversTab({
       onToggled={onToggled}
       isNative={isNative}
       t={t}
-      dragHandle={handle}
     />
   );
 
-  const renderListItem = (card: StationCard, handle: ReactNode = null) => (
+  const renderListItem = (card: StationCard) => (
     <RiverListItem
       card={card}
       isAdmin={isAdmin}
@@ -203,7 +205,6 @@ export default function MyRiversTab({
       onToggled={onToggled}
       isNative={isNative}
       t={t}
-      dragHandle={handle}
     />
   );
 
@@ -211,8 +212,8 @@ export default function MyRiversTab({
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {favoriteCards.map((card) =>
         isManual ? (
-          <SortableRiver key={card.id} id={card.id} t={t}>
-            {(handle) => renderCard(card, handle)}
+          <SortableRiver key={card.id} id={card.id}>
+            {renderCard(card)}
           </SortableRiver>
         ) : (
           <RiverCard
@@ -234,8 +235,8 @@ export default function MyRiversTab({
     <div className="flex flex-col gap-2">
       {favoriteCards.map((card) =>
         isManual ? (
-          <SortableRiver key={card.id} id={card.id} t={t}>
-            {(handle) => renderListItem(card, handle)}
+          <SortableRiver key={card.id} id={card.id}>
+            {renderListItem(card)}
           </SortableRiver>
         ) : (
           <RiverListItem
