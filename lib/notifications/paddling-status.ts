@@ -30,9 +30,9 @@ export function getPaddlingStatus(
     position = (flow - min) / (max - min);
   }
 
-  // Classify: "ideal" when flow is within ±20% of the ideal level,
+  // Classify: "ideal" when flow is within ±30% of the ideal level,
   // otherwise "runnable" (good to go) while still within [min, max].
-  if (ideal != null && Math.abs(flow - ideal) <= Math.abs(ideal) * 0.2) {
+  if (ideal != null && Math.abs(flow - ideal) <= Math.abs(ideal) * 0.3) {
     return { status: "ideal", position };
   }
   return { status: "runnable", position };
