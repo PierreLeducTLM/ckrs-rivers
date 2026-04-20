@@ -261,7 +261,7 @@ function countRunnableWindow(
   return count;
 }
 
-function computeTrend(hourlyData: HourlyPoint[]): TrendDirection {
+export function computeTrend(hourlyData: HourlyPoint[]): TrendDirection {
   // Look at last 6 hours of data
   const recent = hourlyData.slice(-6);
   if (recent.length < 2) return "stable";
