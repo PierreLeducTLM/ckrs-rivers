@@ -42,7 +42,9 @@
     "exploreCta": "Explore Rivers",
     "sortIdeal": "By Ideal Level",
     "sortStatus": "By Status",
-    "sortName": "By Name"
+    "sortName": "By Name",
+    "searchPlaceholder": "Search my rivers...",
+    "noResults": "No rivers match your search"
   },
   "timeTravel": {
     "toggle": "Time travel",

@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "@/lib/i18n/provider";
 import RiverCard from "./river-card";
 import RiverListItem from "./river-list-item";
+import SearchBar from "./search-bar";
 import SortControl, { type SortMode } from "./sort-control";
 import TimeTravelToggle from "./time-travel-toggle";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
-import { idealSortKey, statusPriority } from "./utils";
+import { idealSortKey, normalizeSearch, statusPriority } from "./utils";
 
 const FAVORITES_KEY = "waterflow-favorites";
 const VIEW_MODE_KEY = "waterflow-view-mode";
@@ -48,7 +49,10 @@ export default function MyRiversTab({
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [sort, setSort] = useState<SortMode>("ideal");
+  const [search, setSearch] = useState("");
   const [mounted, setMounted] = useState(false);
+
+  const handleSearch = useCallback((q: string) => setSearch(q), []);
 
   const refreshFavorites = useCallback(() => {
     setFavorites(getFavorites());
@@ -95,9 +99,21 @@ export default function MyRiversTab({
     });
   }, [cards, favorites, sort]);
 
+  const visibleCards = useMemo(() => {
+    const normalizedQuery = normalizeSearch(search);
+    if (!normalizedQuery) return favoriteCards;
+    return favoriteCards.filter((card) => {
+      const nameMatch = normalizeSearch(card.name).includes(normalizedQuery);
+      const regionMatch = card.municipality
+        ? normalizeSearch(card.municipality).includes(normalizedQuery)
+        : false;
+      return nameMatch || regionMatch;
+    });
+  }, [favoriteCards, search]);
+
   if (!mounted) return null;
 
-  // Empty state
+  // Empty state — no favorites at all
   if (favoriteCards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center px-6 py-20 text-center">
@@ -132,6 +148,15 @@ export default function MyRiversTab({
 
   return (
     <div>
+      {/* Search bar */}
+      <div className="mb-3">
+        <SearchBar
+          value={search}
+          onChange={handleSearch}
+          placeholder={t("myRivers.searchPlaceholder")}
+        />
+      </div>
+
       {/* Header controls */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <SortControl value={sort} onChange={handleSortChange} t={t} />
@@ -188,7 +213,7 @@ export default function MyRiversTab({
       {/* Card view */}
       {viewMode === "card" && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {favoriteCards.map((card) => (
+          {visibleCards.map((card) => (
             <RiverCard
               key={card.id}
               card={card}
@@ -206,7 +231,7 @@ export default function MyRiversTab({
       {/* List view */}
       {viewMode === "list" && (
         <div className="flex flex-col gap-2">
-          {favoriteCards.map((card) => (
+          {visibleCards.map((card) => (
             <RiverListItem
               key={card.id}
               card={card}
@@ -219,6 +244,13 @@ export default function MyRiversTab({
             />
           ))}
         </div>
+      )}
+
+      {/* No search results */}
+      {visibleCards.length === 0 && (
+        <p className="py-12 text-center text-sm text-foreground/40">
+          {t("myRivers.noResults")}
+        </p>
       )}
     </div>
   );

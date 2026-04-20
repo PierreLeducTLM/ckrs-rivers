@@ -42,7 +42,9 @@
     "exploreCta": "Explorer les rivieres",
     "sortIdeal": "Par niveau ideal",
     "sortStatus": "Par statut",
-    "sortName": "Par nom"
+    "sortName": "Par nom",
+    "searchPlaceholder": "Rechercher mes rivieres...",
+    "noResults": "Aucune riviere ne correspond a votre recherche"
   },
   "timeTravel": {
     "toggle": "Voyage dans le temps",
