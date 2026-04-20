@@ -8,7 +8,7 @@ import RefreshButton from "./refresh-button";
 import RiverHeader from "./river-header";
 import PaddlingStatusMessage from "./paddling-status-message";
 import BackButton from "./back-button";
-import FlowTendency from "./flow-tendency";
+import FlowTendency from "@/app/components/flow-tendency";
 import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";

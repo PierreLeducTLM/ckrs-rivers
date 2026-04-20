@@ -1,3 +1,5 @@
+import type { TrendDirection } from "@/lib/domain/notification";
+
 export interface StationCard {
   id: string;
   name: string;
@@ -19,6 +21,7 @@ export interface StationCard {
   position: number;
   color: string;
   isGoodRange: boolean;
+  trend: TrendDirection;
   weatherDays: Array<{
     date: string;
     tempMin: number | null;

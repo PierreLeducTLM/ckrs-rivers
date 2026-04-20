@@ -5,6 +5,7 @@ import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
+import FlowTendency from "./flow-tendency";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
 import { computeDisplayState, statusLabel } from "./utils";
@@ -118,14 +119,17 @@ export default function RiverListItem({
         )}
 
         {/* Flow value */}
-        <div className="flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-1.5">
           {displayFlow != null ? (
-            <p className="text-base font-bold tabular-nums sm:text-lg">
-              {displayFlow.toFixed(1)}{" "}
-              <span className="text-xs font-normal text-foreground/60">
-                m&sup3;/s
-              </span>
-            </p>
+            <>
+              <p className="text-base font-bold tabular-nums sm:text-lg">
+                {displayFlow.toFixed(1)}{" "}
+                <span className="text-xs font-normal text-foreground/60">
+                  m&sup3;/s
+                </span>
+              </p>
+              {!isProjected && <FlowTendency trend={card.trend} />}
+            </>
           ) : (
             <p className="text-xs text-foreground/40">{t("app.noData")}</p>
           )}

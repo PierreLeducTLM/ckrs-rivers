@@ -170,6 +170,7 @@ export interface StationCard {
   position: number;
   color: string;
   isGoodRange: boolean;
+  trend: "rising" | "falling" | "stable";
   weatherDays: Array<{
     date: string;
     tempMin: number | null;
