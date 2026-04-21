@@ -158,8 +158,6 @@ export default async function RiverPage({
     .filter((p) => p.observed != null)
     .at(-1)?.timestamp ?? null;
 
-  const flowTrend = computeTrend(hourlyData);
-
   // Compute paddling status
   const currentFlow = lastFlow?.flow ?? null;
   const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
@@ -174,6 +172,8 @@ export default async function RiverPage({
   }));
   const nowTsForBias = Date.now();
   const forecastCorrection = buildForecastCorrection(biasHourlyPoints, nowTsForBias);
+
+  const flowTrend = computeTrend(hourlyData, nowTsForBias);
 
   if (paddling && (paddling.min != null || paddling.ideal != null || paddling.max != null)) {
     const paddlingLevels = {

@@ -85,7 +85,7 @@ export function computeSnapshot(
   const runnableWindowDays = countRunnableWindow(data.forecastDays, paddling, correction, nowMs);
 
   // Compute trend from recent hourly data
-  const trendDirection = computeTrend(data.hourlyData);
+  const trendDirection = computeTrend(data.hourlyData, nowMs);
 
   // When does the forecast enter runnable range?
   const { enters, entersInDays } = forecastEntersRange(
@@ -261,23 +261,47 @@ function countRunnableWindow(
   return count;
 }
 
-export function computeTrend(hourlyData: HourlyPoint[]): TrendDirection {
-  // Look at last 6 hours of data
-  const recent = hourlyData.slice(-6);
-  if (recent.length < 2) return "stable";
+export function computeTrend(hourlyData: HourlyPoint[], nowMs: number = Date.now()): TrendDirection {
+  const THRESHOLD = 0.05;
+  const FORECAST_HORIZON_MS = 48 * 60 * 60 * 1000; // 2 days
+  const OBSERVED_LOOKBACK_MS = 24 * 60 * 60 * 1000; // 1 day
 
-  const flows = recent
-    .map((p) => p.observed ?? p.cehqForecast)
-    .filter((f): f is number => f != null);
+  // Preferred path: compare current flow to the forecast 2 days out.
+  const futureForecasts = hourlyData.filter((p) => {
+    const ts = new Date(p.timestamp).getTime();
+    return ts > nowMs && ts <= nowMs + FORECAST_HORIZON_MS && p.cehqForecast != null;
+  });
 
-  if (flows.length < 2) return "stable";
+  if (futureForecasts.length >= 2) {
+    // Start from the latest observed flow (closest to "now"); fall back to
+    // the first forecast point if no observation is available.
+    const observedPoints = hourlyData.filter((p) => p.observed != null);
+    const start =
+      observedPoints.length > 0
+        ? observedPoints[observedPoints.length - 1].observed!
+        : futureForecasts[0].cehqForecast!;
+    const end = futureForecasts[futureForecasts.length - 1].cehqForecast!;
+    if (start > 0) {
+      const change = (end - start) / start;
+      if (change > THRESHOLD) return "rising";
+      if (change < -THRESHOLD) return "falling";
+    }
+    return "stable";
+  }
 
-  const first = flows[0];
-  const last = flows[flows.length - 1];
+  // Fallback: last 24 hours of observed data.
+  const recentObserved = hourlyData.filter((p) => {
+    const ts = new Date(p.timestamp).getTime();
+    return ts >= nowMs - OBSERVED_LOOKBACK_MS && p.observed != null;
+  });
+  if (recentObserved.length < 2) return "stable";
+
+  const first = recentObserved[0].observed!;
+  const last = recentObserved[recentObserved.length - 1].observed!;
+  if (first <= 0) return "stable";
   const change = (last - first) / first;
-
-  if (change > 0.05) return "rising";
-  if (change < -0.05) return "falling";
+  if (change > THRESHOLD) return "rising";
+  if (change < -THRESHOLD) return "falling";
   return "stable";
 }
 
