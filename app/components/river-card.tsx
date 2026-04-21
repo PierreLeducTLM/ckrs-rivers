@@ -4,7 +4,6 @@ import Link from "next/link";
 import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
-import RelativeTime from "./relative-time";
 import FlowTendency from "./flow-tendency";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
@@ -95,18 +94,10 @@ export default function RiverCard({
               <FlowTendency trend={card.trend} />
             )}
           </div>
-          {isProjected ? (
+          {isProjected && (
             <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
               {t("timeTravel.projected")}
             </span>
-          ) : (
-            card.forecastAt && (
-              <RelativeTime
-                isoDate={card.forecastAt}
-                t={t}
-                className="text-xs text-foreground/40"
-              />
-            )
           )}
         </div>
       )}

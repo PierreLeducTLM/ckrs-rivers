@@ -3,7 +3,6 @@
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import FavoriteButton from "../favorite-button";
-import RelativeTime from "./relative-time";
 import type { StationCard } from "./types";
 import { statusLabel } from "./utils";
 
@@ -135,13 +134,6 @@ export default function BottomSheet({ card, onClose, t }: BottomSheetProps) {
                 {card.lastFlow.toFixed(1)}
               </span>
               <span className="text-sm text-foreground/50">m&sup3;/s</span>
-              {card.forecastAt && (
-                <RelativeTime
-                  isoDate={card.forecastAt}
-                  t={t}
-                  className="ml-auto text-xs text-foreground/40"
-                />
-              )}
             </div>
           )}
 

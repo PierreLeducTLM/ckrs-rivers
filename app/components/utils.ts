@@ -18,19 +18,6 @@ export {
   type ForecastCorrection,
 };
 
-export function timeAgo(
-  isoDate: string,
-  t: (key: string, params?: Record<string, string | number>) => string,
-): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t("time.justNow");
-  if (mins < 60) return t("time.minutesAgo", { n: mins });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return t("time.hoursAgo", { n: hours });
-  return t("time.daysAgo", { n: Math.floor(hours / 24) });
-}
-
 export function weatherIcon(w: {
   tempMax: number | null;
   precipitation: number;

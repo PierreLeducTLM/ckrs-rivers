@@ -40,16 +40,6 @@ function getFavorites(): Set<string> {
   }
 }
 
-function timeAgo(isoDate: string, t: (key: string, params?: Record<string, string | number>) => string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t("time.justNow");
-  if (mins < 60) return t("time.minutesAgo", { n: mins });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return t("time.hoursAgo", { n: hours });
-  return t("time.daysAgo", { n: Math.floor(hours / 24) });
-}
-
 function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
   if (w.snowfall > 0.5) return "\u2744\uFE0F";
   if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F";
@@ -754,11 +744,6 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                       m&sup3;/s
                     </span>
                   </p>
-                  {card.forecastAt && (
-                    <p className="text-xs text-foreground/40">
-                      {timeAgo(card.forecastAt, t)}
-                    </p>
-                  )}
                 </div>
               ) : (
                 <div className="mt-4 rounded-lg bg-foreground/5 px-4 py-3">
@@ -888,9 +873,6 @@ export default function StationGrid({ cards }: { cards: StationCard[] }) {
                     <p className="text-xs text-foreground/40">{t("app.noData")}</p>
                   )}
                 </div>
-                {card.forecastAt && (
-                  <span className="text-[10px] text-foreground/40">{timeAgo(card.forecastAt, t)}</span>
-                )}
 
                 <div className="ml-auto flex flex-shrink-0 gap-0.5">
                   <SubscribeButton stationId={card.id} isSubscribed={subscribedStationIds.has(card.id)} onNeedEmail={handleNeedEmail} onToggled={fetchSubscriptions} isNative={isNative} />
