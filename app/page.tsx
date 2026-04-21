@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { getStations, getPaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { getPaddlingStatus, statusColor } from "@/lib/notifications/paddling-status";
+import { computeTrend } from "@/lib/notifications/evaluate";
 import { AdminAddStation } from "./admin-wrapper";
 import { TabProvider } from "./components/tab-context";
 import AppShell from "./components/app-shell";
@@ -84,6 +85,8 @@ export default async function Home() {
       })
       .filter((p) => p.ts >= cutoffTs);
 
+    const trend = computeTrend(data?.hourly_json ?? []);
+
     const weatherDays = (data?.weather_json ?? [])
       .filter((w) => w.date >= todayStr)
       .slice(0, 7)
@@ -113,6 +116,7 @@ export default async function Home() {
       position,
       color,
       isGoodRange,
+      trend,
       weatherDays,
       putIn: station.putIn
         ? [Number(station.putIn.lat), Number(station.putIn.lon)] as [number, number]

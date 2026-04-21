@@ -8,9 +8,11 @@ import RefreshButton from "./refresh-button";
 import RiverHeader from "./river-header";
 import PaddlingStatusMessage from "./paddling-status-message";
 import BackButton from "./back-button";
+import FlowTendency from "@/app/components/flow-tendency";
 import FavoriteButton from "@/app/favorite-button";
 import T from "@/app/translated-text";
 import { getPaddlingStatus, isGoodRange } from "@/lib/notifications/paddling-status";
+import { computeTrend } from "@/lib/notifications/evaluate";
 import {
   buildForecastCorrection,
   findFirstSustainedBadPoint,
@@ -156,6 +158,8 @@ export default async function RiverPage({
     .filter((p) => p.observed != null)
     .at(-1)?.timestamp ?? null;
 
+  const flowTrend = computeTrend(hourlyData);
+
   // Compute paddling status
   const currentFlow = lastFlow?.flow ?? null;
   const { status: paddlingStatus } = getPaddlingStatus(currentFlow, paddling);
@@ -297,6 +301,7 @@ export default async function RiverPage({
                 {lastFlow.flow.toFixed(1)}
               </span>
               <span className="text-lg text-zinc-500 dark:text-zinc-400">m&sup3;/s</span>
+              <FlowTendency trend={flowTrend} />
               <span className="ml-auto text-sm text-zinc-400 dark:text-zinc-500">
                 {formatDate(lastFlow.date)}
                 {lastObservedTimestamp && (

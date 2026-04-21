@@ -5,6 +5,7 @@ import FavoriteButton from "../favorite-button";
 import SubscribeButton from "../subscribe-button";
 import StatusPill from "./status-pill";
 import RelativeTime from "./relative-time";
+import FlowTendency from "./flow-tendency";
 import { useTab } from "./tab-context";
 import type { StationCard } from "./types";
 import { computeDisplayState, statusLabel } from "./utils";
@@ -90,6 +91,9 @@ export default function RiverCard({
             <span className="text-xs font-medium text-foreground/50">
               m&sup3;/s
             </span>
+            {!isProjected && card.lastFlow != null && (
+              <FlowTendency trend={card.trend} />
+            )}
           </div>
           {isProjected ? (
             <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
