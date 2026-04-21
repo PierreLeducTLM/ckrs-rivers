@@ -85,7 +85,7 @@ export default async function Home() {
       })
       .filter((p) => p.ts >= cutoffTs);
 
-    const trend = computeTrend(data?.hourly_json ?? []);
+    const trend = computeTrend(data?.hourly_json ?? [], nowTs);
 
     const weatherDays = (data?.weather_json ?? [])
       .filter((w) => w.date >= todayStr)
