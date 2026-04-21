@@ -45,16 +45,6 @@ function statusLabel(status: string, t: (key: string) => string): string {
   }
 }
 
-function timeAgo(isoDate: string, t: (key: string, params?: Record<string, string | number>) => string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return t("time.justNow");
-  if (mins < 60) return t("time.minutesAgo", { n: mins });
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return t("time.hoursAgo", { n: hours });
-  return t("time.daysAgo", { n: Math.floor(hours / 24) });
-}
-
 function weatherIcon(w: { tempMax: number | null; precipitation: number; snowfall: number }): string {
   if (w.snowfall > 0.5) return "\u2744\uFE0F";
   if (w.precipitation > 5) return "\uD83C\uDF27\uFE0F";
@@ -260,16 +250,13 @@ function StationPopup({ card, isAdmin }: { card: StationCard; isAdmin: boolean }
           </p>
         )}
 
-        {/* Flow value + time ago */}
+        {/* Flow value */}
         {card.lastFlow != null ? (
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <p style={{ fontSize: 20, fontWeight: 700, margin: 0, fontVariantNumeric: "tabular-nums" }}>
               {card.lastFlow.toFixed(1)}{" "}
               <span style={{ fontSize: 12, fontWeight: 400, color: "#6b7280" }}>m&sup3;/s</span>
             </p>
-            {card.forecastAt && (
-              <span style={{ fontSize: 11, color: "#9ca3af" }}>{timeAgo(card.forecastAt, t)}</span>
-            )}
           </div>
         ) : (
           <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0" }}>No data</p>
