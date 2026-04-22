@@ -175,10 +175,9 @@ export default function RiverListItem({
               )}
             {(displayIsGood || displayStatus === "too-high") && (
               <div
-                className="absolute top-1/2 h-[18px] w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 dark:bg-zinc-900 dark:ring-white/85"
+                className="absolute top-1/2 h-[18px] w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 shadow-[0_0_3px_rgba(0,0,0,0.45)] dark:bg-zinc-900 dark:ring-white dark:shadow-[0_0_6px_rgba(255,255,255,0.55)]"
                 style={{
                   left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
-                  boxShadow: "0 0 3px rgba(0,0,0,0.45)",
                 }}
               />
             )}

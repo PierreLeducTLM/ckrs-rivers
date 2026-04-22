@@ -173,12 +173,11 @@ export default function RiverCard({
             {/* Current position indicator — hidden when too-low or unknown */}
             {(displayIsGood || displayStatus === "too-high") && (
               <div
-                className={`absolute top-1/2 h-6 w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 transition-all duration-500 dark:bg-zinc-900 dark:ring-white/85 ${
+                className={`absolute top-1/2 h-6 w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 shadow-[0_0_4px_rgba(0,0,0,0.5)] transition-all duration-500 dark:bg-zinc-900 dark:ring-white dark:shadow-[0_0_7px_rgba(255,255,255,0.6)] ${
                   displayIsGood && !isProjected ? "animate-flow-pulse" : ""
                 }`}
                 style={{
                   left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
-                  boxShadow: "0 0 4px rgba(0,0,0,0.5)",
                 }}
               />
             )}
