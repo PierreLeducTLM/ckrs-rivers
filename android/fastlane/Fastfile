@@ -1,0 +1,57 @@
+default_platform(:android)
+
+platform :android do
+  desc "Build a signed Android App Bundle (AAB)"
+  lane :build do
+    gradle(task: "clean", project_dir: ".")
+    gradle(task: "bundle", build_type: "Release", project_dir: ".")
+  end
+
+  desc "Upload the latest AAB to the Play Store internal testing track"
+  lane :internal do
+    build
+    upload_to_play_store(
+      track: "internal",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      release_status: "draft"
+    )
+  end
+
+  desc "Promote the latest internal build to closed beta"
+  lane :beta do
+    upload_to_play_store(
+      track: "beta",
+      track_promote_to: "beta",
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: false,
+      skip_upload_changelogs: false,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Release the latest build to production"
+  lane :production do
+    build
+    upload_to_play_store(
+      track: "production",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      release_status: "draft"
+    )
+  end
+
+  desc "Sync store listing metadata (text/screenshots) only"
+  lane :metadata do
+    upload_to_play_store(
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_changelogs: false,
+      skip_upload_metadata: false,
+      skip_upload_images: false,
+      skip_upload_screenshots: false
+    )
+  end
+end

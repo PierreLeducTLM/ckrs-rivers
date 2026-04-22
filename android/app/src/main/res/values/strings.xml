@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">FlowCast</string>
     <string name="title_activity_main">FlowCast</string>
-    <string name="package_name">com.ckrsrivers.app</string>
-    <string name="custom_url_scheme">com.ckrsrivers.app</string>
+    <string name="package_name">com.flowcast.app</string>
+    <string name="custom_url_scheme">com.flowcast.app</string>
 </resources>

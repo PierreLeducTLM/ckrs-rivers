@@ -58,3 +58,13 @@ next-env.d.ts
 android/keystore.properties
 *.keystore
 *.jks
+
+# Fastlane
+android/fastlane/report.xml
+android/fastlane/README.md
+android/fastlane/play-store-key.json
+vendor/bundle/
+.bundle/
+
+# Firebase config (disabled old ckrsrivers file, awaiting flowcast replacement)
+android/app/google-services.json.old-*
