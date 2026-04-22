@@ -34,7 +34,6 @@ export default function RiverListItem({
   const displayFlow = projected ? projected.flow : card.lastFlow;
   const displayColor = projected ? projected.color : card.color;
   const displayStatus = projected ? projected.status : card.status;
-  const displayPosition = projected ? projected.position : card.position;
   const displayIsGood = projected ? projected.isGoodRange : card.isGoodRange;
   const isProjected = projected != null;
 
@@ -92,41 +91,25 @@ export default function RiverListItem({
           </p>
         )}
 
-        {/* Gradient bar (compact) */}
-        {displayFlow != null && (
-          <div className="hidden w-24 flex-shrink-0 sm:block">
-            <div
-              className="relative h-1.5 w-full overflow-hidden rounded-full"
-              style={{
-                background:
-                  displayIsGood || displayStatus === "too-high"
-                    ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 70%, #FACC15 80%, #D32F2F)"
-                    : "#a1a1aa",
-              }}
-            >
-              {(displayIsGood || displayStatus === "too-high") && (
-                <div
-                  className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
-                  style={{
-                    left: `${Math.max(0, Math.min(100, displayPosition * 100))}%`,
-                    backgroundColor: displayColor,
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Flow value */}
         <div className="flex flex-shrink-0 items-center gap-1.5">
           {displayFlow != null ? (
             <>
-              <p className="text-base font-bold tabular-nums sm:text-lg">
-                {displayFlow.toFixed(1)}{" "}
-                <span className="text-xs font-normal text-foreground/60">
+              <span
+                className="inline-block rounded-full px-2.5 py-1 text-sm font-bold tabular-nums leading-none sm:text-base"
+                style={{
+                  backgroundColor:
+                    displayStatus !== "unknown" && displayColor
+                      ? displayColor
+                      : "#71717a",
+                  color: "#fff",
+                }}
+              >
+                {displayFlow.toFixed(1)}
+                <span className="ml-1 text-[10px] font-semibold opacity-90">
                   m&sup3;/s
                 </span>
-              </p>
+              </span>
               {!isProjected && <FlowTendency trend={card.trend} />}
             </>
           ) : (
