@@ -155,11 +155,21 @@ export default function RiverListItem({
             {(displayIsGood || displayStatus === "too-high") &&
               (displayPosition > 0.55 || displayPosition < 0.45) && (
                 <div
-                  className="absolute inset-y-0 rounded-full bg-background/55 dark:bg-background/65"
+                  className="absolute inset-y-0 rounded-full"
                   style={
                     displayPosition > 0.55
-                      ? { left: 0, right: `${(1 - displayPosition) * 100 + 6}%` }
-                      : { left: `${displayPosition * 100 + 6}%`, right: 0 }
+                      ? {
+                          left: 0,
+                          right: `${(1 - displayPosition) * 100 + 6}%`,
+                          backgroundImage:
+                            "linear-gradient(to right, color-mix(in srgb, var(--background) 70%, transparent), transparent)",
+                        }
+                      : {
+                          left: `${displayPosition * 100 + 6}%`,
+                          right: 0,
+                          backgroundImage:
+                            "linear-gradient(to right, transparent, color-mix(in srgb, var(--background) 70%, transparent))",
+                        }
                   }
                 />
               )}
