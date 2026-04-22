@@ -162,23 +162,23 @@ export default function RiverListItem({
                           left: 0,
                           right: `${(1 - displayPosition) * 100 + 6}%`,
                           backgroundImage:
-                            "linear-gradient(to right, color-mix(in srgb, var(--background) 70%, transparent), transparent)",
+                            "linear-gradient(to right, color-mix(in srgb, var(--background) 70%, transparent) 0%, color-mix(in srgb, var(--background) 70%, transparent) 60%, transparent 100%)",
                         }
                       : {
                           left: `${displayPosition * 100 + 6}%`,
                           right: 0,
                           backgroundImage:
-                            "linear-gradient(to right, transparent, color-mix(in srgb, var(--background) 70%, transparent))",
+                            "linear-gradient(to right, transparent 0%, color-mix(in srgb, var(--background) 70%, transparent) 40%, color-mix(in srgb, var(--background) 70%, transparent) 100%)",
                         }
                   }
                 />
               )}
             {(displayIsGood || displayStatus === "too-high") && (
               <div
-                className="absolute top-1/2 h-[14px] w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-1 ring-black/60 dark:bg-zinc-900 dark:ring-white/70"
+                className="absolute top-1/2 h-[18px] w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 dark:bg-zinc-900 dark:ring-white/85"
                 style={{
                   left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
-                  boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
+                  boxShadow: "0 0 3px rgba(0,0,0,0.45)",
                 }}
               />
             )}
