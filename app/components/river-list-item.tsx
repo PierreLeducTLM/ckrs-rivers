@@ -35,6 +35,7 @@ export default function RiverListItem({
   const displayColor = projected ? projected.color : card.color;
   const displayStatus = projected ? projected.status : card.status;
   const displayIsGood = projected ? projected.isGoodRange : card.isGoodRange;
+  const displayPosition = projected ? projected.position : card.position;
   const isProjected = projected != null;
 
   return (
@@ -145,6 +146,31 @@ export default function RiverListItem({
           <FavoriteButton stationId={card.id} />
         </div>
       </div>
+
+      {/* Row 3 (mobile only): flow progress bar */}
+      {displayFlow != null && (
+        <div className="pl-5 sm:hidden">
+          <div
+            className="relative h-1.5 w-full overflow-hidden rounded-full"
+            style={{
+              background:
+                displayIsGood || displayStatus === "too-high"
+                  ? "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 70%, #FACC15 80%, #D32F2F)"
+                  : "#a1a1aa",
+            }}
+          >
+            {(displayIsGood || displayStatus === "too-high") && (
+              <div
+                className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
+                style={{
+                  left: `${Math.max(0, Math.min(100, displayPosition * 100))}%`,
+                  backgroundColor: displayColor,
+                }}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </Link>
   );
 }
