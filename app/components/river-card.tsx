@@ -139,7 +139,7 @@ export default function RiverCard({
       {displayFlow != null && (
         <div className="mt-2">
           <div
-            className="relative h-2 w-full overflow-hidden rounded-full"
+            className="relative h-2 w-full overflow-visible rounded-full"
             style={{
               background:
                 displayIsGood || displayStatus === "too-high"
@@ -147,15 +147,28 @@ export default function RiverCard({
                   : "#a1a1aa",
             }}
           >
+            {/* Dim the side of the bar that is opposite to the marker, so the
+                relevant half (green when low, red when high) stays vivid. */}
+            {(displayIsGood || displayStatus === "too-high") &&
+              (displayPosition > 0.55 || displayPosition < 0.45) && (
+                <div
+                  className="absolute inset-y-0 rounded-full bg-background/55 dark:bg-background/65"
+                  style={
+                    displayPosition > 0.55
+                      ? { left: 0, right: `${(1 - displayPosition) * 100 + 6}%` }
+                      : { left: `${displayPosition * 100 + 6}%`, right: 0 }
+                  }
+                />
+              )}
             {/* Current position indicator — hidden when too-low or unknown */}
             {(displayIsGood || displayStatus === "too-high") && (
               <div
-                className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-white shadow-lg transition-all duration-500 dark:border-zinc-900 ${
+                className={`absolute top-1/2 h-5 w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-1 ring-black/60 transition-all duration-500 dark:bg-zinc-900 dark:ring-white/70 ${
                   displayIsGood && !isProjected ? "animate-flow-pulse" : ""
                 }`}
                 style={{
                   left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
-                  backgroundColor: displayColor,
+                  boxShadow: "0 0 0 1px rgba(0,0,0,0.25)",
                 }}
               />
             )}
