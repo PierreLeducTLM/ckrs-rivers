@@ -55,13 +55,6 @@ export default function RiverListItem({
     >
       {/* Row 1: name + status */}
       <div className="flex min-w-0 items-center gap-2 sm:flex-1">
-        <span
-          className="h-3 w-3 flex-shrink-0 rounded-full"
-          style={{
-            backgroundColor:
-              displayStatus !== "unknown" ? displayColor : "transparent",
-          }}
-        />
         <h2 className="truncate text-sm font-semibold group-hover:underline">
           {card.name}
         </h2>
@@ -78,7 +71,7 @@ export default function RiverListItem({
       </div>
 
       {/* Row 2: flow + controls */}
-      <div className="flex items-center gap-3 pl-5 sm:pl-0">
+      <div className="flex items-center gap-3">
         {isAdmin && (
           <p className="hidden text-xs text-foreground/50 sm:block">
             {card.id}
@@ -149,7 +142,7 @@ export default function RiverListItem({
 
       {/* Row 3 (mobile only): flow progress bar */}
       {displayFlow != null && (
-        <div className="pl-5 sm:hidden">
+        <div className="sm:hidden">
           <div
             className="relative h-1.5 w-full overflow-hidden rounded-full"
             style={{
