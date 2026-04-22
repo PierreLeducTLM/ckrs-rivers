@@ -2,7 +2,8 @@ import { logger, schedules, tasks } from "@trigger.dev/sdk/v3";
 import { neon } from "@neondatabase/serverless";
 
 /**
- * Refresh all station data every 15 minutes.
+ * Refresh all station data on a time-of-day-aware schedule:
+ * every 30 min from 5am–10pm America/Toronto, hourly otherwise.
  *
  * We inline the DB query + refresh logic here rather than importing from
  * @/lib because Trigger.dev tasks run in their own bundled environment
@@ -296,14 +297,35 @@ async function refreshStation(
 }
 
 // ---------------------------------------------------------------------------
-// Scheduled task: refresh all stations every 15 minutes
+// Scheduled task: every 30 min during the day (5am–10pm Montreal), hourly otherwise
 // ---------------------------------------------------------------------------
+
+const SCHEDULE_TIMEZONE = "America/Toronto";
 
 export const refreshAllStations = schedules.task({
   id: "refresh-all-stations",
-  cron: "*/15 * * * *",
+  cron: {
+    pattern: "0,30 * * * *",
+    timezone: SCHEDULE_TIMEZONE,
+  },
   maxDuration: 300,
   run: async (payload) => {
+    const localHour = parseInt(
+      payload.timestamp.toLocaleString("en-US", {
+        timeZone: SCHEDULE_TIMEZONE,
+        hour: "2-digit",
+        hour12: false,
+      }),
+      10,
+    );
+    const localMinute = payload.timestamp.getUTCMinutes();
+    const isDaytime = localHour >= 5 && localHour < 22;
+
+    if (!isDaytime && localMinute !== 0) {
+      logger.info(`Skipping :30 run outside daytime window (local hour ${localHour})`);
+      return { skipped: true, localHour, localMinute };
+    }
+
     const dbSql = createSql();
 
     // Get all active stations with a CEHQ station number (skip custom rivers)
