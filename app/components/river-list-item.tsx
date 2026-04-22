@@ -144,7 +144,7 @@ export default function RiverListItem({
       {displayFlow != null && (
         <div className="sm:hidden">
           <div
-            className="relative h-1.5 w-full overflow-hidden rounded-full"
+            className="relative h-1.5 w-full overflow-visible rounded-full"
             style={{
               background:
                 displayIsGood || displayStatus === "too-high"
@@ -152,12 +152,32 @@ export default function RiverListItem({
                   : "#a1a1aa",
             }}
           >
+            {(displayIsGood || displayStatus === "too-high") &&
+              (displayPosition > 0.55 || displayPosition < 0.45) && (
+                <div
+                  className="absolute inset-y-0 rounded-full"
+                  style={
+                    displayPosition > 0.55
+                      ? {
+                          left: 0,
+                          right: `${(1 - displayPosition) * 100 + 6}%`,
+                          backgroundImage:
+                            "linear-gradient(to right, color-mix(in srgb, var(--background) 70%, transparent) 0%, color-mix(in srgb, var(--background) 70%, transparent) 60%, transparent 100%)",
+                        }
+                      : {
+                          left: `${displayPosition * 100 + 6}%`,
+                          right: 0,
+                          backgroundImage:
+                            "linear-gradient(to right, transparent 0%, color-mix(in srgb, var(--background) 70%, transparent) 40%, color-mix(in srgb, var(--background) 70%, transparent) 100%)",
+                        }
+                  }
+                />
+              )}
             {(displayIsGood || displayStatus === "too-high") && (
               <div
-                className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md dark:border-zinc-900"
+                className="absolute top-1/2 h-[18px] w-1 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 shadow-[0_0_3px_rgba(0,0,0,0.45)] dark:bg-zinc-900 dark:ring-white dark:shadow-[0_0_6px_rgba(255,255,255,0.55)]"
                 style={{
-                  left: `${Math.max(0, Math.min(100, displayPosition * 100))}%`,
-                  backgroundColor: displayColor,
+                  left: `${Math.max(2, Math.min(98, displayPosition * 100))}%`,
                 }}
               />
             )}
