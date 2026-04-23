@@ -16,7 +16,10 @@ import ExploreTab from "./explore-tab";
 import MapTab from "./map-tab";
 import ChatTab from "./chat-tab";
 import TimeTravelBanner from "./time-travel-banner";
+import OnboardingTour from "./onboarding-tour";
 import type { StationCard } from "./types";
+
+const ONBOARDING_STORAGE_KEY = "flowcast-onboarding-seen";
 
 const PULL_THRESHOLD = 60;
 const ICON_HIDDEN_Y = -40;
@@ -25,12 +28,13 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
   const isAdmin = useAdmin();
   const router = useRouter();
   const { t } = useTranslation();
-  const { activeTab } = useTab();
+  const { activeTab, setActiveTab } = useTab();
 
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Hide test stations unless admin
   const visible = isAdmin ? cards : cards.filter((c) => !c.id.startsWith("TEST-"));
@@ -219,6 +223,35 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
       .catch(() => {});
   }, [fetchSubscriptions]);
 
+  // Show onboarding tour on first launch, or when a replay was requested.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(ONBOARDING_STORAGE_KEY) !== "1") {
+        setShowOnboarding(true);
+      }
+    } catch {
+      // localStorage unavailable — skip rather than loop on every render.
+    }
+
+    function onReplay() {
+      setShowOnboarding(true);
+    }
+    window.addEventListener("flowcast:show-onboarding", onReplay);
+    return () => {
+      window.removeEventListener("flowcast:show-onboarding", onReplay);
+    };
+  }, []);
+
+  const handleOnboardingFinish = useCallback(() => {
+    try {
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, "1");
+    } catch {
+      // ignore storage errors
+    }
+    setShowOnboarding(false);
+    setActiveTab("explore");
+  }, [setActiveTab]);
+
   return (
     <div
       className={activeTab === "map"
@@ -290,6 +323,9 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
 
       {/* Bottom navigation */}
       <BottomNav />
+
+      {/* Onboarding walkthrough (first launch + replay from settings) */}
+      {showOnboarding && <OnboardingTour onFinish={handleOnboardingFinish} />}
 
       {/* Modals */}
       {showNotificationModal && (

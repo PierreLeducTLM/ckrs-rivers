@@ -254,5 +254,24 @@
     "label": "Langue",
     "en": "English",
     "fr": "Francais"
+  },
+  "onboarding": {
+    "skip": "Passer",
+    "next": "Suivant",
+    "back": "Precedent",
+    "getStarted": "Commencer",
+    "showAgain": "Revoir le tutoriel",
+    "slide1": {
+      "title": "Planifiez votre prochaine sortie",
+      "body": "FlowCast montre le debit et la meteo en temps reel pour trouver la riviere parfaite."
+    },
+    "slide2": {
+      "title": "Sachez quand c'est navigable",
+      "body": "Un coup d'oeil suffit pour voir les conditions. Touchez une riviere pour les details horaires et la classe de rapide."
+    },
+    "slide3": {
+      "title": "Gardez vos favoris",
+      "body": "Ajoutez une etoile pour epingler une riviere dans Mes Rivieres — et recevez une alerte quand elle est bonne."
+    }
   }
 }

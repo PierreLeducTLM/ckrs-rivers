@@ -9,6 +9,37 @@ import { getPushToken } from "@/lib/capacitor/push";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdminToggle } from "../use-admin";
 
+function ShowWalkthroughButton({ onAfter }: { onAfter: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={() => {
+        try {
+          localStorage.removeItem("flowcast-onboarding-seen");
+        } catch {
+          // ignore
+        }
+        window.dispatchEvent(new Event("flowcast:show-onboarding"));
+        onAfter();
+      }}
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
+    >
+      <svg
+        className="h-4 w-4 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <circle cx="12" cy="12" r="9" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 9.5a2.5 2.5 0 115 0c0 1.5-2.5 2-2.5 3.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 17h.01" />
+      </svg>
+      {t("onboarding.showAgain")}
+    </button>
+  );
+}
+
 function NotificationsLink() {
   const { t } = useTranslation();
   const [href, setHref] = useState<string | null>(null);
@@ -121,6 +152,7 @@ export default function SettingsMenu() {
           <NotificationsLink />
           <LanguageToggle />
           <ThemeToggle />
+          <ShowWalkthroughButton onAfter={() => setOpen(false)} />
           {showAdminToggle && (
             <>
               <div className="my-0.5 border-t border-foreground/10" />

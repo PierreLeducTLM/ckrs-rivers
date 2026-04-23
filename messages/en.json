@@ -254,5 +254,24 @@
     "label": "Language",
     "en": "English",
     "fr": "Francais"
+  },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "back": "Back",
+    "getStarted": "Get started",
+    "showAgain": "Show walkthrough",
+    "slide1": {
+      "title": "Plan your next paddle",
+      "body": "FlowCast shows real-time flow and weather for rivers so you can find the perfect run."
+    },
+    "slide2": {
+      "title": "Know when it's runnable",
+      "body": "At-a-glance paddling readiness. Tap any river for hourly flow and rapid-class details."
+    },
+    "slide3": {
+      "title": "Save your favourites",
+      "body": "Star rivers to pin them in My Rivers — and get notified when they hit your sweet spot."
+    }
   }
 }
