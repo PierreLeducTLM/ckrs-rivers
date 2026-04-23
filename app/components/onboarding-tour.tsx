@@ -162,30 +162,53 @@ function ReadinessHero({
 }: {
   t: (key: string, params?: Record<string, string | number>) => string;
 }) {
-  const chips: { bg: string; color: string; labelKey: string }[] = [
-    { bg: "rgba(16,185,129,0.15)", color: "#059669", labelKey: "status.ideal" },
-    { bg: "rgba(59,130,246,0.15)", color: "#2563eb", labelKey: "status.runnable" },
-    { bg: "rgba(113,113,122,0.15)", color: "#71717a", labelKey: "status.tooLow" },
-  ];
+  // Mock a river card tuned to "ideal" so the user sees the live styling.
+  const idealColor = "#10b981";
+  const markerPosition = 0.58;
   return (
-    <div className="flex flex-col items-stretch gap-2 py-2">
-      {chips.map((c) => (
-        <div
-          key={c.labelKey}
-          className="flex items-center justify-between rounded-xl border border-foreground/10 bg-background px-3 py-2 shadow-sm"
+    <div
+      className="w-full rounded-xl border-2 bg-background p-3 shadow"
+      style={{
+        borderColor: idealColor,
+        boxShadow: `0 0 12px ${idealColor}25`,
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <span
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold tabular-nums text-white"
+          style={{ backgroundColor: idealColor }}
         >
-          <span className="text-sm font-medium text-foreground/70">
-            {/* placeholder river name */}
-            ~~~~~~
-          </span>
-          <span
-            className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-            style={{ backgroundColor: c.bg, color: c.color }}
-          >
-            {t(c.labelKey)}
-          </span>
+          42
+        </span>
+        <span className="text-[11px] font-medium text-foreground/50">m&sup3;/s</span>
+        <span
+          className="ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold"
+          style={{ backgroundColor: "rgba(16,185,129,0.15)", color: "#059669" }}
+        >
+          {t("status.ideal")}
+        </span>
+      </div>
+      <div className="mt-3">
+        <div
+          className="relative h-2 w-full rounded-full"
+          style={{
+            background:
+              "linear-gradient(to right, #4ADE80, #16A34A 50%, #16A34A 70%, #FACC15 80%, #D32F2F)",
+          }}
+        >
+          <div
+            className="absolute top-1/2 h-6 w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-sm bg-white ring-2 ring-black/80 shadow-[0_0_4px_rgba(0,0,0,0.5)] animate-flow-pulse dark:bg-zinc-900 dark:ring-white"
+            style={{ left: `${markerPosition * 100}%` }}
+          />
         </div>
-      ))}
+        <div className="mt-1 flex justify-between text-[9px] font-medium tabular-nums text-foreground/50">
+          <span>{t("onboarding.min")}</span>
+          <span className="text-emerald-600 dark:text-emerald-400">
+            {t("onboarding.ideal")}
+          </span>
+          <span>{t("onboarding.max")}</span>
+        </div>
+      </div>
     </div>
   );
 }

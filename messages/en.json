@@ -261,13 +261,16 @@
     "back": "Back",
     "getStarted": "Get started",
     "showAgain": "Show walkthrough",
+    "min": "Min",
+    "ideal": "Ideal",
+    "max": "Max",
     "slide1": {
       "title": "Plan your next paddle",
       "body": "FlowCast shows real-time flow and weather for rivers so you can find the perfect run."
     },
     "slide2": {
       "title": "Know when it's runnable",
-      "body": "At-a-glance paddling readiness. Tap any river for hourly flow and rapid-class details."
+      "body": "Each river card shows its status at a glance. The coloured pill tells you if it's runnable; the bar places today's flow between the min, ideal and max."
     },
     "slide3": {
       "title": "Save your favourites",
