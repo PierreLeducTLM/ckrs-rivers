@@ -254,5 +254,27 @@
     "label": "Langue",
     "en": "English",
     "fr": "Francais"
+  },
+  "onboarding": {
+    "skip": "Passer",
+    "next": "Suivant",
+    "back": "Precedent",
+    "getStarted": "Commencer",
+    "showAgain": "Revoir le tutoriel",
+    "min": "Min",
+    "ideal": "Ideal",
+    "max": "Max",
+    "slide1": {
+      "title": "Planifiez votre prochaine sortie",
+      "body": "FlowCast montre le debit et la meteo en temps reel pour trouver la riviere parfaite."
+    },
+    "slide2": {
+      "title": "Sachez quand c'est navigable",
+      "body": "Chaque carte de riviere montre son statut en un coup d'oeil. La pastille coloree indique si c'est navigable; la barre situe le debit entre le minimum, l'ideal et le maximum."
+    },
+    "slide3": {
+      "title": "Gardez vos favoris",
+      "body": "Ajoutez une etoile pour epingler une riviere dans Mes Rivieres — et recevez une alerte quand elle est bonne."
+    }
   }
 }
