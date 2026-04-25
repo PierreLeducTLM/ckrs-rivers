@@ -381,6 +381,7 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
     return localStorage.getItem(MAP_LAYER_KEY) ?? t("map.street");
   });
   const isSatellite = savedLayer === "Satellite";
+  const isOsm = savedLayer === "OSM";
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const handleZoom = useCallback((z: number) => setZoom(z), []);
 
@@ -422,7 +423,14 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
       >
         <PersistMapState />
         <LayersControl position="topright">
-          <LayersControl.BaseLayer checked={!isSatellite} name="Street">
+          <LayersControl.BaseLayer checked={!isSatellite && !isOsm} name="Street">
+            <TileLayer
+              attribution='&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
+              maxZoom={20}
+            />
+          </LayersControl.BaseLayer>
+          <LayersControl.BaseLayer checked={isOsm} name="OSM">
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
