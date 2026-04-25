@@ -243,7 +243,13 @@
     "lockedHint": "Cette fonction est en apercu. Ouvrez Reglages -> Fonctions beta et activez Rapides pour la deverrouiller."
   },
   "beta": {
-    "title": "Fonctions beta"
+    "title": "Fonctions beta",
+    "empty": "Aucune fonction beta disponible pour l'instant."
+  },
+  "settings": {
+    "title": "Reglages",
+    "openLink": "Reglages",
+    "back": "Retour"
   },
   "chart": {
     "title": "Debit et previsions CEHQ",

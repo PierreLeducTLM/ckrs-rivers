@@ -243,7 +243,13 @@
     "lockedHint": "This feature is in preview. Open Settings → Beta features and enable Rapids to unlock it."
   },
   "beta": {
-    "title": "Beta features"
+    "title": "Beta features",
+    "empty": "No beta features available right now."
+  },
+  "settings": {
+    "title": "Settings",
+    "openLink": "Settings",
+    "back": "Back"
   },
   "chart": {
     "title": "Flow & CEHQ Forecast",
