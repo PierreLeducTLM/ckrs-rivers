@@ -140,6 +140,7 @@
     "unsubscribeConfirm": "Unsubscribe from all river notifications?",
     "invalidLink": "Invalid or expired link",
     "noToken": "No token provided. Use the link from your confirmation email.",
+    "notSubscribedHint": "You are not subscribed to any river yet. Open a river and tap the bell to set up notifications.",
     "somethingWrong": "Something went wrong",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Push notifications are coming soon on mobile. In the meantime, you can subscribe to email alerts from the web version.",

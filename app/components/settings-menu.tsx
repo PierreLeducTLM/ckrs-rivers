@@ -4,8 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import ThemeToggle from "../theme-toggle";
 import LanguageToggle from "../language-toggle";
-import { getSubToken } from "../subscribe-button";
-import { getPushToken } from "@/lib/capacitor/push";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdminToggle } from "../use-admin";
 
@@ -64,45 +62,6 @@ function ShowWalkthroughButton({ onAfter }: { onAfter: () => void }) {
       </svg>
       {t("onboarding.showAgain")}
     </button>
-  );
-}
-
-function NotificationsLink() {
-  const { t } = useTranslation();
-  const [href, setHref] = useState<string | null>(null);
-
-  useEffect(() => {
-    const token = getSubToken();
-    if (token) {
-      setHref(`/notifications?token=${token}`);
-      return;
-    }
-    // Native-only users (push-only): open prefs via their device push token.
-    const pushToken = getPushToken();
-    if (pushToken) {
-      setHref(`/notifications?pushToken=${encodeURIComponent(pushToken)}`);
-    }
-  }, []);
-
-  if (!href) return null;
-
-  return (
-    <Link
-      href={href}
-      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
-    >
-      <svg
-        className="h-4 w-4 shrink-0"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 01-3.46 0" />
-      </svg>
-      {t("notifications.title")}
-    </Link>
   );
 }
 
@@ -176,11 +135,10 @@ export default function SettingsMenu() {
       </button>
       {open && (
         <div className="absolute right-0 top-full z-[9999] mt-1 flex min-w-[160px] flex-col gap-0.5 rounded-lg border border-foreground/10 bg-background p-1.5 shadow-lg">
-          <NotificationsLink />
+          <SettingsLink onAfter={() => setOpen(false)} />
           <LanguageToggle />
           <ThemeToggle />
           <ShowWalkthroughButton onAfter={() => setOpen(false)} />
-          <SettingsLink onAfter={() => setOpen(false)} />
           {showAdminToggle && (
             <>
               <div className="my-0.5 border-t border-foreground/10" />

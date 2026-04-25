@@ -1,6 +1,7 @@
 import Link from "next/link";
 import T from "@/app/translated-text";
 import BetaFeaturesList from "./beta-features-list";
+import NotificationPreferences from "./notification-preferences";
 
 export default function SettingsPage() {
   return (
@@ -20,8 +21,15 @@ export default function SettingsPage() {
           <T k="settings.title" />
         </h1>
 
-        <section className="mt-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+        <section className="mt-8">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <T k="notifications.title" />
+          </h2>
+          <NotificationPreferences />
+        </section>
+
+        <section className="mt-10">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
             <T k="beta.title" />
           </h2>
           <BetaFeaturesList />

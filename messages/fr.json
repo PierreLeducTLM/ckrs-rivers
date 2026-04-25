@@ -140,6 +140,7 @@
     "unsubscribeConfirm": "Se desabonner de toutes les notifications de rivieres?",
     "invalidLink": "Lien invalide ou expire",
     "noToken": "Aucun jeton fourni. Utilisez le lien de votre courriel de confirmation.",
+    "notSubscribedHint": "Vous n'etes abonne a aucune riviere. Ouvrez une riviere et touchez la cloche pour configurer les notifications.",
     "somethingWrong": "Une erreur est survenue",
     "comingSoon": "Notifications",
     "comingSoonMessage": "Les notifications push arrivent bientot sur mobile. En attendant, vous pouvez vous abonner aux alertes par courriel depuis la version web.",
