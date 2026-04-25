@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+const OVERPASS_URLS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.ru/api/interpreter",
+];
+
+const USER_AGENT = "ckrs-rivers/1.0 (+https://github.com/PierreLeducTLM/ckrs-rivers)";
 
 interface OverpassNode {
   type: "node";
@@ -73,15 +79,39 @@ export async function POST(request: NextRequest) {
       out body;
     `;
 
-    const res = await fetch(OVERPASS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(query)}`,
-    });
+    const requestBody = `data=${encodeURIComponent(query)}`;
 
-    if (!res.ok) {
+    let res: Response | null = null;
+    let lastStatus = 0;
+    let lastStatusText = "";
+    for (const url of OVERPASS_URLS) {
+      try {
+        const attempt = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Accept: "application/json",
+            "User-Agent": USER_AGENT,
+          },
+          body: requestBody,
+        });
+        if (attempt.ok) {
+          res = attempt;
+          break;
+        }
+        lastStatus = attempt.status;
+        lastStatusText = attempt.statusText;
+      } catch {
+        // Network error — try next mirror
+      }
+    }
+
+    if (!res) {
+      const detail = lastStatus
+        ? `HTTP ${lastStatus}${lastStatusText ? ` ${lastStatusText}` : ""}`
+        : "no response";
       return Response.json(
-        { error: `Overpass API error (HTTP ${res.status})` },
+        { error: `Overpass API error (${detail})` },
         { status: 502 },
       );
     }
