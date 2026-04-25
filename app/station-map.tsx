@@ -425,9 +425,8 @@ export default function StationMap({ cards, isAdmin = false, onMarkerTap, classN
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked={!isSatellite && !isOsm} name="Street">
             <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
-              subdomains="abcd"
+              attribution='&copy; OpenStreetMap France | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png"
               maxZoom={20}
             />
           </LayersControl.BaseLayer>
