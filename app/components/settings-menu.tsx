@@ -8,6 +8,7 @@ import { getSubToken } from "../subscribe-button";
 import { getPushToken } from "@/lib/capacitor/push";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdminToggle } from "../use-admin";
+import BetaFeaturesSection from "./beta-features-section";
 
 function ShowWalkthroughButton({ onAfter }: { onAfter: () => void }) {
   const { t } = useTranslation();
@@ -153,6 +154,7 @@ export default function SettingsMenu() {
           <LanguageToggle />
           <ThemeToggle />
           <ShowWalkthroughButton onAfter={() => setOpen(false)} />
+          <BetaFeaturesSection />
           {showAdminToggle && (
             <>
               <div className="my-0.5 border-t border-foreground/10" />

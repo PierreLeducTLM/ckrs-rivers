@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { sql } from "@/lib/db/client";
+import { RapidSchema, type Rapid } from "@/lib/domain/river-station";
+import { z } from "zod";
 
 async function geocodeCity(
   city: string,
@@ -44,6 +46,7 @@ export async function PATCH(
     river_path?: [number, number][] | null;
     rapid_class?: string | null;
     description?: string | null;
+    rapids?: Rapid[];
   };
 
   const sets: string[] = [];
@@ -124,6 +127,18 @@ export async function PATCH(
   if (body.description !== undefined) {
     sets.push(`description = $${idx++}`);
     values.push(body.description);
+  }
+
+  if (body.rapids !== undefined) {
+    const parsed = z.array(RapidSchema).safeParse(body.rapids);
+    if (!parsed.success) {
+      return Response.json(
+        { error: "Invalid rapids payload", details: parsed.error.issues },
+        { status: 400 },
+      );
+    }
+    sets.push(`rapids = $${idx++}`);
+    values.push(JSON.stringify(parsed.data));
   }
 
   if (sets.length === 0) {

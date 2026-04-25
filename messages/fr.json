@@ -216,7 +216,34 @@
     "noInstructions": "Aucune instruction",
     "instructionsPlaceholder": "Ajouter des instructions d'acces...",
     "overview": "Apercu",
-    "conditions": "Conditions et previsions"
+    "conditions": "Conditions et previsions",
+    "viewRapids": "Voir {n} rapide(s)",
+    "editRapids": "Modifier les rapides",
+    "noRapids": "Aucun rapide sur cette riviere",
+    "backToRiver": "Retour a la riviere"
+  },
+  "rapids": {
+    "addTitle": "Ajouter un rapide",
+    "editTitle": "Modifier le rapide",
+    "name": "Nom",
+    "namePlaceholder": "ex. Grande chute",
+    "description": "Description",
+    "descriptionPlaceholder": "Courte description (optionnel)",
+    "grade": "Classe",
+    "gradeNone": "—",
+    "hazard": "Marquer comme dangereux / portage",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "clickPathToAdd": "Cliquez sur ou pres de la riviere pour ajouter un rapide. Glissez un marqueur pour le deplacer.",
+    "saving": "Enregistrement...",
+    "saveAll": "Enregistrer les rapides",
+    "swipeHint": "Glissez pour voir plus",
+    "lockedTitle": "Apercu des rapides",
+    "lockedHint": "Cette fonction est en apercu. Ouvrez Reglages -> Fonctions beta et activez Rapides pour la deverrouiller."
+  },
+  "beta": {
+    "title": "Fonctions beta"
   },
   "chart": {
     "title": "Debit et previsions CEHQ",
