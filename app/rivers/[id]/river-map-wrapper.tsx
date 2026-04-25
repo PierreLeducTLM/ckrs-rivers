@@ -1,6 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useAdmin } from "@/app/use-admin";
+import { useFeatureFlag, type FlagState } from "@/app/use-feature-flag";
 import type { Rapid } from "@/lib/domain/river-station";
 
 const RiverCloseupMap = dynamic(() => import("./river-closeup-map"), {
@@ -19,8 +21,20 @@ interface RiverMapWrapperProps {
   color?: string;
   rapids?: Rapid[];
   stationId?: string;
+  rapidsFlagState?: FlagState;
 }
 
-export default function RiverMapWrapper(props: RiverMapWrapperProps) {
-  return <RiverCloseupMap {...props} />;
+export default function RiverMapWrapper({
+  rapids,
+  rapidsFlagState = "off",
+  ...rest
+}: RiverMapWrapperProps) {
+  const isAdmin = useAdmin();
+  const rapidsVisible = useFeatureFlag("rapids", rapidsFlagState) || isAdmin;
+  return (
+    <RiverCloseupMap
+      {...rest}
+      rapids={rapidsVisible ? rapids : []}
+    />
+  );
 }

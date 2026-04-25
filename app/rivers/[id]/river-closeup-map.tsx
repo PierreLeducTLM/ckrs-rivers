@@ -84,13 +84,32 @@ function FitBounds({
   return null;
 }
 
-function rapidDotIcon(index: number, hazard: boolean | undefined): L.DivIcon {
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+      default: return c;
+    }
+  });
+}
+
+function rapidDotIcon(index: number, name: string, hazard: boolean | undefined): L.DivIcon {
   const bg = hazard ? "#dc2626" : "#0ea5e9";
+  const labelHtml = name
+    ? `<div style="position:absolute;left:26px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#1a1a2e;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none;">${escapeHtml(name)}</div>`
+    : "";
   return L.divIcon({
     className: "",
     iconSize: [22, 22],
     iconAnchor: [11, 11],
-    html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.4);">${index + 1}</div>`,
+    html: `<div style="position:relative;width:22px;height:22px;">
+      <div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.4);">${index + 1}</div>
+      ${labelHtml}
+    </div>`,
   });
 }
 
@@ -218,12 +237,12 @@ export default function RiverCloseupMap({
           </Marker>
         )}
 
-        {/* Rapid markers — numbered, tap to open dedicated rapids screen */}
+        {/* Rapid markers — numbered with name label, tap to open dedicated rapids screen */}
         {rapids.map((r, i) => (
           <Marker
             key={r.id}
             position={r.position}
-            icon={rapidDotIcon(i, r.hazard)}
+            icon={rapidDotIcon(i, r.name || `Rapid ${i + 1}`, r.hazard)}
             eventHandlers={{
               click: () => {
                 if (stationId) {
@@ -231,11 +250,7 @@ export default function RiverCloseupMap({
                 }
               },
             }}
-          >
-            <Tooltip direction="top" offset={[0, -12]}>
-              {r.name || `Rapid ${i + 1}`}
-            </Tooltip>
-          </Marker>
+          />
         ))}
 
         {/* Station marker if no path */}

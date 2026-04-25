@@ -35,15 +35,35 @@ function newId(): string {
   return `r-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function rapidIcon(index: number, hazard: boolean | undefined, active: boolean): L.DivIcon {
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+      default: return c;
+    }
+  });
+}
+
+function rapidIcon(index: number, name: string, hazard: boolean | undefined, active: boolean): L.DivIcon {
   const bg = hazard ? "#dc2626" : "#0ea5e9";
   const border = active ? "#fbbf24" : "#fff";
   const size = active ? 30 : 26;
+  const labelOffset = size / 2 + 6;
+  const labelHtml = name
+    ? `<div style="position:absolute;left:${labelOffset}px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#1a1a2e;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none;">${escapeHtml(name)}</div>`
+    : "";
   return L.divIcon({
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:3px solid ${border};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;">${index + 1}</div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;">
+      <div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:3px solid ${border};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.4);cursor:pointer;">${index + 1}</div>
+      ${labelHtml}
+    </div>`,
   });
 }
 
@@ -126,7 +146,7 @@ function DraggableRapidMarker({
     <Marker
       ref={ref}
       position={rapid.position}
-      icon={rapidIcon(index, rapid.hazard, active)}
+      icon={rapidIcon(index, rapid.name, rapid.hazard, active)}
       draggable
       eventHandlers={handlers}
     />

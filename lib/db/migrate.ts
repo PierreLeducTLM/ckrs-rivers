@@ -53,6 +53,7 @@ async function migrate() {
     `ALTER TABLE push_devices ADD COLUMN IF NOT EXISTS subscriber_id TEXT REFERENCES subscribers(id) ON DELETE SET NULL`,
     `ALTER TABLE push_devices ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb`,
     `CREATE INDEX IF NOT EXISTS idx_push_devices_subscriber ON push_devices(subscriber_id)`,
+    `INSERT INTO feature_flags (key, state, label, description) VALUES ('rapids', 'preview', 'Rapids', 'Place named rapids on rivers and swipe through them on a dedicated screen.') ON CONFLICT (key) DO NOTHING`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

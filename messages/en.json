@@ -238,7 +238,12 @@
     "clickPathToAdd": "Click on or near the river path to add a rapid. Drag a marker to move it.",
     "saving": "Saving...",
     "saveAll": "Save all rapids",
-    "swipeHint": "Swipe to see more"
+    "swipeHint": "Swipe to see more",
+    "lockedTitle": "Rapids preview",
+    "lockedHint": "This feature is in preview. Open Settings → Beta features and enable Rapids to unlock it."
+  },
+  "beta": {
+    "title": "Beta features"
   },
   "chart": {
     "title": "Flow & CEHQ Forecast",

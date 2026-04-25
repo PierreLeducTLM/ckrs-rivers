@@ -163,3 +163,12 @@ CREATE INDEX IF NOT EXISTS idx_push_devices_token ON push_devices(token);
 CREATE INDEX IF NOT EXISTS idx_push_devices_active ON push_devices(active) WHERE active = true;
 -- idx_push_devices_subscriber is created in the ALTER block in migrate.ts
 -- after the subscriber_id column has been added to existing databases.
+
+-- 12. Feature flags (server-controlled gating, optionally per-device unlockable)
+CREATE TABLE IF NOT EXISTS feature_flags (
+  key          TEXT PRIMARY KEY,
+  state        TEXT NOT NULL DEFAULT 'off' CHECK (state IN ('off', 'preview', 'on')),
+  label        TEXT NOT NULL,
+  description  TEXT,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);

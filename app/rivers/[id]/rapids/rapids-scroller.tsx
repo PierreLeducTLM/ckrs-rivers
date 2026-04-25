@@ -13,6 +13,8 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "@/lib/i18n/provider";
+import { useAdmin } from "@/app/use-admin";
+import { useFeatureFlag, type FlagState } from "@/app/use-feature-flag";
 import type { Rapid } from "@/lib/domain/river-station";
 
 interface Props {
@@ -22,20 +24,44 @@ interface Props {
   stationLon: number;
   riverPath: [number, number][] | null;
   rapids: Rapid[];
+  flagState: FlagState;
 }
 
-function rapidIcon(index: number, hazard: boolean | undefined, active: boolean): L.DivIcon {
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+      default: return c;
+    }
+  });
+}
+
+function rapidIcon(index: number, name: string, hazard: boolean | undefined, active: boolean): L.DivIcon {
   const bg = hazard ? "#dc2626" : "#0ea5e9";
   const border = active ? "#fbbf24" : "#fff";
   const size = active ? 36 : 26;
   const ring = active
     ? `<div style="position:absolute;inset:-6px;border:3px solid ${border};border-radius:50%;animation:rapidPulse 1.4s ease-out infinite;pointer-events:none;"></div>`
     : "";
+  const labelOffset = size / 2 + 6;
+  const labelWeight = active ? 700 : 600;
+  const labelSize = active ? 13 : 11;
+  const labelHtml = name
+    ? `<div style="position:absolute;left:${labelOffset}px;top:50%;transform:translateY(-50%);white-space:nowrap;font-size:${labelSize}px;font-weight:${labelWeight};color:#1a1a2e;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none;">${escapeHtml(name)}</div>`
+    : "";
   return L.divIcon({
     className: "",
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
-    html: `<div style="position:relative;width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:3px solid ${border};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${active ? 15 : 12}px;box-shadow:0 2px 6px rgba(0,0,0,.35);">${index + 1}${ring}</div>`,
+    html: `<div style="position:relative;width:${size}px;height:${size}px;">
+      <div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:3px solid ${border};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:${active ? 15 : 12}px;box-shadow:0 2px 6px rgba(0,0,0,.35);">${index + 1}</div>
+      ${ring}
+      ${labelHtml}
+    </div>`,
   });
 }
 
@@ -56,10 +82,13 @@ export default function RapidsScroller({
   stationLon,
   riverPath,
   rapids,
+  flagState,
 }: Props) {
   const { t } = useTranslation();
   const searchParams = useSearchParams();
   const focusId = searchParams?.get("focus") ?? null;
+  const isAdmin = useAdmin();
+  const visible = useFeatureFlag("rapids", flagState) || isAdmin;
 
   // Initial active index — from ?focus= or 0.
   const initialIndex = useMemo(() => {
@@ -123,6 +152,29 @@ export default function RapidsScroller({
   const fallbackCenter: [number, number] =
     riverPath && riverPath.length > 0 ? riverPath[0] : [stationLat, stationLon];
 
+  if (!visible) {
+    return (
+      <div className="flex h-screen flex-col bg-zinc-50 dark:bg-black">
+        <Header stationName={stationName} stationId={stationId} t={t} />
+        <div className="flex flex-1 items-center justify-center p-6 text-center">
+          <div className="max-w-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-800">
+              <svg className="h-7 w-7 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m0-9V6a4 4 0 118 0v2M6 21h12a2 2 0 002-2v-7a2 2 0 00-2-2H6a2 2 0 00-2 2v7a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+              {t("rapids.lockedTitle")}
+            </h2>
+            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+              {t("rapids.lockedHint")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (rapids.length === 0) {
     return (
       <div className="flex h-screen flex-col bg-zinc-50 dark:bg-black">
@@ -169,7 +221,7 @@ export default function RapidsScroller({
             <Marker
               key={r.id}
               position={r.position}
-              icon={rapidIcon(i, r.hazard, i === activeIndex)}
+              icon={rapidIcon(i, r.name || `Rapid ${i + 1}`, r.hazard, i === activeIndex)}
               eventHandlers={{
                 click: () => {
                   setActiveIndex(i);

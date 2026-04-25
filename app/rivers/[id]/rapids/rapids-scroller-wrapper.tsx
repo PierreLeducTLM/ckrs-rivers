@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { Rapid } from "@/lib/domain/river-station";
+import type { FlagState } from "@/app/use-feature-flag";
 
 const RapidsScroller = dynamic(() => import("./rapids-scroller"), {
   ssr: false,
@@ -19,6 +20,7 @@ interface Props {
   stationLon: number;
   riverPath: [number, number][] | null;
   rapids: Rapid[];
+  flagState: FlagState;
 }
 
 export default function RapidsScrollerWrapper(props: Props) {

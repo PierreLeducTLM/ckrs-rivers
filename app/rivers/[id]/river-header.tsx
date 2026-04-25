@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAdmin } from "@/app/use-admin";
+import { useFeatureFlag, type FlagState } from "@/app/use-feature-flag";
 import { useTranslation } from "@/lib/i18n/provider";
 import StationMetaEditor from "./station-meta-editor";
 import type { Rapid } from "@/lib/domain/river-station";
@@ -41,6 +42,7 @@ interface RiverHeaderProps {
   initialRapidClass?: string | null;
   initialDescription?: string | null;
   initialRapids?: Rapid[];
+  rapidsFlagState?: FlagState;
   regime?: string | null;
 }
 
@@ -58,6 +60,7 @@ export default function RiverHeader({
   initialRapidClass = null,
   initialDescription = null,
   initialRapids = [],
+  rapidsFlagState = "off",
   regime = null,
 }: RiverHeaderProps) {
   const isAdmin = useAdmin();
@@ -65,6 +68,10 @@ export default function RiverHeader({
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Admins always see rapids editing tools regardless of the flag (so they
+  // can prepare content while the feature is still hidden from end users).
+  const rapidsVisible = useFeatureFlag("rapids", rapidsFlagState) || isAdmin;
 
   async function handleDelete() {
     setDeleting(true);
@@ -137,7 +144,7 @@ export default function RiverHeader({
           initialPath={initialRiverPath}
         />
       )}
-      {isAdmin && (
+      {isAdmin && rapidsFlagState !== "off" && (
         <RapidsEditor
           stationId={stationId}
           stationLat={stationLat}
@@ -146,7 +153,7 @@ export default function RiverHeader({
           initialRapids={initialRapids}
         />
       )}
-      {!isAdmin && initialRapids.length > 0 && (
+      {!isAdmin && rapidsVisible && initialRapids.length > 0 && (
         <div className="mt-4">
           <Link
             href={`/rivers/${stationId}/rapids`}

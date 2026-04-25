@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
+import { getFeatureFlagState } from "@/lib/feature-flags";
 import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
@@ -244,7 +245,8 @@ export default async function RiverPage({
   const distanceKm = riverPath && riverPath.length > 1 ? pathDistanceKm(riverPath) : null;
   const rapidClass = (station.rapidClass as string | undefined) ?? null;
   const description = (station.description as string | undefined) ?? null;
-  const rapids = station.rapids ?? [];
+  const rapidsFlagState = await getFeatureFlagState("rapids");
+  const rapids = rapidsFlagState === "off" ? [] : station.rapids ?? [];
 
   const hasMapContent =
     (riverPath && riverPath.length > 0) || putIn || takeOut || rapids.length > 0;
@@ -278,6 +280,7 @@ export default async function RiverPage({
             initialRapidClass={rapidClass}
             initialDescription={description}
             initialRapids={rapids}
+            rapidsFlagState={rapidsFlagState}
             regime={station.regime ?? null}
           />
 
@@ -352,6 +355,7 @@ export default async function RiverPage({
                   stationLon={Number(station.coordinates.lon)}
                   rapids={rapids}
                   stationId={id}
+                  rapidsFlagState={rapidsFlagState}
                 />
 
                 {/* Quick stats bar under map */}
