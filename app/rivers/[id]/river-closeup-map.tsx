@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   MapContainer,
   TileLayer,
@@ -13,6 +14,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useTranslation } from "@/lib/i18n/provider";
+import type { Rapid } from "@/lib/domain/river-station";
 
 /** Open the device's default map app at the given coordinates */
 function openInMaps(lat: number, lon: number, label: string) {
@@ -82,6 +84,16 @@ function FitBounds({
   return null;
 }
 
+function rapidDotIcon(index: number, hazard: boolean | undefined): L.DivIcon {
+  const bg = hazard ? "#dc2626" : "#0ea5e9";
+  return L.divIcon({
+    className: "",
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${bg};border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;box-shadow:0 1px 3px rgba(0,0,0,.4);">${index + 1}</div>`,
+  });
+}
+
 interface RiverCloseupMapProps {
   riverPath: [number, number][] | null;
   putIn: [number, number] | null;
@@ -89,6 +101,8 @@ interface RiverCloseupMapProps {
   stationLat: number;
   stationLon: number;
   color?: string;
+  rapids?: Rapid[];
+  stationId?: string;
 }
 
 export default function RiverCloseupMap({
@@ -98,8 +112,11 @@ export default function RiverCloseupMap({
   stationLat,
   stationLon,
   color = "#3b82f6",
+  rapids = [],
+  stationId,
 }: RiverCloseupMapProps) {
   const { t } = useTranslation();
+  const router = useRouter();
 
   return (
     <div className="h-[300px] w-full overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800 sm:h-[350px]">
@@ -200,6 +217,26 @@ export default function RiverCloseupMap({
             </Tooltip>
           </Marker>
         )}
+
+        {/* Rapid markers — numbered, tap to open dedicated rapids screen */}
+        {rapids.map((r, i) => (
+          <Marker
+            key={r.id}
+            position={r.position}
+            icon={rapidDotIcon(i, r.hazard)}
+            eventHandlers={{
+              click: () => {
+                if (stationId) {
+                  router.push(`/rivers/${stationId}/rapids?focus=${encodeURIComponent(r.id)}`);
+                }
+              },
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -12]}>
+              {r.name || `Rapid ${i + 1}`}
+            </Tooltip>
+          </Marker>
+        ))}
 
         {/* Station marker if no path */}
         {(!riverPath || riverPath.length === 0) && !putIn && !takeOut && (

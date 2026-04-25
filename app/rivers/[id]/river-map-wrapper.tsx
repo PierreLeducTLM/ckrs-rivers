@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { Rapid } from "@/lib/domain/river-station";
 
 const RiverCloseupMap = dynamic(() => import("./river-closeup-map"), {
   ssr: false,
@@ -16,6 +17,8 @@ interface RiverMapWrapperProps {
   stationLat: number;
   stationLon: number;
   color?: string;
+  rapids?: Rapid[];
+  stationId?: string;
 }
 
 export default function RiverMapWrapper(props: RiverMapWrapperProps) {

@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS stations (
   paddling_max       DOUBLE PRECISION,
   rapid_class        TEXT,
   description        TEXT,
+  rapids             JSONB NOT NULL DEFAULT '[]'::jsonb,
   status             TEXT NOT NULL DEFAULT 'pending',
   error_message      TEXT,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),

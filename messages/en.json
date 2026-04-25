@@ -216,7 +216,29 @@
     "noInstructions": "No instructions yet",
     "instructionsPlaceholder": "Add access instructions...",
     "overview": "Overview",
-    "conditions": "Conditions & Forecast"
+    "conditions": "Conditions & Forecast",
+    "viewRapids": "View {n} rapid(s)",
+    "editRapids": "Edit rapids",
+    "noRapids": "No rapids on this river yet",
+    "backToRiver": "Back to river"
+  },
+  "rapids": {
+    "addTitle": "Add rapid",
+    "editTitle": "Edit rapid",
+    "name": "Name",
+    "namePlaceholder": "e.g. Big Drop",
+    "description": "Description",
+    "descriptionPlaceholder": "Short description (optional)",
+    "grade": "Grade",
+    "gradeNone": "—",
+    "hazard": "Mark as hazard / portage",
+    "save": "Save rapid",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "clickPathToAdd": "Click on or near the river path to add a rapid. Drag a marker to move it.",
+    "saving": "Saving...",
+    "saveAll": "Save all rapids",
+    "swipeHint": "Swipe to see more"
   },
   "chart": {
     "title": "Flow & CEHQ Forecast",

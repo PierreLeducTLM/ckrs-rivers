@@ -244,8 +244,10 @@ export default async function RiverPage({
   const distanceKm = riverPath && riverPath.length > 1 ? pathDistanceKm(riverPath) : null;
   const rapidClass = (station.rapidClass as string | undefined) ?? null;
   const description = (station.description as string | undefined) ?? null;
+  const rapids = station.rapids ?? [];
 
-  const hasMapContent = (riverPath && riverPath.length > 0) || putIn || takeOut;
+  const hasMapContent =
+    (riverPath && riverPath.length > 0) || putIn || takeOut || rapids.length > 0;
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
@@ -275,6 +277,7 @@ export default async function RiverPage({
             catchmentArea={station.catchmentArea as number | undefined}
             initialRapidClass={rapidClass}
             initialDescription={description}
+            initialRapids={rapids}
             regime={station.regime ?? null}
           />
 
@@ -347,6 +350,8 @@ export default async function RiverPage({
                   takeOut={takeOut}
                   stationLat={Number(station.coordinates.lat)}
                   stationLon={Number(station.coordinates.lon)}
+                  rapids={rapids}
+                  stationId={id}
                 />
 
                 {/* Quick stats bar under map */}

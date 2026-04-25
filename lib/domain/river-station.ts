@@ -25,6 +25,19 @@ export const LandCoverProfileSchema = z
 
 export type LandCoverProfile = z.infer<typeof LandCoverProfileSchema>;
 
+// --- Rapid (named feature placed along a river path) ---
+
+export const RapidSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1).max(80),
+  description: z.string().max(500).optional(),
+  position: z.tuple([z.number(), z.number()]),
+  grade: z.string().optional(),
+  hazard: z.boolean().optional(),
+});
+
+export type Rapid = z.infer<typeof RapidSchema>;
+
 // --- River Station ---
 
 export const RiverStationSchema = z.object({
@@ -47,6 +60,7 @@ export const RiverStationSchema = z.object({
   riverPath: z.array(z.tuple([z.number(), z.number()])).optional(),
   rapidClass: z.string().optional(),
   description: z.string().optional(),
+  rapids: z.array(RapidSchema).default([]),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;

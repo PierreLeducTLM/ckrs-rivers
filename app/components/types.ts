@@ -1,4 +1,5 @@
 import type { TrendDirection } from "@/lib/domain/notification";
+import type { Rapid } from "@/lib/domain/river-station";
 
 export interface StationCard {
   id: string;
@@ -33,4 +34,5 @@ export interface StationCard {
   takeOut?: [number, number];
   riverPath?: [number, number][];
   rapidClass?: string;
+  rapids?: Rapid[];
 }

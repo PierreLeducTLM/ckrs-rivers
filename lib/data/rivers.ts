@@ -5,7 +5,11 @@
 import { cache } from "react";
 
 import { sql } from "@/lib/db/client";
-import { RiverStationSchema, type RiverStation } from "@/lib/domain/river-station";
+import {
+  RiverStationSchema,
+  type RiverStation,
+  type Rapid,
+} from "@/lib/domain/river-station";
 import { fetchRealtimeData, type RealtimeResult } from "@/lib/realtime/cehq-client";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +40,7 @@ interface StationRow {
   river_path: [number, number][] | null;
   rapid_class: string | null;
   description: string | null;
+  rapids: Rapid[] | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -62,6 +67,7 @@ function rowToStation(row: StationRow): RiverStation {
     riverPath: row.river_path ?? undefined,
     rapidClass: row.rapid_class ?? undefined,
     description: row.description ?? undefined,
+    rapids: row.rapids ?? [],
   });
 }
 
