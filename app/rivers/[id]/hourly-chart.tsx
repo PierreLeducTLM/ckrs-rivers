@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   ComposedChart,
   Area,
@@ -141,6 +142,57 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
     ticks.push(t);
   }
 
+  // Zoom/pan window (indices into chartData).
+  const lastIndex = Math.max(0, chartData.length - 1);
+  const [range, setRange] = useState<[number, number]>([0, lastIndex]);
+
+  // Reset when the data length changes (e.g., after a refresh).
+  useEffect(() => {
+    setRange([0, lastIndex]);
+  }, [lastIndex]);
+
+  const safeStart = Math.min(range[0], lastIndex);
+  const safeEnd = Math.min(Math.max(range[1], safeStart), lastIndex);
+  const visibleTsMin = chartData[safeStart]?.ts ?? tsMin;
+  const visibleTsMax = chartData[safeEnd]?.ts ?? tsMax;
+  const visibleTicks = ticks.filter((t) => t >= visibleTsMin && t <= visibleTsMax);
+
+  const span = Math.max(1, safeEnd - safeStart);
+  const isZoomed = safeStart > 0 || safeEnd < lastIndex;
+
+  function zoomBy(factor: number) {
+    if (lastIndex <= 1) return;
+    const newSpan = Math.min(lastIndex, Math.max(2, Math.round(span * factor)));
+    const center = Math.round((safeStart + safeEnd) / 2);
+    let newStart = Math.max(0, center - Math.round(newSpan / 2));
+    let newEnd = newStart + newSpan;
+    if (newEnd > lastIndex) {
+      newEnd = lastIndex;
+      newStart = Math.max(0, newEnd - newSpan);
+    }
+    setRange([newStart, newEnd]);
+  }
+
+  function panBy(direction: 1 | -1) {
+    if (!isZoomed) return;
+    const shift = Math.max(1, Math.round(span * 0.4));
+    let newStart = safeStart + direction * shift;
+    let newEnd = safeEnd + direction * shift;
+    if (newStart < 0) {
+      newStart = 0;
+      newEnd = span;
+    }
+    if (newEnd > lastIndex) {
+      newEnd = lastIndex;
+      newStart = Math.max(0, lastIndex - span);
+    }
+    setRange([newStart, newEnd]);
+  }
+
+  function resetZoom() {
+    setRange([0, lastIndex]);
+  }
+
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
       <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -165,6 +217,56 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
         </div>
       )}
 
+      {/* Zoom/pan controls — tap-friendly on touch devices */}
+      <div className="mb-2 flex items-center gap-1 text-zinc-600 dark:text-zinc-300">
+        <button
+          type="button"
+          onClick={() => zoomBy(0.5)}
+          aria-label={t("chart.zoomIn")}
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-base font-semibold hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          disabled={span <= 2}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomBy(2)}
+          aria-label={t("chart.zoomOut")}
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-base font-semibold hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          disabled={!isZoomed}
+        >
+          −
+        </button>
+        <div className="mx-1 h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
+        <button
+          type="button"
+          onClick={() => panBy(-1)}
+          aria-label={t("chart.panLeft")}
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-base hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          disabled={!isZoomed || safeStart <= 0}
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          onClick={() => panBy(1)}
+          aria-label={t("chart.panRight")}
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-zinc-200 bg-white text-base hover:bg-zinc-50 active:bg-zinc-100 disabled:opacity-40 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          disabled={!isZoomed || safeEnd >= lastIndex}
+        >
+          →
+        </button>
+        {isZoomed && (
+          <button
+            type="button"
+            onClick={resetZoom}
+            className="ml-auto flex h-9 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-medium hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600"
+          >
+            {t("chart.resetZoom")}
+          </button>
+        )}
+      </div>
+
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart
           data={chartData}
@@ -187,8 +289,9 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             dataKey="ts"
             type="number"
             scale="time"
-            domain={[tsMin, tsMax]}
-            ticks={ticks}
+            domain={[visibleTsMin, visibleTsMax]}
+            ticks={visibleTicks}
+            allowDataOverflow
             tickFormatter={formatTick}
             tick={{ fontSize: 10, fill: "currentColor", opacity: 0.5 }}
             tickLine={false}
@@ -210,6 +313,8 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
           />
 
           <Tooltip
+            allowEscapeViewBox={{ x: false, y: true }}
+            wrapperStyle={{ pointerEvents: "none" }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const d = payload[0]?.payload as
@@ -217,7 +322,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                 | undefined;
               if (!d) return null;
               return (
-                <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800 pointer-coarse:-translate-y-[calc(100%_+_2.5rem)]">
                   <p className="font-medium text-zinc-900 dark:text-zinc-100">
                     {new Date(d.timestamp).toLocaleString("en-CA", {
                       weekday: "short",
