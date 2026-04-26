@@ -98,14 +98,11 @@ function FitToPath({ path, station }: { path: [number, number][] | null; station
 
 function MapClickHandler({
   onClick,
-  enabled,
 }: {
   onClick: (lat: number, lon: number) => void;
-  enabled: boolean;
 }) {
   useMapEvents({
     click(e) {
-      if (!enabled) return;
       onClick(e.latlng.lat, e.latlng.lng);
     },
   });
@@ -314,7 +311,7 @@ export default function RapidsEditor({
             </LayersControl.BaseLayer>
           </LayersControl>
           <FitToPath path={riverPath} station={[stationLat, stationLon]} />
-          <MapClickHandler onClick={placeNewRapid} enabled={!active} />
+          <MapClickHandler onClick={placeNewRapid} />
           {riverPath && riverPath.length > 1 && (
             <Polyline
               positions={riverPath}
