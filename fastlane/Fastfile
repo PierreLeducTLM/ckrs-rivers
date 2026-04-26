@@ -1,0 +1,57 @@
+default_platform(:ios)
+
+# Keep iOS metadata/screenshots under their own subtree so Android's
+# `fastlane/metadata/android/` layout keeps working untouched.
+IOS_METADATA_PATH    = "./fastlane/metadata/ios"
+IOS_SCREENSHOTS_PATH = "./fastlane/screenshots/ios"
+
+IOS_WORKSPACE = "ios/App/App.xcworkspace"
+IOS_SCHEME    = "App"
+IOS_BUILD_DIR = "ios/build"
+
+platform :ios do
+  desc "Upload App Store listing metadata + screenshots only (no binary)"
+  lane :metadata do
+    deliver(
+      metadata_path:       IOS_METADATA_PATH,
+      screenshots_path:    IOS_SCREENSHOTS_PATH,
+      skip_binary_upload:  true,
+      skip_app_version_update: false,
+      force:               true,   # skip HTML preview confirmation
+      submit_for_review:   false,
+      precheck_include_in_app_purchases: false,
+    )
+  end
+
+  desc "Build a signed App Store IPA (macOS + Xcode required)"
+  lane :build do
+    build_app(
+      workspace:        IOS_WORKSPACE,
+      scheme:           IOS_SCHEME,
+      export_method:    "app-store",
+      output_directory: IOS_BUILD_DIR,
+      clean:            true,
+    )
+  end
+
+  desc "Build + upload IPA and listing to App Store Connect (does NOT submit for review)"
+  lane :release do
+    build
+    deliver(
+      metadata_path:     IOS_METADATA_PATH,
+      screenshots_path:  IOS_SCREENSHOTS_PATH,
+      ipa:               "#{IOS_BUILD_DIR}/App.ipa",
+      force:             true,
+      submit_for_review: false,
+    )
+  end
+
+  desc "Upload the latest IPA to TestFlight for internal testing"
+  lane :beta do
+    build
+    upload_to_testflight(
+      ipa:                    "#{IOS_BUILD_DIR}/App.ipa",
+      skip_waiting_for_build_processing: true,
+    )
+  end
+end
