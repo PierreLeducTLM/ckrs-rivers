@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/lib/i18n/provider";
 import { useAdmin } from "../use-admin";
+import { useFeatureFlag, type FlagState } from "../use-feature-flag";
 import { getSubToken } from "../subscribe-button";
 import { getPushToken } from "@/lib/capacitor/push";
 import SubscribeModal from "../subscribe-modal";
@@ -24,11 +25,26 @@ const ONBOARDING_STORAGE_KEY = "flowcast-onboarding-seen";
 const PULL_THRESHOLD = 60;
 const ICON_HIDDEN_Y = -40;
 
-export default function AppShell({ cards }: { cards: StationCard[] }) {
+export default function AppShell({
+  cards,
+  chatFlagState = "off",
+}: {
+  cards: StationCard[];
+  chatFlagState?: FlagState;
+}) {
   const isAdmin = useAdmin();
   const router = useRouter();
   const { t } = useTranslation();
   const { activeTab, setActiveTab } = useTab();
+  const chatVisible = useFeatureFlag("chat", chatFlagState) || isAdmin;
+
+  // If the chat flag flips off (or the user lands on chat without opting in),
+  // bounce them to a default tab so they don't get stuck on a hidden screen.
+  useEffect(() => {
+    if (activeTab === "chat" && !chatVisible) {
+      setActiveTab("explore");
+    }
+  }, [activeTab, chatVisible, setActiveTab]);
 
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
@@ -319,10 +335,10 @@ export default function AppShell({ cards }: { cards: StationCard[] }) {
         <MapTab cards={visible} isAdmin={isAdmin} />
       )}
 
-      {activeTab === "chat" && <ChatTab />}
+      {activeTab === "chat" && chatVisible && <ChatTab />}
 
       {/* Bottom navigation */}
-      <BottomNav />
+      <BottomNav chatVisible={chatVisible} />
 
       {/* Onboarding walkthrough (first launch + replay from settings) */}
       {showOnboarding && <OnboardingTour onFinish={handleOnboardingFinish} />}

@@ -17,6 +17,7 @@ import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 
 
 import { chatTools } from "@/lib/ai/tools";
 import { buildSystemMessages } from "@/lib/ai/system-prompt";
+import { getFeatureFlagState } from "@/lib/feature-flags";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -33,6 +34,10 @@ interface RequestBody {
 }
 
 export async function POST(req: Request) {
+  if ((await getFeatureFlagState("chat")) === "off") {
+    return Response.json({ error: "Chat is not enabled." }, { status: 404 });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json(
       { error: "Chat is not configured — ANTHROPIC_API_KEY is missing." },

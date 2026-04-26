@@ -121,6 +121,27 @@ export default function RapidsScroller({
     }
   }, [initialIndex, rapids.length]);
 
+  // One-time "nudge" so users see the carousel can be swiped. Skipped if there
+  // is only a single rapid (nothing to swipe to).
+  const nudgedRef = useRef(false);
+  useEffect(() => {
+    if (nudgedRef.current) return;
+    if (rapids.length <= 1) return;
+    const container = carouselRef.current;
+    if (!container) return;
+    nudgedRef.current = true;
+    // Wait for the initial scrollToIndex to settle, then bounce.
+    const t = window.setTimeout(() => {
+      programmaticScrollUntil.current = Date.now() + 1400;
+      const startLeft = container.scrollLeft;
+      container.scrollTo({ left: startLeft + 60, behavior: "smooth" });
+      window.setTimeout(() => {
+        container.scrollTo({ left: startLeft, behavior: "smooth" });
+      }, 550);
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [rapids.length]);
+
   // Update activeIndex as the user scrolls. Use scroll position instead of
   // IntersectionObserver because it gives us the centered card directly and
   // works reliably with scroll-snap on iOS / Capacitor.
@@ -188,7 +209,13 @@ export default function RapidsScroller({
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-zinc-50 dark:bg-black">
-      <style>{`@keyframes rapidPulse { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }`}</style>
+      <style>{`
+        @keyframes rapidPulse { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.6); } }
+        @keyframes swipeHintNudge {
+          0%, 100% { transform: translateX(0); opacity: .7; }
+          50% { transform: translateX(6px); opacity: 1; }
+        }
+      `}</style>
 
       <Header stationName={stationName} stationId={stationId} t={t} />
 
@@ -237,71 +264,120 @@ export default function RapidsScroller({
         </MapContainer>
       </div>
 
-      {/* Card carousel (bottom ~45%) */}
+      {/* Pagination dots — make it obvious there are multiple cards */}
+      {rapids.length > 1 && (
+        <div className="flex shrink-0 items-center justify-center gap-1.5 pt-2 pb-1">
+          {rapids.map((r, i) => (
+            <button
+              key={r.id}
+              type="button"
+              aria-label={`Rapid ${i + 1}`}
+              onClick={() => {
+                setActiveIndex(i);
+                scrollToIndex(i);
+              }}
+              className={`h-1.5 rounded-full transition-all ${
+                i === activeIndex
+                  ? "w-5 bg-sky-500"
+                  : "w-1.5 bg-zinc-300 dark:bg-zinc-700"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Card carousel (bottom ~45%) — cards are <100% wide so neighbors peek
+          on the edges, telegraphing that the row is swipeable. */}
       <div
         ref={carouselRef}
         className="flex flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden scroll-smooth"
         style={{ scrollSnapType: "x mandatory" }}
       >
-        {rapids.map((r, i) => (
-          <div
-            key={r.id}
-            ref={(el) => {
-              cardRefs.current[i] = el;
-            }}
-            className="flex h-full w-full shrink-0 snap-center snap-always flex-col px-5 py-4"
-            style={{ scrollSnapAlign: "center" }}
-          >
-            <div className="flex h-full flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-              <div className="flex items-center gap-3">
-                <span
-                  className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-white ${
-                    r.hazard ? "bg-red-600" : "bg-sky-500"
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                <h2 className="flex-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {r.name}
-                </h2>
-                {r.grade && (
-                  <span className="rounded bg-zinc-800 px-2.5 py-1 text-sm font-bold text-white dark:bg-zinc-200 dark:text-zinc-900">
-                    {r.grade}
+        {rapids.map((r, i) => {
+          const isLast = i === rapids.length - 1;
+          const cardWidth = rapids.length > 1 ? "w-[88%]" : "w-full";
+          return (
+            <div
+              key={r.id}
+              ref={(el) => {
+                cardRefs.current[i] = el;
+              }}
+              className={`flex h-full ${cardWidth} shrink-0 snap-center snap-always flex-col px-2 py-3`}
+              style={{ scrollSnapAlign: "center" }}
+            >
+              <div className="relative flex h-full flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-bold text-white ${
+                      r.hazard ? "bg-red-600" : "bg-sky-500"
+                    }`}
+                  >
+                    {i + 1}
                   </span>
-                )}
-              </div>
-
-              {r.hazard && (
-                <div className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                  <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                  </svg>
-                  Hazard
+                  <h2 className="flex-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+                    {r.name}
+                  </h2>
+                  {r.grade && (
+                    <span className="rounded bg-zinc-800 px-2.5 py-1 text-sm font-bold text-white dark:bg-zinc-200 dark:text-zinc-900">
+                      {r.grade}
+                    </span>
+                  )}
                 </div>
-              )}
 
-              {r.description && (
-                <p className="mt-4 flex-1 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
-                  {r.description}
-                </p>
-              )}
+                {r.hazard && (
+                  <div className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                    <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                    </svg>
+                    Hazard
+                  </div>
+                )}
 
-              <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-500">
-                <span>
-                  {i + 1} / {rapids.length}
-                </span>
-                {i === 0 && rapids.length > 1 && (
-                  <span className="flex items-center gap-1">
-                    {t("rapids.swipeHint")}
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {r.description && (
+                  <p className="mt-4 flex-1 overflow-y-auto whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+                    {r.description}
+                  </p>
+                )}
+
+                <div className="mt-4 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-500">
+                  <span>
+                    {i + 1} / {rapids.length}
+                  </span>
+                  {!isLast && rapids.length > 1 && (
+                    <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400">
+                      {t("rapids.swipeHint")}
+                      <svg
+                        className="h-3.5 w-3.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                        style={{ animation: "swipeHintNudge 1.6s ease-in-out infinite" }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+
+                {/* Edge chevron on top of the card pointing to next rapid —
+                    visible alongside the peeking next card, so the swipe
+                    affordance is obvious even before reading the hint text. */}
+                {!isLast && rapids.length > 1 && i === activeIndex && (
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-sky-500/90 p-1.5 text-white shadow-md"
+                    style={{ animation: "swipeHintNudge 1.6s ease-in-out infinite" }}
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
-                  </span>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -10,6 +10,10 @@ const TABS: { id: TabId; labelKey: string }[] = [
   { id: "chat", labelKey: "tabs.chat" },
 ];
 
+interface BottomNavProps {
+  chatVisible?: boolean;
+}
+
 function TabIcon({ id, active }: { id: TabId; active: boolean }) {
   const cls = `h-6 w-6 ${active ? "text-brand" : "text-foreground/40"}`;
   switch (id) {
@@ -41,9 +45,11 @@ function TabIcon({ id, active }: { id: TabId; active: boolean }) {
   }
 }
 
-export default function BottomNav() {
+export default function BottomNav({ chatVisible = false }: BottomNavProps) {
   const { activeTab, setActiveTab } = useTab();
   const { t } = useTranslation();
+
+  const tabs = chatVisible ? TABS : TABS.filter((tab) => tab.id !== "chat");
 
   const handleTap = (id: TabId) => {
     if (id === activeTab) {
@@ -61,7 +67,7 @@ export default function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="mx-auto flex max-w-lg items-center justify-around">
-        {TABS.map(({ id, labelKey }) => (
+        {tabs.map(({ id, labelKey }) => (
           <button
             key={id}
             onClick={() => handleTap(id)}

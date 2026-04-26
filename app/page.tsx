@@ -4,6 +4,7 @@ import { getStations, getPaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { getPaddlingStatus, statusColor } from "@/lib/notifications/paddling-status";
 import { computeTrend } from "@/lib/notifications/evaluate";
+import { getFeatureFlagState } from "@/lib/feature-flags";
 import { AdminAddStation } from "./admin-wrapper";
 import { TabProvider } from "./components/tab-context";
 import AppShell from "./components/app-shell";
@@ -22,7 +23,11 @@ interface HourlyPoint {
 // ---------------------------------------------------------------------------
 
 export default async function Home() {
-  const [stations, paddlingMap] = await Promise.all([getStations(), getPaddlingLevels()]);
+  const [stations, paddlingMap, chatFlagState] = await Promise.all([
+    getStations(),
+    getPaddlingLevels(),
+    getFeatureFlagState("chat"),
+  ]);
 
   // Fetch municipality for each station (not in domain model but in DB)
   const municipalityRows = (await sql(
@@ -133,7 +138,7 @@ export default async function Home() {
     <div className="min-h-screen bg-background text-foreground">
       <main className="mx-auto max-w-6xl px-6 py-4">
         <TabProvider>
-          <AppShell cards={cards} />
+          <AppShell cards={cards} chatFlagState={chatFlagState} />
         </TabProvider>
 
         <AdminAddStation />
