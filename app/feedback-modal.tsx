@@ -34,7 +34,7 @@ export default function FeedbackModal({ onClose, stationId, stationName }: Feedb
   const [message, setMessage] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [field, setField] = useState("");
+  const [fields, setFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
@@ -44,6 +44,12 @@ export default function FeedbackModal({ onClose, stationId, stationName }: Feedb
   useEffect(() => {
     messageRef.current?.focus();
   }, []);
+
+  function toggleField(value: string) {
+    setFields((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +65,7 @@ export default function FeedbackModal({ onClose, stationId, stationName }: Feedb
         body: JSON.stringify({
           kind: isContextual ? "river_config" : "general",
           stationId: stationId ?? undefined,
-          field: isContextual && field ? field : undefined,
+          fields: isContextual && fields.length > 0 ? fields : undefined,
           message: message.trim(),
           name: name.trim() || undefined,
           email: email.trim() || undefined,
@@ -124,23 +130,33 @@ export default function FeedbackModal({ onClose, stationId, stationName }: Feedb
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {isContextual && (
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-foreground/70">
+                <fieldset>
+                  <legend className="mb-1 block text-xs font-medium text-foreground/70">
                     {t("feedback.fieldLabel")}
-                  </label>
-                  <select
-                    value={field}
-                    onChange={(e) => setField(e.target.value)}
-                    className="w-full rounded-lg border border-foreground/20 bg-transparent px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">{t("feedback.fieldPlaceholder")}</option>
-                    {FIELD_OPTIONS.map((value) => (
-                      <option key={value} value={value}>
-                        {t(FIELD_TRANSLATION_KEY[value])}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  </legend>
+                  <p className="mb-1.5 text-xs text-foreground/40">
+                    {t("feedback.fieldHint")}
+                  </p>
+                  <div className="grid grid-cols-1 gap-1.5 rounded-lg border border-foreground/20 bg-transparent p-2 sm:grid-cols-2">
+                    {FIELD_OPTIONS.map((value) => {
+                      const checked = fields.includes(value);
+                      return (
+                        <label
+                          key={value}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-sm transition-colors hover:bg-foreground/5"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleField(value)}
+                            className="h-4 w-4 cursor-pointer rounded border-foreground/30 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>{t(FIELD_TRANSLATION_KEY[value])}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
               )}
 
               <div>

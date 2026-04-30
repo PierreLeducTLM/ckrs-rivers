@@ -110,8 +110,8 @@
     "reportIssue": "Report incorrect info",
     "messageLabel": "Message",
     "messagePlaceholder": "What's on your mind?",
-    "fieldLabel": "Which field is incorrect?",
-    "fieldPlaceholder": "Not sure / other",
+    "fieldLabel": "Which fields are incorrect?",
+    "fieldHint": "Select all that apply.",
     "fields": {
       "paddlingLevels": "Paddling levels (min / ideal / max)",
       "putInTakeOut": "Put-in / Take-out",

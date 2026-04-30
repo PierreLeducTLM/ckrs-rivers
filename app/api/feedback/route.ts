@@ -19,6 +19,16 @@ const ALLOWED_FIELDS = [
 ] as const;
 type FeedbackField = (typeof ALLOWED_FIELDS)[number];
 
+const FIELD_LABEL_EN: Record<FeedbackField, string> = {
+  paddling_levels: "Paddling levels (min / ideal / max)",
+  put_in_take_out: "Put-in / Take-out",
+  river_path: "River path",
+  rapid_class: "Rapid class",
+  description: "Description",
+  coordinates: "Coordinates",
+  other: "Something else",
+};
+
 const MAX_MESSAGE_LEN = 4000;
 const MAX_NAME_LEN = 200;
 const MAX_PAGE_URL_LEN = 1000;
@@ -38,6 +48,7 @@ interface FeedbackBody {
   message?: string;
   stationId?: string;
   field?: string;
+  fields?: unknown;
   name?: string;
   email?: string;
   pageUrl?: string;
@@ -77,14 +88,28 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "stationId is required for river_config feedback" }, { status: 400 });
   }
 
-  const rawField = body.field?.trim() ?? "";
-  let field: FeedbackField | null = null;
-  if (rawField.length > 0) {
-    if (!ALLOWED_FIELDS.includes(rawField as FeedbackField)) {
-      return Response.json({ error: "Invalid field value" }, { status: 400 });
+  // Accept either `fields: string[]` (current client) or `field: string` (legacy
+  // single-value form). Normalize to a deduped, validated list.
+  const rawFields: string[] = [];
+  if (Array.isArray(body.fields)) {
+    for (const f of body.fields) {
+      if (typeof f === "string") rawFields.push(f.trim());
     }
-    field = rawField as FeedbackField;
+  } else if (typeof body.field === "string" && body.field.trim().length > 0) {
+    rawFields.push(body.field.trim());
   }
+
+  const selectedFields: FeedbackField[] = [];
+  for (const f of rawFields) {
+    if (f.length === 0) continue;
+    if (!ALLOWED_FIELDS.includes(f as FeedbackField)) {
+      return Response.json({ error: `Invalid field value: ${f}` }, { status: 400 });
+    }
+    if (!selectedFields.includes(f as FeedbackField)) {
+      selectedFields.push(f as FeedbackField);
+    }
+  }
+  const fieldStored: string | null = selectedFields.length > 0 ? selectedFields.join(",") : null;
 
   const name = body.name?.trim().slice(0, MAX_NAME_LEN) || null;
 
@@ -120,7 +145,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO feedback (kind, station_id, field, message, name, email, page_url, user_agent)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
-      [kind, stationId, field, message, name, email, pageUrl, userAgent],
+      [kind, stationId, fieldStored, message, name, email, pageUrl, userAgent],
     )) as Array<{ id: string }>;
     id = inserted[0].id;
   } catch (err) {
@@ -131,13 +156,24 @@ export async function POST(request: NextRequest) {
   // Best-effort admin notification — never blocks the response on failure.
   const recipient = process.env.FEEDBACK_NOTIFICATION_EMAIL ?? "pierre@leduc.tech";
   try {
-    const subjectKind = kind === "river_config" ? "river config" : "general";
-    const subject = `[FlowCast Feedback] ${subjectKind}${stationName ? ` — ${stationName}` : ""}`;
+    const subjectKind = kind === "river_config" ? "River config" : "General";
+    const subjectStation = stationName
+      ? `: ${stationName}`
+      : stationId
+        ? `: ${stationId}`
+        : "";
+    const subject = `[FlowCast Feedback] ${subjectKind}${subjectStation}`;
+
+    const fieldsHtml =
+      selectedFields.length > 0
+        ? `<ul>${selectedFields
+            .map((f) => `<li>${escapeHtml(FIELD_LABEL_EN[f])} <code>(${escapeHtml(f)})</code></li>`)
+            .join("")}</ul>`
+        : null;
 
     const lines: Array<[string, string | null]> = [
       ["Kind", kind],
       ["Station", stationId ? `${stationName ?? "?"} (${stationId})` : null],
-      ["Field", field],
       ["Name", name],
       ["Email", email],
       ["Page", pageUrl],
@@ -152,16 +188,22 @@ export async function POST(request: NextRequest) {
     const html = `
       <h2>New FlowCast feedback</h2>
       <ul>${meta}</ul>
+      ${fieldsHtml ? `<h3>Reported fields</h3>${fieldsHtml}` : ""}
       <h3>Message</h3>
       <pre style="white-space:pre-wrap;font-family:inherit;">${escapeHtml(message)}</pre>
     `;
 
+    console.log(
+      `[feedback ${id}] sending notification email kind=${kind} station=${stationId ?? "-"} fields=${selectedFields.join("|") || "-"} to=${recipient}`,
+    );
     const result = await sendEmail({ to: recipient, subject, html });
-    if (!result.success) {
-      console.error("Feedback notification email failed:", result.error);
+    if (result.success) {
+      console.log(`[feedback ${id}] notification email sent (resend id=${result.id ?? "?"})`);
+    } else {
+      console.error(`[feedback ${id}] notification email failed:`, result.error);
     }
   } catch (err) {
-    console.error("Feedback notification email threw:", err);
+    console.error(`[feedback ${id}] notification email threw:`, err);
   }
 
   return Response.json({ success: true, id });
