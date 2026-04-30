@@ -34,6 +34,34 @@ function SettingsLink({ onAfter }: { onAfter: () => void }) {
   );
 }
 
+function SendFeedbackButton({ onAfter }: { onAfter: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={() => {
+        window.dispatchEvent(new Event("flowcast:open-feedback"));
+        onAfter();
+      }}
+      className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-foreground/50 transition-colors hover:text-brand"
+    >
+      <svg
+        className="h-4 w-4 shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.94 9.94 0 01-4-.832L3 21l1.832-3.668A8.024 8.024 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+        />
+      </svg>
+      {t("feedback.menuItem")}
+    </button>
+  );
+}
+
 function ShowWalkthroughButton({ onAfter }: { onAfter: () => void }) {
   const { t } = useTranslation();
   return (
@@ -139,6 +167,7 @@ export default function SettingsMenu() {
           <LanguageToggle />
           <ThemeToggle />
           <ShowWalkthroughButton onAfter={() => setOpen(false)} />
+          <SendFeedbackButton onAfter={() => setOpen(false)} />
           {showAdminToggle && (
             <>
               <div className="my-0.5 border-t border-foreground/10" />

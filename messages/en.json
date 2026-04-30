@@ -102,6 +102,38 @@
     "confirmationSent": "We sent a confirmation link to <strong>{email}</strong>. Click it to verify your email, then come back and tap the bell on any river to get notified.",
     "done": "Done"
   },
+  "feedback": {
+    "menuItem": "Send feedback",
+    "title": "Send feedback",
+    "description": "Tell us what's wrong or what could be better.",
+    "reportingFor": "Reporting an issue with {name}",
+    "reportIssue": "Report incorrect info",
+    "messageLabel": "Message",
+    "messagePlaceholder": "What's on your mind?",
+    "fieldLabel": "Which field is incorrect?",
+    "fieldPlaceholder": "Not sure / other",
+    "fields": {
+      "paddlingLevels": "Paddling levels (min / ideal / max)",
+      "putInTakeOut": "Put-in / Take-out",
+      "riverPath": "River path",
+      "rapidClass": "Rapid class",
+      "description": "Description",
+      "coordinates": "Coordinates",
+      "other": "Something else"
+    },
+    "nameLabel": "Your name (optional)",
+    "namePlaceholder": "Jane Paddler",
+    "emailLabel": "Email (optional)",
+    "emailPlaceholder": "you@example.com",
+    "emailHint": "We'll only use it to follow up on your feedback.",
+    "cancel": "Cancel",
+    "submit": "Send",
+    "sending": "Sending...",
+    "successTitle": "Feedback sent",
+    "success": "Thanks - we got your feedback.",
+    "done": "Done",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
   "confirmed": {
     "title": "Email verified!",
     "message": "Your email is confirmed. Go back to the app and tap the bell icon on any river card to choose which rivers you want notifications for.",

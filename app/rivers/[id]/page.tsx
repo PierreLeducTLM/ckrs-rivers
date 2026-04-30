@@ -6,6 +6,7 @@ import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
 import HourlyChart from "./hourly-chart";
 import RefreshButton from "./refresh-button";
+import ReportIssueLink from "./report-issue-link";
 import RiverHeader from "./river-header";
 import PaddlingStatusMessage from "./paddling-status-message";
 import BackButton from "./back-button";
@@ -289,6 +290,10 @@ export default async function RiverPage({
             {generatedAt && (
               <UpdatedAt isoDate={generatedAt} stationId={id} />
             )}
+          </div>
+
+          <div className="mt-3">
+            <ReportIssueLink stationId={id} stationName={station.name} />
           </div>
         </header>
 
