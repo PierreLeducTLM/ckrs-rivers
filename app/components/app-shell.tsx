@@ -9,6 +9,7 @@ import { useFeatureFlag, type FlagState } from "../use-feature-flag";
 import { getSubToken } from "../subscribe-button";
 import { getPushToken } from "@/lib/capacitor/push";
 import SubscribeModal from "../subscribe-modal";
+import FeedbackModal from "../feedback-modal";
 import { useTab } from "./tab-context";
 import BottomNav from "./bottom-nav";
 import SettingsMenu from "./settings-menu";
@@ -47,6 +48,7 @@ export default function AppShell({
   }, [activeTab, chatVisible, setActiveTab]);
 
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
@@ -252,9 +254,14 @@ export default function AppShell({
     function onReplay() {
       setShowOnboarding(true);
     }
+    function onOpenFeedback() {
+      setShowFeedback(true);
+    }
     window.addEventListener("flowcast:show-onboarding", onReplay);
+    window.addEventListener("flowcast:open-feedback", onOpenFeedback);
     return () => {
       window.removeEventListener("flowcast:show-onboarding", onReplay);
+      window.removeEventListener("flowcast:open-feedback", onOpenFeedback);
     };
   }, []);
 
@@ -346,6 +353,9 @@ export default function AppShell({
       {/* Modals */}
       {showNotificationModal && (
         <SubscribeModal onClose={() => setShowNotificationModal(false)} />
+      )}
+      {showFeedback && (
+        <FeedbackModal onClose={() => setShowFeedback(false)} />
       )}
       {showComingSoon && (
         <div

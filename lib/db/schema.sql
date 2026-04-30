@@ -172,3 +172,20 @@ CREATE TABLE IF NOT EXISTS feature_flags (
   description  TEXT,
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- 13. Feedback (general + contextual river-config reports)
+CREATE TABLE IF NOT EXISTS feedback (
+  id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  kind         TEXT NOT NULL CHECK (kind IN ('general','river_config')),
+  station_id   TEXT REFERENCES stations(id) ON DELETE SET NULL,
+  field        TEXT,
+  message      TEXT NOT NULL,
+  name         TEXT,
+  email        TEXT,
+  page_url     TEXT,
+  user_agent   TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_station ON feedback(station_id) WHERE station_id IS NOT NULL;

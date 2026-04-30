@@ -55,6 +55,9 @@ async function migrate() {
     `CREATE INDEX IF NOT EXISTS idx_push_devices_subscriber ON push_devices(subscriber_id)`,
     `INSERT INTO feature_flags (key, state, label, description) VALUES ('rapids', 'preview', 'Rapids', 'Place named rapids on rivers and swipe through them on a dedicated screen.') ON CONFLICT (key) DO NOTHING`,
     `INSERT INTO feature_flags (key, state, label, description) VALUES ('chat', 'preview', 'Chat', 'Ask an AI assistant about river conditions and get personalised recommendations.') ON CONFLICT (key) DO NOTHING`,
+    `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS field TEXT`,
+    `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS page_url TEXT`,
+    `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS user_agent TEXT`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

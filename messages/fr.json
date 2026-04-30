@@ -102,6 +102,38 @@
     "confirmationSent": "Nous avons envoye un lien de confirmation a <strong>{email}</strong>. Cliquez dessus pour verifier votre courriel, puis revenez et appuyez sur la cloche d'une riviere pour etre notifie.",
     "done": "Termine"
   },
+  "feedback": {
+    "menuItem": "Envoyer des commentaires",
+    "title": "Envoyer des commentaires",
+    "description": "Dites-nous ce qui ne va pas ou ce qui pourrait etre ameliore.",
+    "reportingFor": "Signalement concernant {name}",
+    "reportIssue": "Signaler une information incorrecte",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Qu'avez-vous en tete?",
+    "fieldLabel": "Quels champs sont incorrects?",
+    "fieldHint": "Cochez tout ce qui s'applique.",
+    "fields": {
+      "paddlingLevels": "Niveaux de pagaie (min / ideal / max)",
+      "putInTakeOut": "Mise a l'eau / Sortie",
+      "riverPath": "Trace de la riviere",
+      "rapidClass": "Classe de rapides",
+      "description": "Description",
+      "coordinates": "Coordonnees",
+      "other": "Autre chose"
+    },
+    "nameLabel": "Votre nom (facultatif)",
+    "namePlaceholder": "Jeanne Pagayeuse",
+    "emailLabel": "Courriel (facultatif)",
+    "emailPlaceholder": "vous@exemple.com",
+    "emailHint": "Nous l'utiliserons uniquement pour faire un suivi sur vos commentaires.",
+    "cancel": "Annuler",
+    "submit": "Envoyer",
+    "sending": "Envoi...",
+    "successTitle": "Commentaires envoyes",
+    "success": "Merci - nous avons bien recu vos commentaires.",
+    "done": "Termine",
+    "errorGeneric": "Une erreur est survenue. Veuillez reessayer."
+  },
   "confirmed": {
     "title": "Courriel verifie!",
     "message": "Votre courriel est confirme. Retournez a l'application et appuyez sur l'icone de cloche sur une carte de riviere pour choisir vos notifications.",
