@@ -2,6 +2,7 @@ import { ImageResponse } from "next/og";
 import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
 import { getPaddlingStatus } from "@/lib/notifications/paddling-status";
 import { sql } from "@/lib/db/client";
+import { getFlowcastLogoDataUrl } from "@/lib/share/og-logo";
 
 export const runtime = "nodejs";
 export const alt = "FlowCast — river status preview";
@@ -48,6 +49,7 @@ export default async function Image({
 }) {
   const { id } = await params;
   const station = await getStationById(id);
+  const logoDataUrl = await getFlowcastLogoDataUrl();
 
   if (!station) {
     return new ImageResponse(
@@ -64,6 +66,7 @@ export default async function Image({
             color: "#18181b",
           }}
         >
+          <img src={logoDataUrl} width={96} height={96} alt="" style={{ marginRight: 24 }} />
           FlowCast
         </div>
       ),
@@ -94,13 +97,20 @@ export default async function Image({
           style={{
             display: "flex",
             alignItems: "center",
-            fontSize: 32,
-            fontWeight: 700,
-            color: "#0369a1",
-            letterSpacing: -0.5,
+            gap: 16,
           }}
         >
-          FlowCast
+          <img src={logoDataUrl} width={64} height={64} alt="" />
+          <div
+            style={{
+              fontSize: 32,
+              fontWeight: 700,
+              color: "#0369a1",
+              letterSpacing: -0.5,
+            }}
+          >
+            FlowCast
+          </div>
         </div>
 
         {/* River name */}

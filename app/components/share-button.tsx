@@ -20,8 +20,12 @@ function buildShareUrl(stationId: string, kind: ShareKind): string {
       ? window.location.origin
       : "https://www.flowcast.ca";
   const params = new URLSearchParams({ ref: "share", ts: String(Date.now()) });
-  if (kind !== "river") params.set("point", kind);
-  return `${origin}/rivers/${stationId}?${params.toString()}`;
+  if (kind === "river") {
+    return `${origin}/rivers/${stationId}?${params.toString()}`;
+  }
+  // Point shares use a dedicated /go route that unfurls a FlowCast OG card
+  // and redirects the user to their maps app on tap.
+  return `${origin}/go/${stationId}/${kind}?${params.toString()}`;
 }
 
 async function nativeShare(args: {
