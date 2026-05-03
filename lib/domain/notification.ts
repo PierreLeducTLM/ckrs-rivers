@@ -18,8 +18,25 @@ export const AlertTypeSchema = z.enum([
 ]);
 export type AlertType = z.infer<typeof AlertTypeSchema>;
 
-/** All known alert types — iterate for UI toggles and default enable set. */
+/** All known alert types — kept for type-safety / historical prefs payloads. */
 export const ALL_ALERT_TYPES: readonly AlertType[] = AlertTypeSchema.options;
+
+/**
+ * Alert types currently disabled at the source in evaluate-alerts.ts.
+ * Mirrored here so the settings UI can hide their toggles. The server-side
+ * `DISABLED_ALERT_TYPES` constant in src/trigger/evaluate-alerts.ts is the
+ * authoritative gate (Trigger.dev bundling forbids @/ imports there).
+ */
+export const DISABLED_ALERT_TYPES: ReadonlySet<AlertType> = new Set<AlertType>([
+  "dropping-out",
+  "rain-bump",
+  "confidence-upgraded",
+]);
+
+/** Alert types shown to users in the preference UI. */
+export const USER_FACING_ALERT_TYPES: readonly AlertType[] = ALL_ALERT_TYPES.filter(
+  (t) => !DISABLED_ALERT_TYPES.has(t),
+);
 
 export const PrioritySchema = z.enum(["critical", "high", "normal", "low"]);
 export type Priority = z.infer<typeof PrioritySchema>;
@@ -78,10 +95,10 @@ export const SubscriberPreferencesSchema = z.object({
   /** Per-channel opt-out. Both default true so existing users keep receiving. */
   emailEnabled: z.boolean().default(true),
   pushEnabled: z.boolean().default(true),
-  /** Allow-list of alert types the user wants to receive. Defaults to all 8. */
+  /** Allow-list of alert types the user wants to receive. */
   enabledAlertTypes: z
     .array(AlertTypeSchema)
-    .default([...ALL_ALERT_TYPES]),
+    .default([...USER_FACING_ALERT_TYPES]),
 });
 export type SubscriberPreferences = z.infer<typeof SubscriberPreferencesSchema>;
 

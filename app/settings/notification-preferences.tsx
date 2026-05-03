@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { setSubToken, getSubToken } from "../subscribe-button";
 import { useTranslation } from "@/lib/i18n/provider";
-import { ALL_ALERT_TYPES, type AlertType } from "@/lib/domain/notification";
+import { USER_FACING_ALERT_TYPES, type AlertType } from "@/lib/domain/notification";
 import { initPushNotifications, getPushToken } from "@/lib/capacitor/push";
 
 interface ManageData {
@@ -27,7 +27,7 @@ const DEFAULT_PREFS: Prefs = {
   weekendOnly: false,
   emailEnabled: true,
   pushEnabled: true,
-  enabledAlertTypes: [...ALL_ALERT_TYPES],
+  enabledAlertTypes: [...USER_FACING_ALERT_TYPES],
 };
 
 const ALERT_TYPE_I18N_KEY: Record<AlertType, string> = {
@@ -226,7 +226,7 @@ export default function NotificationPreferences() {
   };
 
   const selectAllAlertTypes = () =>
-    setPrefs((p) => ({ ...p, enabledAlertTypes: [...ALL_ALERT_TYPES] }));
+    setPrefs((p) => ({ ...p, enabledAlertTypes: [...USER_FACING_ALERT_TYPES] }));
 
   const deselectAllAlertTypes = () =>
     setPrefs((p) => ({ ...p, enabledAlertTypes: [] }));
@@ -256,6 +256,10 @@ export default function NotificationPreferences() {
 
   const hasEmail = !!data.email;
   const isNative = !!pushToken;
+  // "Select all" reflects the user-facing list only — old saved prefs that
+  // still carry now-disabled types shouldn't make this checkbox lie.
+  const enabledUserFacing = new Set(prefs.enabledAlertTypes);
+  const allUserFacingEnabled = USER_FACING_ALERT_TYPES.every((type) => enabledUserFacing.has(type));
 
   return (
     <div>
@@ -374,13 +378,11 @@ export default function NotificationPreferences() {
           <button
             type="button"
             onClick={
-              prefs.enabledAlertTypes.length === ALL_ALERT_TYPES.length
-                ? deselectAllAlertTypes
-                : selectAllAlertTypes
+              allUserFacingEnabled ? deselectAllAlertTypes : selectAllAlertTypes
             }
             className="text-xs text-blue-500 hover:underline"
           >
-            {prefs.enabledAlertTypes.length === ALL_ALERT_TYPES.length
+            {allUserFacingEnabled
               ? t("notifications.deselectAll")
               : t("notifications.selectAll")}
           </button>
@@ -390,7 +392,7 @@ export default function NotificationPreferences() {
         </p>
 
         <div className="mt-3 space-y-2">
-          {ALL_ALERT_TYPES.map((type) => {
+          {USER_FACING_ALERT_TYPES.map((type) => {
             const key = ALERT_TYPE_I18N_KEY[type];
             return (
               <ToggleRow
