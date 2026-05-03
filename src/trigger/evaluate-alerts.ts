@@ -163,6 +163,13 @@ const ALERT_COOLDOWN_MS: Record<string, number> = {
   "confidence-upgraded": 24 * 3600_000,
 };
 
+/** Globally disabled alert types — never emitted regardless of user prefs. */
+const DISABLED_ALERT_TYPES = new Set<string>([
+  "dropping-out",
+  "rain-bump",
+  "confidence-upgraded",
+]);
+
 /** Lower = more important. Matches the admin notifications page order. */
 const ALERT_RANK: Record<string, number> = {
   "its-on": 1,
@@ -387,6 +394,7 @@ function detectAlerts(
   const nowRunnable = isGoodRange(curr.paddlingStatus);
 
   function add(type: string, msg: string) {
+    if (DISABLED_ALERT_TYPES.has(type)) return;
     alerts.push({
       alertType: type,
       priority: (ALERT_PRIORITY[type] ?? "normal") as AlertCandidate["priority"],
@@ -516,42 +524,54 @@ async function sendPushForAlerts(
 
     if (allowedAlerts.length === 0) continue;
 
-    const top = allowedAlerts[0];
-    const topEmoji = EMOJI[top.alertType] ?? "\uD83D\uDCE2";
-    const topPrefix = PREFIX[top.alertType] ?? "Alert";
+    // Send one push per alert. Android auto-bundles 4+ notifications from
+    // the same app into a stack; iOS groups them via thread-id even with 2.
+    let tokenInvalidated = false;
+    for (const alert of allowedAlerts) {
+      const emoji = EMOJI[alert.alertType] ?? "\uD83D\uDCE2";
+      const prefix = PREFIX[alert.alertType] ?? "Alert";
 
-    const title = allowedAlerts.length === 1
-      ? `${topEmoji} ${topPrefix} — ${top.stationName}`
-      : `${topEmoji} ${topPrefix} — ${top.stationName} (+${allowedAlerts.length - 1} more)`;
-
-    const body = allowedAlerts.length === 1
-      ? top.message
-      : allowedAlerts.map((a) => `${EMOJI[a.alertType] ?? ""} ${a.message}`).join("\n");
-
-    try {
-      await messaging.send({
-        token: device.token,
-        notification: { title, body },
-        data: {
-          stationId: top.stationId,
-          alertType: top.alertType,
-        },
-        android: {
-          priority: "high" as const,
-          notification: { channelId: "river-alerts" },
-        },
-      });
-      sent++;
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      // Deactivate invalid tokens
-      if (errMsg.includes("not-registered") || errMsg.includes("invalid-registration-token")) {
-        await dbSql(`UPDATE push_devices SET active = false WHERE token = $1`, [device.token]);
-        logger.warn("Deactivated stale push token", { token: device.token.slice(0, 12) + "..." });
-      } else {
+      try {
+        await messaging.send({
+          token: device.token,
+          notification: {
+            title: `${emoji} ${prefix} — ${alert.stationName}`,
+            body: alert.message,
+          },
+          data: {
+            stationId: alert.stationId,
+            alertType: alert.alertType,
+          },
+          android: {
+            priority: "high" as const,
+            notification: {
+              channelId: "river-alerts",
+              // Per-station+type tag: a fresh alert of the same type for the
+              // same river replaces the prior one rather than stacking dupes.
+              tag: `flowcast-${alert.stationId}-${alert.alertType}`,
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                "thread-id": "flowcast-river-alerts",
+              },
+            },
+          },
+        });
+        sent++;
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes("not-registered") || errMsg.includes("invalid-registration-token")) {
+          await dbSql(`UPDATE push_devices SET active = false WHERE token = $1`, [device.token]);
+          logger.warn("Deactivated stale push token", { token: device.token.slice(0, 12) + "..." });
+          tokenInvalidated = true;
+          break; // Don't retry remaining alerts on a dead token.
+        }
         logger.error("FCM send failed", { error: errMsg, platform: device.platform });
       }
     }
+    if (tokenInvalidated) continue;
   }
 
   return sent;
