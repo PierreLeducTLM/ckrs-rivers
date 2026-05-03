@@ -173,7 +173,7 @@ export default function ShareButton({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+          className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/40 sm:items-center"
           onClick={() => setOpen(false)}
         >
           <div
