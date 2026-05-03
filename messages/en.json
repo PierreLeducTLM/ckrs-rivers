@@ -205,6 +205,22 @@
     "add": "Add to favorites",
     "remove": "Remove from favorites"
   },
+  "share": {
+    "river": "Share river",
+    "putIn": "Share put-in",
+    "takeOut": "Share take-out",
+    "title": "Share with friends",
+    "messageLabel": "Your message",
+    "messagePlaceholder": "Anyone up for a Shipshaw run? It's prime!",
+    "send": "Share",
+    "cancel": "Cancel",
+    "copyLink": "Copy link",
+    "copied": "Link copied!",
+    "shareTitleRiver": "{name} on FlowCast",
+    "shareTitlePutIn": "Put-in — {name}",
+    "shareTitleTakeOut": "Take-out — {name}",
+    "dialogTitle": "Share via"
+  },
   "theme": {
     "label": "Theme",
     "system": "System",

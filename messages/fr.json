@@ -205,6 +205,22 @@
     "add": "Ajouter aux favoris",
     "remove": "Retirer des favoris"
   },
+  "share": {
+    "river": "Partager la riviere",
+    "putIn": "Partager la mise a l'eau",
+    "takeOut": "Partager la sortie",
+    "title": "Partager avec des amis",
+    "messageLabel": "Votre message",
+    "messagePlaceholder": "Des partants pour un Shipshaw? Elle est Prime!",
+    "send": "Partager",
+    "cancel": "Annuler",
+    "copyLink": "Copier le lien",
+    "copied": "Lien copie!",
+    "shareTitleRiver": "{name} sur FlowCast",
+    "shareTitlePutIn": "Mise a l'eau — {name}",
+    "shareTitleTakeOut": "Sortie — {name}",
+    "dialogTitle": "Partager via"
+  },
   "theme": {
     "label": "Theme",
     "system": "Systeme",
