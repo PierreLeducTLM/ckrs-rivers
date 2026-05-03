@@ -1,0 +1,1 @@
+No login required. The app fetches public hydrometric data on launch — open any river to see live flow and forecast charts. Push notifications are opt-in via Settings; not required for review.

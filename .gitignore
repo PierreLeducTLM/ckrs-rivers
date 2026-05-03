@@ -63,6 +63,14 @@ android/keystore.properties
 android/fastlane/report.xml
 android/fastlane/README.md
 android/fastlane/play-store-key.json
+ios/fastlane/report.xml
+ios/fastlane/README.md
+ios/fastlane/.env.default
+ios/fastlane/AuthKey_*.p8
+ios/fastlane/*.p8
+ios/fastlane/certs/
+ios/fastlane/profiles/
+ios/build/
 vendor/bundle/
 .bundle/
 

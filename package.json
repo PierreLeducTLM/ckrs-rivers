@@ -5,12 +5,14 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "npx tsx lib/db/migrate.ts && next build",
+    "build:mobile": "next build",
     "start": "next start",
     "lint": "eslint",
     "cap:sync": "npx cap sync",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
     "store:screenshots": "npx tsx scripts/generate-store-screenshots.ts",
+    "store:screenshots:ios": "npx tsx scripts/generate-store-screenshots-ios.ts",
     "store:icon": "npx tsx scripts/generate-store-icon.ts",
     "store:all": "npm run store:icon && npm run store:screenshots"
   },

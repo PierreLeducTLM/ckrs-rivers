@@ -1,0 +1,166 @@
+default_platform(:ios)
+
+WORKSPACE  = "App/App.xcworkspace"
+SCHEME     = "App"
+BUILD_DIR  = "build"
+IPA_PATH   = "#{BUILD_DIR}/App.ipa"
+PODFILE_DIR = "App"
+
+platform :ios do
+  before_all do
+    # Ensure subprocesses (npx cap sync → pod-install) pick up the same rbenv Ruby
+    # we're running under. Without this, Homebrew's Ruby may shadow rbenv's `bundle`
+    # via PATH order and bundler can't find the vendored gems (different ABI).
+    rbenv_shims = File.expand_path("~/.rbenv/shims")
+    if File.directory?(rbenv_shims) && !ENV["PATH"].to_s.start_with?(rbenv_shims)
+      ENV["PATH"] = "#{rbenv_shims}:#{ENV["PATH"]}"
+    end
+
+    # Authenticate with the App Store Connect API key (JWT) when present.
+    # Drop the .p8 at ios/fastlane/AuthKey_<KEY_ID>.p8 (or set FASTLANE_ASC_KEY_PATH),
+    # and set FASTLANE_ASC_KEY_ID + FASTLANE_ASC_ISSUER_ID in .env.default.
+    # Falls back to the interactive `apple_id` login defined in Appfile when missing.
+    key_path = ENV["FASTLANE_ASC_KEY_PATH"]
+    key_path ||= Dir[File.expand_path("AuthKey_*.p8", __dir__)].first
+    key_id = ENV["FASTLANE_ASC_KEY_ID"]
+    issuer_id = ENV["FASTLANE_ASC_ISSUER_ID"]
+
+    if key_path && File.exist?(key_path) && key_id && issuer_id
+      app_store_connect_api_key(
+        key_id: key_id,
+        issuer_id: issuer_id,
+        key_filepath: key_path,
+        duration: 1200,
+        in_house: false
+      )
+    end
+  end
+
+  desc "Sync the Capacitor web build into ios/App and install pods"
+  lane :prepare do
+    # build:mobile = `next build` without the DB migrate step (migrations are a server-deploy concern, not a mobile shell concern).
+    sh("cd ../.. && npm run build:mobile && npx cap sync ios")
+    cocoapods(podfile: PODFILE_DIR)
+  end
+
+  desc "Bump CFBundleVersion (build number) to App Store Connect's latest + 1"
+  lane :bump_build do
+    increment_build_number(
+      xcodeproj: "App/App.xcodeproj",
+      build_number: latest_testflight_build_number(initial_build_number: 0) + 1
+    )
+  end
+
+  desc "Build a signed IPA for App Store distribution"
+  lane :build do
+    prepare
+    team_id = ENV["FASTLANE_TEAM_ID"]
+    UI.user_error!("FASTLANE_TEAM_ID is not set. Add it to ios/fastlane/.env.default — find it at developer.apple.com → Membership.") if team_id.to_s.empty?
+
+    bundle_id = "com.flowcast.paddle.app"
+
+    # Sanity-check that aps-environment matches the signing target. With manual signing
+    # for App Store distribution, an entitlement of "development" produces a build that
+    # registers tokens against APNs sandbox — pushes from the production server will fail
+    # silently. Catch this before it reaches TestFlight.
+    entitlements_path = File.expand_path("../App/App/App.entitlements", __dir__)
+    if File.exist?(entitlements_path)
+      aps_env = File.read(entitlements_path).match(/<key>aps-environment<\/key>\s*<string>(\w+)<\/string>/)&.captures&.first
+      if aps_env == "development"
+        UI.user_error!("aps-environment is 'development' in App.entitlements but this lane signs with an Apple Distribution profile for App Store / TestFlight. Push tokens registered by this build won't work against production APNs. Change to 'production' in ios/App/App/App.entitlements.")
+      elsif aps_env != "production"
+        UI.important("aps-environment value is '#{aps_env || "unset"}' in App.entitlements — expected 'production'. Verify push setup before shipping.")
+      end
+    end
+
+    # Provision an Apple Distribution certificate + App Store profile via the ASC API key.
+    # Using `sigh`/`cert` directly avoids the "no devices registered" issue that blocks
+    # Xcode's automatic signing path for Development profiles.
+    cert(
+      generate_apple_certs: true,
+      development: false,
+      output_path: File.expand_path("certs", __dir__)
+    )
+    sigh(
+      app_identifier: bundle_id,
+      force: true,
+      output_path: File.expand_path("profiles", __dir__)
+    )
+    profile_name = lane_context[SharedValues::SIGH_NAME]
+
+    # Switch the App target's Release config to manual signing with the profile we just got.
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "App/App.xcodeproj",
+      bundle_identifier: bundle_id,
+      team_id: team_id,
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name,
+      targets: ["App"],
+      build_configurations: ["Release"]
+    )
+
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: BUILD_DIR,
+      output_name: "App.ipa",
+      clean: true,
+      include_bitcode: false,
+      include_symbols: true,
+      export_options: {
+        method: "app-store",
+        provisioningProfiles: { bundle_id => profile_name },
+        signingStyle: "manual"
+      }
+    )
+  end
+
+  desc "Upload the latest build to TestFlight (no review submission)"
+  lane :beta do
+    bump_build
+    build
+    upload_to_testflight(
+      ipa: IPA_PATH,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      changelog: ENV["FASTLANE_TESTFLIGHT_CHANGELOG"] || "Internal build"
+    )
+  end
+
+  desc "Upload the latest build to App Store Connect as a draft (no auto-submit)"
+  lane :release do
+    bump_build
+    build
+    upload_to_app_store(
+      ipa: IPA_PATH,
+      skip_metadata: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Sync App Store listing metadata + screenshots only (no binary)"
+  lane :metadata do
+    upload_to_app_store(
+      skip_binary_upload: true,
+      skip_metadata: false,
+      skip_screenshots: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Dry-run: build the IPA and run precheck without uploading"
+  lane :validate do
+    build
+    precheck(
+      include_in_app_purchases: false
+    )
+  end
+end

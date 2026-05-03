@@ -1,4 +1,4 @@
-package com.flowcast.app;
+package com.flowcast.paddle.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;

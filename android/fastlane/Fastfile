@@ -54,4 +54,15 @@ platform :android do
       skip_upload_screenshots: false
     )
   end
+
+  desc "Dry-run the production upload — validates AAB, signing, versionCode, and metadata without committing"
+  lane :validate do
+    build
+    upload_to_play_store(
+      track: "production",
+      aab: "app/build/outputs/bundle/release/app-release.aab",
+      skip_upload_apk: true,
+      validate_only: true
+    )
+  end
 end

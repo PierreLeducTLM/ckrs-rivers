@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "308113899505",
+    "project_id": "flowcast-3bce9",
+    "storage_bucket": "flowcast-3bce9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:308113899505:android:88ed6ec43967d30fbc8e50",
+        "android_client_info": {
+          "package_name": "com.flowcast.paddle.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmhDOjbwpZoOqG5OHkFk_h5rgnD9PfIoI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

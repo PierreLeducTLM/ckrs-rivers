@@ -1,2 +1,2 @@
 json_key_file("fastlane/play-store-key.json")
-package_name("com.flowcast.app")
+package_name("com.flowcast.paddle.app")

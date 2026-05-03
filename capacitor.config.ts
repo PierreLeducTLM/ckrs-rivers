@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.flowcast.app",
+  appId: "com.flowcast.paddle.app",
   appName: "FlowCast",
   // Server-rendered app: Capacitor loads the deployed URL in the WebView.
   // Change this to your production Vercel URL before building for release.
