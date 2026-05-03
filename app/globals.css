@@ -1,16 +1,12 @@
 @import "tailwindcss";
 
+/* Disable Tailwind's dark variant — light theme only. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
   --brand: #2D8FCC;
-}
-
-.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
 }
 
 @theme inline {
