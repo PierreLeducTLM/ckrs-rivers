@@ -244,6 +244,11 @@
   resolved "https://registry.npmjs.org/@capacitor/push-notifications/-/push-notifications-6.0.4.tgz"
   integrity sha512-ZUxrHG17NztdcRMvual7b2GY45hcEWTLCjV01BjhyooDOUpvUGneFd95g+sJ6WhQTc90uVuaLuWl1xhXsBvBbg==
 
+"@capacitor/share@^6.0.4":
+  version "6.0.4"
+  resolved "https://registry.npmjs.org/@capacitor/share/-/share-6.0.4.tgz"
+  integrity sha512-Ij8C3as4n6L+SUj3M1ko+DGIsrDw2VTkn5Y/pQnFRI9dRk6YoSpGKLN54yOyN7ew3N9bVa8Rko+dFwdcNg7ESA==
+
 "@capacitor/splash-screen@^6.0.4":
   version "6.0.4"
   resolved "https://registry.npmjs.org/@capacitor/splash-screen/-/splash-screen-6.0.4.tgz"

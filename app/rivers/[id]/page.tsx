@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
 import { getFeatureFlagState } from "@/lib/feature-flags";
 import { sql } from "@/lib/db/client";
@@ -22,6 +23,7 @@ import {
 } from "@/app/components/utils";
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
+import ShareButton from "@/app/components/share-button";
 import UpdatedAt from "./updated-at";
 import { pathDistanceKm } from "@/lib/geo/haversine";
 
@@ -97,6 +99,43 @@ function Section({
       {children}
     </section>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Metadata (OpenGraph for social/messenger link previews)
+// ---------------------------------------------------------------------------
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const station = await getStationById(id);
+  if (!station) return {};
+
+  const title = `${station.name} — FlowCast`;
+  const description = (station.description as string | undefined)?.slice(0, 200)
+    ?? `Real-time flow & paddling status for ${station.name}.`;
+  const url = `https://www.flowcast.ca/rivers/${id}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      url,
+      title,
+      description,
+      siteName: "FlowCast",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -255,10 +294,13 @@ export default async function RiverPage({
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back + Favorite */}
+        {/* Back + Favorite + Share */}
         <div className="flex items-center justify-between">
           <BackButton />
-          <FavoriteButton stationId={id} />
+          <div className="flex items-center gap-2">
+            <ShareButton stationId={id} stationName={station.name} kind="river" />
+            <FavoriteButton stationId={id} />
+          </div>
         </div>
 
         {/* River header */}
@@ -405,50 +447,72 @@ export default async function RiverPage({
               <Section titleKey="detail.putInTakeOut">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {putIn && (
-                    <NavigateToPoint
-                      lat={putIn[0]}
-                      lon={putIn[1]}
-                      label="Put-in"
-                      className="cursor-pointer rounded-lg border border-green-200 bg-green-50/50 p-4 text-left transition-colors hover:bg-green-100/60 active:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:bg-green-950/50"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">
-                          P
-                        </span>
-                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300">
-                          <T k="detail.putIn" />
-                        </h3>
-                        <svg className="ml-auto h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
+                    <div className="relative">
+                      <NavigateToPoint
+                        lat={putIn[0]}
+                        lon={putIn[1]}
+                        label="Put-in"
+                        className="block w-full cursor-pointer rounded-lg border border-green-200 bg-green-50/50 p-4 text-left transition-colors hover:bg-green-100/60 active:bg-green-100 dark:border-green-900 dark:bg-green-950/30 dark:hover:bg-green-950/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-xs font-bold text-white">
+                            P
+                          </span>
+                          <h3 className="text-sm font-semibold text-green-800 dark:text-green-300">
+                            <T k="detail.putIn" />
+                          </h3>
+                          <svg className="ml-auto h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                          </svg>
+                        </div>
+                        <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                          {putIn[0].toFixed(5)}, {putIn[1].toFixed(5)}
+                        </p>
+                      </NavigateToPoint>
+                      <div className="absolute right-2 top-2">
+                        <ShareButton
+                          stationId={id}
+                          stationName={station.name}
+                          kind="put-in"
+                          className="rounded-md bg-white/80 p-1.5 backdrop-blur transition-colors hover:bg-white dark:bg-zinc-900/80 dark:hover:bg-zinc-900"
+                          iconClassName="h-4 w-4 text-green-700 dark:text-green-300"
+                        />
                       </div>
-                      <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
-                        {putIn[0].toFixed(5)}, {putIn[1].toFixed(5)}
-                      </p>
-                    </NavigateToPoint>
+                    </div>
                   )}
                   {takeOut && (
-                    <NavigateToPoint
-                      lat={takeOut[0]}
-                      lon={takeOut[1]}
-                      label="Take-out"
-                      className="cursor-pointer rounded-lg border border-red-200 bg-red-50/50 p-4 text-left transition-colors hover:bg-red-100/60 active:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:hover:bg-red-950/50"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
-                          T
-                        </span>
-                        <h3 className="text-sm font-semibold text-red-800 dark:text-red-300">
-                          <T k="detail.takeOut" />
-                        </h3>
-                        <svg className="ml-auto h-4 w-4 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
+                    <div className="relative">
+                      <NavigateToPoint
+                        lat={takeOut[0]}
+                        lon={takeOut[1]}
+                        label="Take-out"
+                        className="block w-full cursor-pointer rounded-lg border border-red-200 bg-red-50/50 p-4 text-left transition-colors hover:bg-red-100/60 active:bg-red-100 dark:border-red-900 dark:bg-red-950/30 dark:hover:bg-red-950/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
+                            T
+                          </span>
+                          <h3 className="text-sm font-semibold text-red-800 dark:text-red-300">
+                            <T k="detail.takeOut" />
+                          </h3>
+                          <svg className="ml-auto h-4 w-4 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                          </svg>
+                        </div>
+                        <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                          {takeOut[0].toFixed(5)}, {takeOut[1].toFixed(5)}
+                        </p>
+                      </NavigateToPoint>
+                      <div className="absolute right-2 top-2">
+                        <ShareButton
+                          stationId={id}
+                          stationName={station.name}
+                          kind="take-out"
+                          className="rounded-md bg-white/80 p-1.5 backdrop-blur transition-colors hover:bg-white dark:bg-zinc-900/80 dark:hover:bg-zinc-900"
+                          iconClassName="h-4 w-4 text-red-700 dark:text-red-300"
+                        />
                       </div>
-                      <p className="mt-2 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
-                        {takeOut[0].toFixed(5)}, {takeOut[1].toFixed(5)}
-                      </p>
-                    </NavigateToPoint>
+                    </div>
                   )}
                 </div>
               </Section>
