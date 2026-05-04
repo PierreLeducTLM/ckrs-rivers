@@ -12,6 +12,7 @@ import SubscribeModal from "../subscribe-modal";
 import FeedbackModal from "../feedback-modal";
 import { useTab } from "./tab-context";
 import BottomNav from "./bottom-nav";
+import SettingsMenu from "./settings-menu";
 import MyRiversTab from "./my-rivers-tab";
 import ExploreTab from "./explore-tab";
 import MapTab from "./map-tab";
@@ -299,11 +300,14 @@ export default function AppShell({
       </div>
 
       {/* Header */}
-      <div ref={headerRef} className="relative z-20 mb-4 flex items-center gap-2">
-        <Image src="/logo2.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
-        <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">
-          {t("app.title")}
-        </h1>
+      <div ref={headerRef} className="relative z-20 mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Image src="/logo2.png" alt="" width={36} height={36} className="h-9 w-9 object-contain" />
+          <h1 className="text-lg font-bold tracking-tight text-brand sm:text-xl">
+            {t("app.title")}
+          </h1>
+        </div>
+        <SettingsMenu />
       </div>
 
       {/* Time travel banner (sticky under header when active) */}
