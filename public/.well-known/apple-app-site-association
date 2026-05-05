@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["SBN6A79J6H.com.flowcast.paddle.app"],
+        "components": [
+          { "/": "/rivers/*" },
+          { "/": "/go/*" }
+        ]
+      }
+    ]
+  }
+}

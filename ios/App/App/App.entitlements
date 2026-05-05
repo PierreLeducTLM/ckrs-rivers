@@ -4,5 +4,10 @@
 <dict>
 	<key>aps-environment</key>
 	<string>production</string>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.flowcast.ca</string>
+		<string>applinks:flowcast.ca</string>
+	</array>
 </dict>
 </plist>
