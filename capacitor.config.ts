@@ -36,6 +36,7 @@ const config: CapacitorConfig = {
       "@capacitor/splash-screen",
       "@capacitor/status-bar",
       "@capacitor/push-notifications",
+      "@capacitor/share",
     ],
   },
 };
