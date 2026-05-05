@@ -5,8 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.flowcast.paddle.app",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_UPLOAD_KEY_SHA256",
-        "REPLACE_WITH_PLAY_APP_SIGNING_SHA256"
+        "29:DD:FD:7D:38:4F:7C:3B:4D:0F:0E:92:A7:BC:ED:69:9D:8B:4A:EE:6F:54:A9:43:3D:DE:84:33:E7:7F:DB:A4",
+        "FE:24:B7:00:00:B9:2E:A3:E9:7E:E8:E5:6E:F8:51:4E:50:E2:D1:F7:D5:12:1B:4E:04:24:71:82:E5:1B:CD:C7"
       ]
     }
   }
