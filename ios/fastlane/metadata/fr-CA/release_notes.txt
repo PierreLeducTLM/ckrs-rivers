@@ -1,1 +1,1 @@
-Version initiale.
+• Les liens de rivières partagés (Messenger, texto, courriel…) ouvrent maintenant directement dans FlowCast au lieu d'un navigateur intégré.
