@@ -16,6 +16,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// apple-itunes-app smart banner. Lets mobile Safari surface "Open in app" /
+// "View on App Store" without us writing any banner UI. Only renders inside
+// Safari, but it's a free win for users who tap "⋯ → Open in Safari" out of
+// Messenger's in-app browser.
+const IOS_APP_STORE_ID = process.env.NEXT_PUBLIC_IOS_APP_STORE_ID;
+const otherMeta: Record<string, string> = {};
+if (IOS_APP_STORE_ID) {
+  otherMeta["apple-itunes-app"] = `app-id=${IOS_APP_STORE_ID}`;
+}
+
 export const metadata: Metadata = {
   title: "FlowCast — River flow forecasts",
   description: "River flow forecasts for paddlers",
@@ -24,6 +34,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "FlowCast",
   },
+  other: otherMeta,
 };
 
 export const viewport: Viewport = {

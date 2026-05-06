@@ -35,6 +35,17 @@
                 <data android:pathPrefix="/go/" />
             </intent-filter>
 
+            <!-- Custom scheme for the deferred-deep-link bouncer's iOS-style fallback.
+                 The primary Android flow uses intent:// (handled by the https filter
+                 above), but this lets `flowcast://...` URLs from any context (manual
+                 testing, future channels) resolve to the app. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="flowcast" />
+            </intent-filter>
+
         </activity>
 
         <provider

@@ -24,6 +24,8 @@ import {
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
 import ShareButton from "@/app/components/share-button";
+import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
+import AutoNavigate from "./auto-navigate";
 import UpdatedAt from "./updated-at";
 import { pathDistanceKm } from "@/lib/geo/haversine";
 
@@ -144,10 +146,18 @@ export async function generateMetadata({
 
 export default async function RiverPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const search = await searchParams;
+  const navigateRaw = Array.isArray(search.navigate)
+    ? search.navigate[0]
+    : search.navigate;
+  const navigateKind: "put-in" | "take-out" | null =
+    navigateRaw === "put-in" || navigateRaw === "take-out" ? navigateRaw : null;
 
   const station = await getStationById(id);
   if (!station) notFound();
@@ -291,8 +301,27 @@ export default async function RiverPage({
   const hasMapContent =
     (riverPath && riverPath.length > 0) || putIn || takeOut || rapids.length > 0;
 
+  // Auto-launch maps when the app is opened on a put-in / take-out share via
+  // the DDL flow. Only fires inside Capacitor (web visitors aren't disturbed).
+  const autoNavigatePoint = (() => {
+    if (!navigateKind) return null;
+    const coords = navigateKind === "put-in" ? putIn : takeOut;
+    if (!coords) return null;
+    const label = `${navigateKind === "put-in" ? "Put-in" : "Take-out"} — ${station.name}`;
+    return { kind: navigateKind, lat: coords[0], lon: coords[1], label };
+  })();
+
   return (
     <div className="min-h-screen bg-zinc-50 font-sans dark:bg-black">
+      <DeepLinkBouncer />
+      {autoNavigatePoint && (
+        <AutoNavigate
+          kind={autoNavigatePoint.kind}
+          lat={autoNavigatePoint.lat}
+          lon={autoNavigatePoint.lon}
+          label={autoNavigatePoint.label}
+        />
+      )}
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Back + Favorite + Share */}
         <div className="flex items-center justify-between">

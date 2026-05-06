@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getStationById } from "@/lib/data/rivers";
 import RedirectToMaps from "./redirect-to-maps";
+import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
 
 export const dynamic = "force-dynamic";
 
@@ -77,20 +78,23 @@ export default async function GoToPointPage({
   const fallback = googleMapsUrl(lat, lon);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-6 text-center font-sans dark:bg-zinc-950">
-      <RedirectToMaps lat={lat} lon={lon} label={label} fallbackUrl={fallback} />
-      <div>
-        <p className="text-base text-zinc-600 dark:text-zinc-300">
-          Opening in your maps app…
-        </p>
-        <p className="mt-3">
-          <a
-            href={fallback}
-            className="font-semibold text-sky-700 underline hover:text-sky-800 dark:text-sky-400"
-          >
-            Tap here if it doesn&apos;t open automatically
-          </a>
-        </p>
+    <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-zinc-950">
+      <DeepLinkBouncer />
+      <div className="flex flex-1 items-center justify-center p-6 text-center">
+        <RedirectToMaps lat={lat} lon={lon} label={label} fallbackUrl={fallback} />
+        <div>
+          <p className="text-base text-zinc-600 dark:text-zinc-300">
+            Opening in your maps app…
+          </p>
+          <p className="mt-3">
+            <a
+              href={fallback}
+              className="font-semibold text-sky-700 underline hover:text-sky-800 dark:text-sky-400"
+            >
+              Tap here if it doesn&apos;t open automatically
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
