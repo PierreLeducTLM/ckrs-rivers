@@ -190,11 +190,13 @@ CREATE TABLE IF NOT EXISTS feedback (
 CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feedback_station ON feedback(station_id) WHERE station_id IS NOT NULL;
 
--- 14. Deferred deep link clicks
--- Tracks share-link taps from in-app browsers (Messenger, Instagram, ...) so the
--- FlowCast app can recover the originally shared path on first launch after install.
--- Android matches by clickId carried through Play Store install referrer; iOS
--- matches best-effort by hashed (IP/24 + UA) within a short time window.
+-- 14. Deferred deep link clicks. Tracks share-link taps from in-app browsers
+-- (Messenger, Instagram, etc) so the FlowCast app can recover the originally
+-- shared path on first launch after install. Android matches by clickId
+-- carried through the Play Store install referrer. iOS matches best-effort
+-- by hashed (IP/24 + UA) within a short time window.
+-- NOTE - migrate.ts splits on the semicolon character, so don't use
+-- semicolons in comments.
 CREATE TABLE IF NOT EXISTS ddl_clicks (
   click_id     TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   target_path  TEXT NOT NULL,
