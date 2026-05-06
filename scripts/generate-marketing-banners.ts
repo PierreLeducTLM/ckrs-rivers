@@ -37,6 +37,12 @@ const VARIANTS: Variant[] = [
   { name: "web", badgePath: BADGE_WEB, badgeWidth: 380 },
 ];
 
+const ALL_BADGES = [
+  { path: BADGE_IOS, width: 180 },
+  { path: BADGE_ANDROID, width: 190 },
+  { path: BADGE_WEB, width: 190 },
+];
+
 type Layout = {
   suffix: string;
   W: number;
@@ -184,10 +190,76 @@ async function buildBanner(variant: Variant, layout: Layout): Promise<void> {
   console.log(`✓ ${out}`);
 }
 
+async function buildAllBanner(): Promise<void> {
+  const W = 1080;
+  const H = 540;
+  const out = join(ROOT, "marketing", "banner-all-strip.png");
+
+  const logoBuf = await sharp(LOGO)
+    .resize({ width: 280, height: 280, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  const textBuf = Buffer.from(`
+<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  <style>
+    .title { font: 700 80px 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; letter-spacing: -2px; }
+    .tag   { font: 500 24px 'Helvetica Neue', Arial, sans-serif; fill: #e6f3ff; opacity: 0.95; }
+    .pick  { font: 500 18px 'Helvetica Neue', Arial, sans-serif; fill: #ffffff; opacity: 0.85; text-anchor: middle; }
+  </style>
+  <text x="400" y="150" class="title">${TITLE}</text>
+  <text x="400" y="195" class="tag">${TAGLINE}</text>
+  <text x="${W / 2}" y="335" class="pick">Disponible sur</text>
+</svg>`);
+
+  const badges = await Promise.all(
+    ALL_BADGES.map(async (b) => {
+      const buf = await sharp(await readFile(b.path))
+        .resize({ width: b.width, fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .png()
+        .toBuffer();
+      const meta = await sharp(buf).metadata();
+      return { buf, w: b.width, h: meta.height ?? 60 };
+    }),
+  );
+
+  const gap = 28;
+  const rowWidth = badges.reduce((s, b) => s + b.w, 0) + gap * (badges.length - 1);
+  const rowLeftStart = Math.round((W - rowWidth) / 2);
+  const maxH = Math.max(...badges.map((b) => b.h));
+  const rowTop = H - 50 - maxH;
+
+  const composites = [
+    { input: logoBuf, left: 80, top: 60 },
+    { input: textBuf, left: 0, top: 0 },
+  ];
+  let cursor = rowLeftStart;
+  for (const b of badges) {
+    composites.push({
+      input: b.buf,
+      left: cursor,
+      top: rowTop + Math.round((maxH - b.h) / 2),
+    });
+    cursor += b.w + gap;
+  }
+
+  if (rowWidth > W - 40) {
+    console.warn(`⚠ badges row (${rowWidth}px) overflows banner — consider smaller widths`);
+  }
+
+  await sharp(backgroundSvg(W, H))
+    .composite(composites)
+    .png({ compressionLevel: 9 })
+    .toFile(out);
+
+  console.log(`✓ ${out}`);
+}
+
 async function main(): Promise<void> {
   for (const v of VARIANTS) {
     await buildBanner(v, LAYOUT_STRIP);
   }
+  await buildAllBanner();
 }
 
 main().catch((err) => {
