@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { isInAppBrowser } from "@/lib/ddl/detect";
+
 interface Props {
   lat: number;
   lon: number;
@@ -24,8 +26,30 @@ function pickMapsUrl(lat: number, lon: number, label: string, fallbackUrl: strin
 
 export default function RedirectToMaps({ lat, lon, label, fallbackUrl }: Props) {
   useEffect(() => {
-    const url = pickMapsUrl(lat, lon, label, fallbackUrl);
-    window.location.replace(url);
+    let cancelled = false;
+
+    async function run() {
+      if (typeof navigator === "undefined") return;
+      // In an in-app browser, the DeepLinkBouncer takes over with a banner /
+      // intent redirect — don't yank the user into Maps from underneath it.
+      if (isInAppBrowser(navigator.userAgent)) return;
+      // Inside the FlowCast app itself, Capacitor rewrites /go/* to /rivers/*
+      // before this component ever mounts, but defend just in case.
+      try {
+        const cap = await import("@capacitor/core");
+        if (cap.Capacitor.isNativePlatform()) return;
+      } catch {
+        // Capacitor unavailable — regular browser, continue.
+      }
+      if (cancelled) return;
+      const url = pickMapsUrl(lat, lon, label, fallbackUrl);
+      window.location.replace(url);
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
   }, [lat, lon, label, fallbackUrl]);
 
   return null;
