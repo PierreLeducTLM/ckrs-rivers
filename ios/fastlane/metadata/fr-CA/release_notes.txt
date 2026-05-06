@@ -1,1 +1,4 @@
-• Les liens de rivières partagés (Messenger, texto, courriel…) ouvrent maintenant directement dans FlowCast au lieu d'un navigateur intégré.
+Améliorations du partage
+
+• Les liens FlowCast partagés depuis Messenger, Facebook ou Instagram s'ouvrent maintenant directement dans l'application au lieu de rester coincés dans le navigateur intégré.
+• Si l'application n'est pas encore installée, le lien est conservé et vous amène à la bonne rivière dès la première ouverture après l'installation.
