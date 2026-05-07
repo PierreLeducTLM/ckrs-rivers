@@ -275,7 +275,14 @@ interface StationMetaEditorProps {
   initialWeatherCity?: string | null;
   initialRapidClass?: string | null;
   initialDescription?: string | null;
+  initialApproved?: boolean;
+  initialHidden?: boolean;
   isAdmin?: boolean;
+  approved?: boolean;
+  unlocked?: boolean;
+  onApprovedChange?: (approved: boolean) => void;
+  onHiddenChange?: (hidden: boolean) => void;
+  onUnlock?: () => void;
 }
 
 export default function StationMetaEditor({
@@ -285,7 +292,14 @@ export default function StationMetaEditor({
   initialWeatherCity = null,
   initialRapidClass = null,
   initialDescription = null,
+  initialApproved = false,
+  initialHidden = false,
   isAdmin = false,
+  approved: approvedProp,
+  unlocked: unlockedProp,
+  onApprovedChange,
+  onHiddenChange,
+  onUnlock,
 }: StationMetaEditorProps) {
   const { t } = useTranslation();
   const [name, setName] = useState(initialName);
@@ -298,13 +312,57 @@ export default function StationMetaEditor({
   const [savingDesc, setSavingDesc] = useState(false);
   const [savingClass, setSavingClass] = useState(false);
 
-  const patch = async (fields: Record<string, string | number | null>) => {
+  // Approve/hide state — controlled if parent passes them, otherwise local.
+  const [approvedLocal, setApprovedLocal] = useState(initialApproved);
+  const [hiddenLocal, setHiddenLocal] = useState(initialHidden);
+  const [unlockedLocal, setUnlockedLocal] = useState(false);
+  const [savingApproved, setSavingApproved] = useState(false);
+  const [savingHidden, setSavingHidden] = useState(false);
+
+  const approved = approvedProp ?? approvedLocal;
+  const unlocked = unlockedProp ?? unlockedLocal;
+  const locked = approved && !unlocked;
+
+  const patch = async (fields: Record<string, string | number | boolean | null>) => {
+    const body = locked && fields.unlock === undefined
+      ? { ...fields, unlock: true }
+      : fields;
     const res = await fetch(`/api/stations/${stationId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fields),
+      body: JSON.stringify(body),
     });
     return res;
+  };
+
+  const toggleApproved = async () => {
+    setSavingApproved(true);
+    const next = !approved;
+    const res = await patch({ approved: next });
+    setSavingApproved(false);
+    if (res.ok) {
+      setApprovedLocal(next);
+      onApprovedChange?.(next);
+      // When unapproving, drop the session-unlock so the lock UI reappears
+      // if the admin re-approves.
+      if (!next) setUnlockedLocal(false);
+    }
+  };
+
+  const toggleHidden = async () => {
+    setSavingHidden(true);
+    const next = !hiddenLocal;
+    const res = await patch({ hidden: next });
+    setSavingHidden(false);
+    if (res.ok) {
+      setHiddenLocal(next);
+      onHiddenChange?.(next);
+    }
+  };
+
+  const handleUnlock = () => {
+    setUnlockedLocal(true);
+    onUnlock?.();
   };
 
   // Read-only mode for non-admin users
@@ -325,8 +383,115 @@ export default function StationMetaEditor({
     );
   }
 
+  // Locked admin view: name + rapid class read-only, with an unlock banner.
+  // The Approved/Hidden toggles remain available so the admin can manage state.
+  if (locked) {
+    return (
+      <div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {name}
+          </h1>
+          {rapidClass && (
+            <span className="rounded bg-zinc-800 px-2 py-1 text-xs font-bold uppercase text-white dark:bg-zinc-200 dark:text-zinc-900">
+              {rapidClass}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            {t("admin.approvedBadge")}
+          </span>
+          {hiddenLocal && (
+            <span className="inline-flex items-center rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">
+              {t("admin.hiddenBadge")}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-900 dark:bg-emerald-950/30">
+          <svg className="h-4 w-4 flex-shrink-0 text-emerald-700 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-3 0h15a1.5 1.5 0 011.5 1.5v7.5a1.5 1.5 0 01-1.5 1.5h-15a1.5 1.5 0 01-1.5-1.5v-7.5a1.5 1.5 0 011.5-1.5z" />
+          </svg>
+          <span className="text-emerald-900 dark:text-emerald-200">
+            {t("admin.lockedBanner")}
+          </span>
+          <button
+            type="button"
+            onClick={handleUnlock}
+            className="ml-auto rounded-md border border-emerald-300 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900"
+          >
+            {t("admin.unlockToEdit")}
+          </button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={toggleApproved}
+            disabled={savingApproved}
+            className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-50 disabled:opacity-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+          >
+            {savingApproved ? "..." : t("admin.markUnapproved")}
+          </button>
+          <button
+            type="button"
+            onClick={toggleHidden}
+            disabled={savingHidden}
+            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            {savingHidden ? "..." : hiddenLocal ? t("admin.showToPublic") : t("admin.hideFromPublic")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
+      {/* Approve / Hide controls */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={toggleApproved}
+          disabled={savingApproved}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+            approved
+              ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          }`}
+        >
+          {approved && (
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+          )}
+          {savingApproved
+            ? "..."
+            : approved
+              ? t("admin.markUnapproved")
+              : t("admin.markApproved")}
+        </button>
+        <button
+          type="button"
+          onClick={toggleHidden}
+          disabled={savingHidden}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+            hiddenLocal
+              ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+              : "border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          }`}
+        >
+          {savingHidden ? "..." : hiddenLocal ? t("admin.showToPublic") : t("admin.hideFromPublic")}
+        </button>
+        {approved && unlocked && (
+          <span className="text-xs text-amber-600 dark:text-amber-400">
+            {t("admin.unlockedNote")}
+          </span>
+        )}
+      </div>
+
       {/* Editable station name */}
       <EditableText
         value={name}

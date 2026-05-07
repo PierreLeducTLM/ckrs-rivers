@@ -352,6 +352,8 @@ export default async function RiverPage({
             initialRapidClass={rapidClass}
             initialDescription={description}
             initialRapids={rapids}
+            initialApproved={station.approved ?? false}
+            initialHidden={station.hidden ?? false}
             rapidsFlagState={rapidsFlagState}
             regime={station.regime ?? null}
           />

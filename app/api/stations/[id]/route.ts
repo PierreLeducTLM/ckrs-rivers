@@ -47,10 +47,50 @@ export async function PATCH(
     rapid_class?: string | null;
     description?: string | null;
     rapids?: Rapid[];
+    approved?: boolean;
+    hidden?: boolean;
+    unlock?: boolean;
   };
 
+  // Approved-lock: if the river is currently approved and this request would
+  // change anything other than the approved/hidden flags, require an explicit
+  // unlock=true in the body. The lock is intentionally easy to bypass — its
+  // purpose is to make accidental edits to vetted content impossible.
+  const lockEditableFields = [
+    body.name,
+    body.paddling_min,
+    body.paddling_ideal,
+    body.paddling_max,
+    body.weather_city,
+    body.put_in_lat,
+    body.put_in_lon,
+    body.take_out_lat,
+    body.take_out_lon,
+    body.river_path,
+    body.rapid_class,
+    body.description,
+    body.rapids,
+  ];
+  const touchesLockedField = lockEditableFields.some((v) => v !== undefined);
+
+  if (touchesLockedField && body.unlock !== true) {
+    const rows = (await sql(
+      `SELECT approved FROM stations WHERE id = $1`,
+      [id],
+    )) as { approved: boolean | null }[];
+    if (rows.length === 0) {
+      return Response.json({ error: "Station not found" }, { status: 404 });
+    }
+    if (rows[0].approved === true) {
+      return Response.json(
+        { error: "River is approved — unlock first" },
+        { status: 423 },
+      );
+    }
+  }
+
   const sets: string[] = [];
-  const values: (string | number | null)[] = [];
+  const values: (string | number | boolean | null)[] = [];
   let idx = 1;
 
   if (body.name !== undefined) {
@@ -141,6 +181,19 @@ export async function PATCH(
     values.push(JSON.stringify(parsed.data));
   }
 
+  if (body.approved !== undefined) {
+    sets.push(`approved = $${idx++}`);
+    values.push(body.approved);
+    if (body.approved === true) {
+      sets.push(`approved_at = now()`);
+    }
+  }
+
+  if (body.hidden !== undefined) {
+    sets.push(`hidden = $${idx++}`);
+    values.push(body.hidden);
+  }
+
   if (sets.length === 0) {
     return Response.json({ error: "No fields to update" }, { status: 400 });
   }
@@ -162,9 +215,19 @@ export async function DELETE(
 ) {
   const { id } = await params;
 
-  const rows = await sql(`SELECT id FROM stations WHERE id = $1`, [id]) as { id: string }[];
+  const rows = await sql(`SELECT id, approved FROM stations WHERE id = $1`, [id]) as {
+    id: string;
+    approved: boolean | null;
+  }[];
   if (rows.length === 0) {
     return Response.json({ error: "Station not found" }, { status: 404 });
+  }
+
+  if (rows[0].approved === true) {
+    return Response.json(
+      { error: "River is approved — unapprove before deleting" },
+      { status: 423 },
+    );
   }
 
   await sql(`DELETE FROM stations WHERE id = $1`, [id]);

@@ -330,7 +330,19 @@
     "deleteConfirmTitle": "Delete river?",
     "deleteConfirmMessage": "This will permanently delete \"{name}\" and all its data (forecasts, subscriptions, flow readings). This cannot be undone.",
     "confirmDelete": "Delete",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "markApproved": "Mark approved",
+    "markUnapproved": "Mark unapproved",
+    "approvedBadge": "Approved",
+    "approvedBadgeTooltip": "Reviewed by an admin — info verified",
+    "lockedBanner": "Reviewed and approved. Unlock to edit.",
+    "unlockToEdit": "Unlock to edit",
+    "unlockedNote": "Unlocked for this session",
+    "hideFromPublic": "Hide from public",
+    "showToPublic": "Show to public",
+    "hiddenBadge": "Hidden",
+    "hiddenBadgeTooltip": "Not visible to non-admin users",
+    "hiddenBanner": "Hidden from public — only admins see this river in lists."
   },
   "language": {
     "label": "Language",

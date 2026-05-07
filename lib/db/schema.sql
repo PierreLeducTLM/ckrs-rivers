@@ -19,6 +19,9 @@ CREATE TABLE IF NOT EXISTS stations (
   rapids             JSONB NOT NULL DEFAULT '[]'::jsonb,
   status             TEXT NOT NULL DEFAULT 'pending',
   error_message      TEXT,
+  approved           BOOLEAN NOT NULL DEFAULT false,
+  approved_at        TIMESTAMPTZ,
+  hidden             BOOLEAN NOT NULL DEFAULT false,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
