@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { tasks } from "@trigger.dev/sdk/v3";
 
 import { sql } from "@/lib/db/client";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 // ---------------------------------------------------------------------------
 // Test station constants
@@ -372,6 +373,9 @@ Sent via admin test panel</div></div></body></html>`;
 // ---------------------------------------------------------------------------
 
 export async function GET() {
+  const authResult = await requireAdmin();
+  if (authResult instanceof Response) return authResult;
+
   // Check test station exists
   const stations = (await sql(
     `SELECT id, name, status FROM stations WHERE id = $1`,
@@ -435,6 +439,9 @@ export async function GET() {
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
+  const authResult = await requireAdmin();
+  if (authResult instanceof Response) return authResult;
+
   const body = (await request.json()) as {
     action: string;
     email?: string;

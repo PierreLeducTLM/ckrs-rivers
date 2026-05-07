@@ -1,12 +1,15 @@
 import { sql } from "@/lib/db/client";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 /**
  * GET /api/admin/subscribers
  *
  * Returns all subscribers with their active subscriptions (station names).
- * No auth gate — the admin page is client-gated via useAdmin().
  */
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth instanceof Response) return auth;
+
   const rows = (await sql(
     `SELECT
        sub.id,

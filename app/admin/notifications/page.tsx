@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useAdmin } from "@/app/use-admin";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -152,7 +151,6 @@ function StatusDot({ ok }: { ok: boolean }) {
 // ---------------------------------------------------------------------------
 
 export default function AdminNotificationsPage() {
-  const isAdmin = useAdmin();
   const [status, setStatus] = useState<StatusData | null>(null);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -286,23 +284,6 @@ export default function AdminNotificationsPage() {
     }
     setActionLoading(null);
   };
-
-  // ---------- Access control ----------
-  if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Admin Access Required</h1>
-          <p className="mt-2 text-foreground/60">
-            Add <code className="rounded bg-foreground/5 px-1.5 py-0.5 text-sm">?admin</code> to any page URL to enable admin mode.
-          </p>
-          <Link href="/" className="mt-4 inline-block text-sm text-brand underline">
-            Back to home
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

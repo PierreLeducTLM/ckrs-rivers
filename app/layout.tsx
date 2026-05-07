@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import CapacitorInit from "./capacitor-init";
+import AuthSessionProvider from "./session-provider";
 import { I18nProvider } from "@/lib/i18n/provider";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next"
@@ -56,12 +57,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <I18nProvider>
-          <Analytics/>
-          <SpeedInsights />
-          <CapacitorInit />
-          {children}
-        </I18nProvider>
+        <AuthSessionProvider>
+          <I18nProvider>
+            <Analytics/>
+            <SpeedInsights />
+            <CapacitorInit />
+            {children}
+          </I18nProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );

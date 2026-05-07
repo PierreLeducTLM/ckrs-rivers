@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAdmin } from "@/app/use-admin";
 
 interface Subscription {
   stationId: string;
@@ -19,13 +18,11 @@ interface Subscriber {
 }
 
 export default function AdminSubscribersPage() {
-  const isAdmin = useAdmin();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAdmin) return;
     fetch("/api/admin/subscribers")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load subscribers");
@@ -34,15 +31,7 @@ export default function AdminSubscribersPage() {
       .then((data) => setSubscribers(data.subscribers))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [isAdmin]);
-
-  if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <p className="text-foreground/50">Admin access required</p>
-      </div>
-    );
-  }
+  }, []);
 
   const totalActive = subscribers.filter((s) =>
     s.subscriptions.some((sub) => sub.active),

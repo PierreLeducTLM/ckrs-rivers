@@ -1,6 +1,10 @@
 import { sql } from "@/lib/db/client";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth instanceof Response) return auth;
+
   const rows = (await sql(
     `SELECT id, name, paddling_min, paddling_ideal, paddling_max
      FROM stations

@@ -4,15 +4,22 @@ import {
   setFeatureFlagState,
   type FlagState,
 } from "@/lib/feature-flags";
+import { requireAdmin } from "@/lib/auth/require-admin";
 
 const VALID: FlagState[] = ["off", "preview", "on"];
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth instanceof Response) return auth;
+
   const flags = await getAllFeatureFlags();
   return Response.json({ flags });
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAdmin();
+  if (auth instanceof Response) return auth;
+
   const body = (await request.json().catch(() => ({}))) as {
     key?: string;
     state?: string;

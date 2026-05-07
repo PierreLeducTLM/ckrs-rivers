@@ -218,3 +218,21 @@ CREATE INDEX IF NOT EXISTS idx_ddl_clicks_match
 CREATE INDEX IF NOT EXISTS idx_ddl_clicks_expires
   ON ddl_clicks(expires_at)
   WHERE consumed_at IS NULL;
+
+-- 15. Admin users. Operators of the FlowCast admin panel. Created manually
+-- by an existing admin from /admin/users (or by the /setup wizard if the
+-- table is empty). Uses bcrypt password hashes - the application is the
+-- only thing that ever reads or writes password_hash.
+CREATE TABLE IF NOT EXISTS admin_users (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email           TEXT NOT NULL UNIQUE,
+  password_hash   TEXT NOT NULL,
+  name            TEXT,
+  role            TEXT NOT NULL DEFAULT 'admin',
+  is_active       BOOLEAN NOT NULL DEFAULT true,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_by      UUID REFERENCES admin_users(id) ON DELETE SET NULL,
+  last_login_at   TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_users_email ON admin_users(LOWER(email));
