@@ -72,14 +72,6 @@ export default function RiverCard({
               {t("admin.hiddenBadge")}
             </span>
           )}
-          {isAdmin && card.approved && (
-            <span
-              className="flex-shrink-0 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-              title={t("admin.approvedBadgeTooltip")}
-            >
-              {t("admin.approvedBadge")}
-            </span>
-          )}
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
           <SubscribeButton
