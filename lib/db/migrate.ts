@@ -58,6 +58,9 @@ async function migrate() {
     `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS field TEXT`,
     `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS page_url TEXT`,
     `ALTER TABLE feedback ADD COLUMN IF NOT EXISTS user_agent TEXT`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

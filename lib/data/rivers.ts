@@ -41,6 +41,8 @@ interface StationRow {
   rapid_class: string | null;
   description: string | null;
   rapids: Rapid[] | null;
+  approved: boolean | null;
+  hidden: boolean | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -68,6 +70,8 @@ function rowToStation(row: StationRow): RiverStation {
     rapidClass: row.rapid_class ?? undefined,
     description: row.description ?? undefined,
     rapids: row.rapids ?? [],
+    approved: row.approved ?? false,
+    hidden: row.hidden ?? false,
   });
 }
 

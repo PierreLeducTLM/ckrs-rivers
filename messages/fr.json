@@ -330,7 +330,19 @@
     "deleteConfirmTitle": "Supprimer la riviere?",
     "deleteConfirmMessage": "Cela supprimera definitivement \"{name}\" et toutes ses donnees (previsions, abonnements, lectures de debit). Cette action est irreversible.",
     "confirmDelete": "Supprimer",
-    "deleting": "Suppression..."
+    "deleting": "Suppression...",
+    "markApproved": "Marquer approuvee",
+    "markUnapproved": "Retirer l'approbation",
+    "approvedBadge": "Approuvee",
+    "approvedBadgeTooltip": "Revisee par un admin - informations verifiees",
+    "lockedBanner": "Revisee et approuvee. Deverrouillez pour modifier.",
+    "unlockToEdit": "Deverrouiller",
+    "unlockedNote": "Deverrouillee pour cette session",
+    "hideFromPublic": "Masquer du public",
+    "showToPublic": "Afficher au public",
+    "hiddenBadge": "Masquee",
+    "hiddenBadgeTooltip": "Invisible pour les utilisateurs non-admin",
+    "hiddenBanner": "Masquee du public - seuls les admins voient cette riviere dans les listes."
   },
   "language": {
     "label": "Langue",

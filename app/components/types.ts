@@ -35,4 +35,6 @@ export interface StationCard {
   riverPath?: [number, number][];
   rapidClass?: string;
   rapids?: Rapid[];
+  approved: boolean;
+  hidden: boolean;
 }

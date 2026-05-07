@@ -131,6 +131,8 @@ export default async function Home() {
         : undefined,
       riverPath: station.riverPath,
       rapidClass: station.rapidClass as string | undefined,
+      approved: station.approved ?? false,
+      hidden: station.hidden ?? false,
     };
   });
 

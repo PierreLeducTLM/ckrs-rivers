@@ -64,6 +64,14 @@ export default function RiverCard({
               {card.rapidClass}
             </span>
           )}
+          {isAdmin && card.hidden && (
+            <span
+              className="flex-shrink-0 rounded bg-zinc-200 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
+              title={t("admin.hiddenBadgeTooltip")}
+            >
+              {t("admin.hiddenBadge")}
+            </span>
+          )}
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
           <SubscribeButton

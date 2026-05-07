@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
       const internalId = `custom_${randomUUID().slice(0, 8)}`;
 
       await sql(
-        `INSERT INTO stations (id, station_number, name, lat, lon, status)
-         VALUES ($1, NULL, $2, $3, $4, 'ready')`,
+        `INSERT INTO stations (id, station_number, name, lat, lon, status, hidden)
+         VALUES ($1, NULL, $2, $3, $4, 'ready', true)`,
         [internalId, name, lat, lon],
       );
 
@@ -174,10 +174,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert into database — immediately ready (no model training needed)
+    // Insert into database — ready and hidden by default; admin reviews before publishing
     await sql(
-      `INSERT INTO stations (id, station_number, name, lat, lon, catchment_area_km2, regime, municipality, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ready')`,
+      `INSERT INTO stations (id, station_number, name, lat, lon, catchment_area_km2, regime, municipality, status, hidden)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ready', true)`,
       [internalId, stationId, name, lat, lon, catchmentArea, cehqData.regimeEcoulement, cehqData.municipalite],
     );
 

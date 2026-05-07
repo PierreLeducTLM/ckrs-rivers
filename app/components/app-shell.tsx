@@ -54,8 +54,10 @@ export default function AppShell({
   const [subscribedStationIds, setSubscribedStationIds] = useState<Set<string>>(new Set());
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Hide test stations unless admin
-  const visible = isAdmin ? cards : cards.filter((c) => !c.id.startsWith("TEST-"));
+  // Hide test stations and admin-hidden rivers unless admin
+  const visible = isAdmin
+    ? cards
+    : cards.filter((c) => !c.id.startsWith("TEST-") && !c.hidden);
 
   // ---------------------------------------------------------------------------
   // Pull-to-refresh

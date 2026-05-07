@@ -61,6 +61,8 @@ export const RiverStationSchema = z.object({
   rapidClass: z.string().optional(),
   description: z.string().optional(),
   rapids: z.array(RapidSchema).default([]),
+  approved: z.boolean().default(false),
+  hidden: z.boolean().default(false),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;
