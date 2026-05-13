@@ -249,6 +249,53 @@ function dayMidpointHoursAhead(date: string, nowMs: number): number {
   return (midpointMs - nowMs) / 3600_000;
 }
 
+/**
+ * Forward-looking trend: compare the latest observed flow to the forecast
+ * 2 days out. Falls back to the last 24h of observed data when no forecast
+ * is available. Mirrors lib/notifications/evaluate.ts:computeTrend.
+ */
+function computeTrend(
+  hourlyData: HourlyPoint[],
+  nowMs: number,
+): "rising" | "falling" | "stable" {
+  const THRESHOLD = 0.05;
+  const FORECAST_HORIZON_MS = 48 * 3600_000;
+  const OBSERVED_LOOKBACK_MS = 24 * 3600_000;
+
+  const futureForecasts = hourlyData.filter((p) => {
+    const ts = new Date(p.timestamp).getTime();
+    return ts > nowMs && ts <= nowMs + FORECAST_HORIZON_MS && p.cehqForecast != null;
+  });
+
+  if (futureForecasts.length >= 2) {
+    const observedPoints = hourlyData.filter((p) => p.observed != null);
+    const start =
+      observedPoints.length > 0
+        ? observedPoints[observedPoints.length - 1].observed!
+        : futureForecasts[0].cehqForecast!;
+    const end = futureForecasts[futureForecasts.length - 1].cehqForecast!;
+    if (start > 0) {
+      const change = (end - start) / start;
+      if (change > THRESHOLD) return "rising";
+      if (change < -THRESHOLD) return "falling";
+    }
+    return "stable";
+  }
+
+  const recentObserved = hourlyData.filter((p) => {
+    const ts = new Date(p.timestamp).getTime();
+    return ts >= nowMs - OBSERVED_LOOKBACK_MS && p.observed != null;
+  });
+  if (recentObserved.length < 2) return "stable";
+  const first = recentObserved[0].observed!;
+  const last = recentObserved[recentObserved.length - 1].observed!;
+  if (first <= 0) return "stable";
+  const change = (last - first) / first;
+  if (change > THRESHOLD) return "rising";
+  if (change < -THRESHOLD) return "falling";
+  return "stable";
+}
+
 // ---------------------------------------------------------------------------
 // Snapshot computation
 // ---------------------------------------------------------------------------
@@ -281,17 +328,11 @@ function computeSnapshot(
     else if (runnableWindowDays > 0) break;
   }
 
-  // Trend from last 6 hourly points
-  let trendDirection: "rising" | "falling" | "stable" = "stable";
-  const recent = hourlyData.slice(-6);
-  if (recent.length >= 2) {
-    const flows = recent.map((p) => p.observed ?? p.cehqForecast).filter((f): f is number => f != null);
-    if (flows.length >= 2) {
-      const change = (flows[flows.length - 1] - flows[0]) / flows[0];
-      if (change > 0.05) trendDirection = "rising";
-      else if (change < -0.05) trendDirection = "falling";
-    }
-  }
+  // Tendency — compare the latest observed flow to the forecast 2 days out
+  // so we catch rivers that bump up briefly but are descending overall.
+  // Falls back to the last 24h of observed data if no forecast is available.
+  // Mirrors lib/notifications/evaluate.ts:computeTrend.
+  const trendDirection = computeTrend(hourlyData, nowMs);
 
   // Forecast enters range — apply correction per-day.
   let forecastEntersRange = false;
@@ -407,9 +448,20 @@ function detectAlerts(
 
   const flow = curr.currentFlow?.toFixed(1) ?? "?";
 
-  // its-on
+  // its-on \u2014 skip when the river only briefly bumped above min from below
+  // while the forward tendency is falling (forecast says it'll drop back out).
+  // Coming from too-high (descending into range) is still a legit transition.
   if (nowRunnable && !wasRunnable) {
-    add("its-on", `${stationName} is now runnable at ${flow} m\u00b3/s. Time to paddle!`);
+    const cameFromBelow =
+      !prev || prev.paddlingStatus === "too-low" || prev.paddlingStatus === "unknown";
+    const briefBump =
+      curr.forecastExitsRange &&
+      curr.forecastExitsRangeInHours != null &&
+      curr.forecastExitsRangeInHours < 12;
+    const fluke = cameFromBelow && (curr.trendDirection === "falling" || briefBump);
+    if (!fluke) {
+      add("its-on", `${stationName} is now runnable at ${flow} m\u00b3/s. Time to paddle!`);
+    }
   }
 
   // safety-warning
@@ -422,10 +474,14 @@ function detectAlerts(
     add("dropping-out", `${stationName} expected to drop out of range in ~${Math.round(curr.forecastExitsRangeInHours)}h.`);
   }
 
-  // runnable-in-n-days
+  // runnable-in-n-days — skip when the overall tendency is falling. A single
+  // forecast day that grazes min while the surrounding trend points down is
+  // almost always a brief blip, not a real opportunity.
   if (!nowRunnable && curr.forecastEntersRange && curr.forecastEntersRangeInDays != null) {
-    const d = Math.round(curr.forecastEntersRangeInDays);
-    add("runnable-in-n-days", `${stationName} predicted to become runnable in ${d} day${d === 1 ? "" : "s"}.`);
+    if (curr.trendDirection !== "falling") {
+      const d = Math.round(curr.forecastEntersRangeInDays);
+      add("runnable-in-n-days", `${stationName} predicted to become runnable in ${d} day${d === 1 ? "" : "s"}.`);
+    }
   }
 
   // rain-bump — skip for dam-influenced rivers (CEHQ: "Influencé")

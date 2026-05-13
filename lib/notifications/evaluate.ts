@@ -158,9 +158,21 @@ export function detectAlerts(
   }
 
   // --- its-on: entered runnable range ---
+  // Skip when the river only briefly bumped above min from below while the
+  // forward tendency is falling \u2014 the forecast says it'll drop back out.
+  // Coming from too-high (descending into range) is still a legit transition.
   if (isRunnable && !wasRunnable) {
-    const flow = current.currentFlow?.toFixed(1) ?? "?";
-    add("its-on", `${stationName} is now in runnable range at ${flow} m\u00b3/s. Time to paddle!`);
+    const cameFromBelow =
+      !prev || prev.paddlingStatus === "too-low" || prev.paddlingStatus === "unknown";
+    const briefBump =
+      current.forecastExitsRange &&
+      current.forecastExitsRangeInHours != null &&
+      current.forecastExitsRangeInHours < 12;
+    const fluke = cameFromBelow && (current.trendDirection === "falling" || briefBump);
+    if (!fluke) {
+      const flow = current.currentFlow?.toFixed(1) ?? "?";
+      add("its-on", `${stationName} is now in runnable range at ${flow} m\u00b3/s. Time to paddle!`);
+    }
   }
 
   // --- safety-warning: entered too-high ---
@@ -183,13 +195,18 @@ export function detectAlerts(
   }
 
   // --- runnable-in-n-days: forecast enters range within lead time ---
+  // Skip when the overall tendency is falling — a single forecast day that
+  // grazes the min while the surrounding trend points down is almost always
+  // a brief blip, not a real opportunity.
   if (!isRunnable && current.forecastEntersRange && current.forecastEntersRangeInDays != null) {
-    const days = Math.round(current.forecastEntersRangeInDays);
-    add(
-      "runnable-in-n-days",
-      `${stationName} is predicted to become runnable in ${days} day${days === 1 ? "" : "s"}.`,
-      { entersInDays: days },
-    );
+    if (current.trendDirection !== "falling") {
+      const days = Math.round(current.forecastEntersRangeInDays);
+      add(
+        "runnable-in-n-days",
+        `${stationName} is predicted to become runnable in ${days} day${days === 1 ? "" : "s"}.`,
+        { entersInDays: days },
+      );
+    }
   }
 
   // --- rain-bump: significant precipitation incoming ---
