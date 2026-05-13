@@ -76,3 +76,8 @@ vendor/bundle/
 
 # Firebase config (disabled old ckrsrivers file, awaiting flowcast replacement)
 android/app/google-services.json.old-*
+
+# Claude / nf / claude-flow scratch state — never commit
+.claude/
+.planning/
+ios/App/.claude-flow/

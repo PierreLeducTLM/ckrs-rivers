@@ -218,3 +218,45 @@ CREATE INDEX IF NOT EXISTS idx_ddl_clicks_match
 CREATE INDEX IF NOT EXISTS idx_ddl_clicks_expires
   ON ddl_clicks(expires_at)
   WHERE consumed_at IS NULL;
+
+-- 15. Spypoint cameras linked to a station for runnability
+-- Reading is in the painted/printed scale's own units e.g. -2 to +4
+-- Thresholds are in those same units
+CREATE TABLE IF NOT EXISTS cameras (
+  id                       TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  spypoint_camera_id       TEXT NOT NULL UNIQUE,
+  name                     TEXT NOT NULL,
+  station_id               TEXT REFERENCES stations(id) ON DELETE SET NULL,
+  scale_description        TEXT,
+  scale_min                DOUBLE PRECISION,
+  scale_max                DOUBLE PRECISION,
+  scale_unit               TEXT,
+  paddling_min_reading     DOUBLE PRECISION,
+  paddling_ideal_reading   DOUBLE PRECISION,
+  paddling_max_reading     DOUBLE PRECISION,
+  last_synced_photo_date   TIMESTAMPTZ,
+  active                   BOOLEAN NOT NULL DEFAULT true,
+  created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at               TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_cameras_station ON cameras(station_id) WHERE station_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cameras_active ON cameras(active) WHERE active = true;
+
+-- 16. Camera images each photo plus its AI reading
+CREATE TABLE IF NOT EXISTS camera_images (
+  id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  camera_id           TEXT NOT NULL REFERENCES cameras(id) ON DELETE CASCADE,
+  spypoint_photo_id   TEXT NOT NULL UNIQUE,
+  captured_at         TIMESTAMPTZ NOT NULL,
+  blob_url            TEXT NOT NULL,
+  blob_pathname       TEXT NOT NULL,
+  reading_value       DOUBLE PRECISION,
+  reading_confidence  TEXT,
+  reading_source      TEXT NOT NULL DEFAULT 'ai',
+  reading_notes       TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_camera_images_camera_time
+  ON camera_images(camera_id, captured_at DESC);

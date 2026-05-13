@@ -23,6 +23,7 @@ import {
 } from "@/app/components/utils";
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
+import CameraSnapshot, { type CameraSnapshotData } from "./camera-snapshot";
 import ShareButton from "@/app/components/share-button";
 import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
 import AutoNavigate from "./auto-navigate";
@@ -204,6 +205,47 @@ export default async function RiverPage({
   }
 
   const lastFlow = cached?.lastFlow ?? null;
+
+  // Latest camera image + reading + thresholds for the runnability pill.
+  // Tolerate missing tables (fresh DB before migration) by catching errors.
+  let cameraSnapshot: CameraSnapshotData | null = null;
+  try {
+    const camRows = (await sql(
+      `SELECT ci.blob_url, ci.captured_at::text AS captured_at,
+              ci.reading_value, ci.reading_confidence,
+              c.scale_unit, c.paddling_min_reading, c.paddling_ideal_reading, c.paddling_max_reading
+       FROM camera_images ci
+       JOIN cameras c ON c.id = ci.camera_id
+       WHERE c.station_id = $1 AND c.active = true
+       ORDER BY ci.captured_at DESC
+       LIMIT 1`,
+      [id],
+    )) as Array<{
+      blob_url: string;
+      captured_at: string;
+      reading_value: number | null;
+      reading_confidence: string | null;
+      scale_unit: string | null;
+      paddling_min_reading: number | null;
+      paddling_ideal_reading: number | null;
+      paddling_max_reading: number | null;
+    }>;
+    if (camRows.length > 0) {
+      const r = camRows[0];
+      cameraSnapshot = {
+        imageUrl: r.blob_url,
+        capturedAt: r.captured_at,
+        readingValue: r.reading_value,
+        readingConfidence: r.reading_confidence,
+        scaleUnit: r.scale_unit,
+        paddlingMinReading: r.paddling_min_reading,
+        paddlingIdealReading: r.paddling_ideal_reading,
+        paddlingMaxReading: r.paddling_max_reading,
+      };
+    }
+  } catch {
+    // Tables not migrated yet — fall through with no snapshot.
+  }
 
   const lastObservedTimestamp = hourlyData
     .filter((p) => p.observed != null)
@@ -406,6 +448,13 @@ export default async function RiverPage({
           <section className="mt-6">
             <HourlyChart data={chartData} nowTimestamp={nowTimestamp} paddling={paddling} correction={forecastCorrection} />
           </section>
+        )}
+
+        {/* Camera snapshot (if a Spypoint camera is assigned to this river) */}
+        {cameraSnapshot && (
+          <div className="mt-6">
+            <CameraSnapshot data={cameraSnapshot} />
+          </div>
         )}
 
         {/* No data state */}
