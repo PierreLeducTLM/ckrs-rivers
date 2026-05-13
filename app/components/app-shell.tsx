@@ -277,13 +277,10 @@ export default function AppShell({
 
   return (
     <div
-      className={activeTab === "map"
-        ? "flex flex-col"
-        : "pb-16"
-      }
+      className={activeTab === "map" ? "flex flex-col" : undefined}
       style={activeTab === "map"
         ? { height: "calc(100dvh - 2rem - 3.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))" }
-        : undefined
+        : { paddingBottom: "calc(4rem + env(safe-area-inset-bottom, 0px))" }
       }
     >
       {/* Pull-to-refresh floating icon */}
