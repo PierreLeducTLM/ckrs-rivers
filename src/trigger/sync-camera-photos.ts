@@ -121,7 +121,7 @@ export const syncCameraPhotos = schedules.task({
   id: "sync-camera-photos",
   cron: { pattern: "0 * * * *", timezone: SCHEDULE_TIMEZONE },
   maxDuration: 600,
-  run: async (payload) => {
+  run: async (payload, { ctx }) => {
     const localHour = parseInt(
       payload.timestamp.toLocaleString("en-US", {
         timeZone: SCHEDULE_TIMEZONE,
@@ -130,7 +130,8 @@ export const syncCameraPhotos = schedules.task({
       }),
       10,
     );
-    if (localHour < 5 || localHour >= 22) {
+    const isManualRun = ctx.run.isTest;
+    if (!isManualRun && (localHour < 5 || localHour >= 22)) {
       logger.info(`Skipping sync outside daytime (local hour ${localHour})`);
       return { skipped: true, localHour };
     }
