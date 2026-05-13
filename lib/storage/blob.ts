@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { del, put } from "@vercel/blob";
 
 export interface UploadResult {
   url: string;
@@ -19,4 +19,10 @@ export async function uploadCameraImage(
     allowOverwrite: true,
   });
   return { url: blob.url, pathname: blob.pathname };
+}
+
+export async function deleteCameraImages(urlsOrPathnames: string[]): Promise<void> {
+  const targets = urlsOrPathnames.filter((s): s is string => typeof s === "string" && s.length > 0);
+  if (targets.length === 0) return;
+  await del(targets);
 }
