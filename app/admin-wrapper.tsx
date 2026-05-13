@@ -9,8 +9,7 @@ export function AdminAddStation() {
   if (!isAdmin) return null;
   return (
     <>
-      <AddStation />
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-foreground/20 p-4">
         <Link
           href="/admin/flow-management"
           className="inline-flex items-center gap-1.5 rounded-lg border border-foreground/15 px-3 py-1.5 text-sm text-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground/80"
@@ -58,6 +57,7 @@ export function AdminAddStation() {
           Cameras
         </Link>
       </div>
+      <AddStation />
     </>
   );
 }
