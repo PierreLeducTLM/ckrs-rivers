@@ -12,6 +12,7 @@ import {
   BRAS_LOUIS_REFERENCE_STATION_ID,
   DISPLAY_LEVEL_STEP_M,
   GAUGE_OUTPUT_RANGE_M,
+  MAX_REFERENCE_STALENESS_HOURS,
   MIN_SLOPE_SAMPLES,
   SLOPE_WINDOW_HOURS,
   SPRING_JUNE_FLOW_THRESHOLD_M3S,
@@ -21,6 +22,7 @@ import {
 
 export type RefusalReason =
   | "no-current-flow"
+  | "reference-stale"
   | "flow-out-of-range"
   | "insufficient-slope-samples";
 
@@ -114,17 +116,32 @@ export function predictBrasLouisGauge(
   const series = toSeries(valinSeries);
   const atMs = at.getTime();
 
-  // Current flow = most recent reading at-or-before `at`.
-  let current: SeriesPoint | undefined;
-  for (let i = series.length - 1; i >= 0; i--) {
-    if (series[i].t <= atMs) { current = series[i]; break; }
-  }
-  if (!current) {
+  // Anchor on the latest available reading rather than wall-clock `now`:
+  // CEHQ timestamps can be hours off due to local-time-vs-UTC handling,
+  // and the slope/level we care about is always relative to whatever
+  // data we actually have. The staleness check below catches series
+  // that are genuinely too old to predict from.
+  const latest = series.length > 0 ? series[series.length - 1] : undefined;
+  if (!latest) {
     return {
       ok: false,
-      refusal: { reason: "no-current-flow", detail: "No Valin reading at or before the target time." },
+      refusal: { reason: "no-current-flow", detail: "No Valin readings in the supplied series." },
     };
   }
+
+  const stalenessHours = (atMs - latest.t) / 3_600_000;
+  if (stalenessHours > MAX_REFERENCE_STALENESS_HOURS) {
+    return {
+      ok: false,
+      refusal: {
+        reason: "reference-stale",
+        detail: `Latest Valin reading is ${stalenessHours.toFixed(1)} h old (cutoff ${MAX_REFERENCE_STALENESS_HOURS} h).`,
+      },
+    };
+  }
+
+  const anchorMs = latest.t;
+  const current = latest;
 
   const q = current.q;
   if (q < VALID_FLOW_RANGE_M3S.min || q > VALID_FLOW_RANGE_M3S.max) {
@@ -137,20 +154,20 @@ export function predictBrasLouisGauge(
     };
   }
 
-  const windowStart = atMs - SLOPE_WINDOW_HOURS * 3_600_000;
-  const window = series.filter((p) => p.t >= windowStart && p.t <= atMs);
+  const windowStart = anchorMs - SLOPE_WINDOW_HOURS * 3_600_000;
+  const window = series.filter((p) => p.t >= windowStart && p.t <= anchorMs);
   if (window.length < MIN_SLOPE_SAMPLES) {
     return {
       ok: false,
       refusal: {
         reason: "insufficient-slope-samples",
-        detail: `Need at least ${MIN_SLOPE_SAMPLES} Valin samples in the trailing ${SLOPE_WINDOW_HOURS} h; got ${window.length}.`,
+        detail: `Need at least ${MIN_SLOPE_SAMPLES} Valin samples in the ${SLOPE_WINDOW_HOURS} h ending ${new Date(anchorMs).toISOString()}; got ${window.length}.`,
       },
     };
   }
 
-  const slope = slopeM3sPerHour(window, atMs);
-  const regime = classifyRegime(at.getMonth(), q, slope);
+  const slope = slopeM3sPerHour(window, anchorMs);
+  const regime = classifyRegime(new Date(anchorMs).getUTCMonth(), q, slope);
   const fit = BRAS_LOUIS_FIT[regime];
 
   const raw = fit.a + fit.b * q + fit.c * slope;

@@ -43,9 +43,20 @@ export default async function PredictorCard({ predictorKey }: Props) {
   // eslint-disable-next-line react-hooks/purity -- server component runs per request
   const now = Date.now();
   const windowMs = 3 * 60 * 60 * 1000;
-  const samplesInWindow = series.filter(
+  // The predictor anchors its slope window on the latest sample, not on
+  // wall-clock `now`. Mirror that here so the debug grid shows the same
+  // count the predictor used. `samplesNearNow` is also useful — it tells
+  // you whether CEHQ timestamps look fresh against real time.
+  const anchorMs = lastFetchedTs ? Date.parse(lastFetchedTs) : null;
+  const samplesInAnchorWindow = anchorMs == null
+    ? 0
+    : series.filter(
+        (r) => Date.parse(r.timestamp) >= anchorMs - windowMs && Date.parse(r.timestamp) <= anchorMs,
+      ).length;
+  const samplesNearNow = series.filter(
     (r) => Date.parse(r.timestamp) >= now - windowMs,
   ).length;
+  const stalenessHours = anchorMs == null ? null : (now - anchorMs) / 3_600_000;
 
   return (
     <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -106,10 +117,16 @@ export default async function PredictorCard({ predictorKey }: Props) {
             <dd>{fetchError ? `error: ${fetchError}` : `ok — ${series.length} readings`}</dd>
             <dt>latest reading</dt>
             <dd>{lastFetchedTs ?? "—"}</dd>
-            <dt>samples in last 3 h</dt>
+            <dt>staleness vs now</dt>
             <dd>
-              {samplesInWindow} (need ≥ 4)
+              {stalenessHours == null
+                ? "—"
+                : `${stalenessHours.toFixed(1)} h${stalenessHours < 0 ? " (future-dated — likely timezone bug)" : ""}`}
             </dd>
+            <dt>samples in 3 h ending at latest</dt>
+            <dd>{samplesInAnchorWindow} (need ≥ 4)</dd>
+            <dt>samples in last 3 h vs now</dt>
+            <dd>{samplesNearNow}</dd>
             <dt>page rendered at</dt>
             <dd>{new Date(now).toISOString()}</dd>
           </dl>

@@ -45,6 +45,14 @@ export const SLOPE_WINDOW_HOURS = 3;
 /** Minimum Valin samples in the slope window for a trustworthy slope. */
 export const MIN_SLOPE_SAMPLES = 4;
 
+/**
+ * Refuse if the latest reference reading is older than this. CEHQ
+ * timestamps come through the realtime client with timezone quirks
+ * (local time stamped Z), so we anchor on the latest sample rather
+ * than wall-clock `now`, and only flag genuine staleness here.
+ */
+export const MAX_REFERENCE_STALENESS_HOURS = 12;
+
 /** Physical clamp on output gauge value (m). The visual scale tops out at 4.5. */
 export const GAUGE_OUTPUT_RANGE_M = { min: 0, max: 5 };
 
