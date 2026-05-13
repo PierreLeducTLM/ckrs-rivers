@@ -15,17 +15,13 @@ interface Props {
   predictorKey: string;
 }
 
-const REFUSAL_LABELS: Record<string, string> = {
-  "no-current-flow": "No recent reference flow available.",
-  "flow-out-of-range": "Reference flow is outside the predictor's calibrated range.",
-  "insufficient-slope-samples": "Not enough recent reference samples to estimate the trend.",
-};
-
 export default async function PredictorCard({ predictorKey }: Props) {
   const predictor = getPredictor(predictorKey);
   if (!predictor) return null;
 
   let series: FlowReading[];
+  let fetchError: string | null = null;
+  let lastFetchedTs: string | null = null;
   try {
     const realtime = await fetchRealtimeData(predictor.referenceStationId);
     series = realtime.readings
@@ -37,11 +33,19 @@ export default async function PredictorCard({ predictorKey }: Props) {
         source: "gauge",
         quality: "provisional",
       }));
-  } catch {
-    return null;
+    lastFetchedTs = series.length > 0 ? series[series.length - 1].timestamp : null;
+  } catch (err) {
+    fetchError = err instanceof Error ? err.message : String(err);
+    series = [];
   }
 
   const result = predictor.predict(series);
+  // eslint-disable-next-line react-hooks/purity -- server component runs per request
+  const now = Date.now();
+  const windowMs = 3 * 60 * 60 * 1000;
+  const samplesInWindow = series.filter(
+    (r) => Date.parse(r.timestamp) >= now - windowMs,
+  ).length;
 
   return (
     <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -88,9 +92,28 @@ export default async function PredictorCard({ predictorKey }: Props) {
           </div>
         </>
       ) : (
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-          {REFUSAL_LABELS[result.refusal.reason] ?? result.refusal.detail}
-        </p>
+        <div className="mt-2 space-y-1 text-sm">
+          <p className="text-zinc-800 dark:text-zinc-200">
+            <span className="font-mono text-xs text-amber-700 dark:text-amber-400">
+              {result.refusal.reason}
+            </span>{" "}
+            — {result.refusal.detail}
+          </p>
+          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
+            <dt>reference station</dt>
+            <dd>{predictor.referenceStationId}</dd>
+            <dt>fetch</dt>
+            <dd>{fetchError ? `error: ${fetchError}` : `ok — ${series.length} readings`}</dd>
+            <dt>latest reading</dt>
+            <dd>{lastFetchedTs ?? "—"}</dd>
+            <dt>samples in last 3 h</dt>
+            <dd>
+              {samplesInWindow} (need ≥ 4)
+            </dd>
+            <dt>page rendered at</dt>
+            <dd>{new Date(now).toISOString()}</dd>
+          </dl>
+        </div>
       )}
     </section>
   );
