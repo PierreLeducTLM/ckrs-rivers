@@ -60,7 +60,7 @@ async function syncCamera(
         continue;
       }
 
-      const bytes = await client.downloadPhoto(photo, { size: "medium" });
+      const bytes = await client.downloadPhoto(photo, { size: "large" });
       const { url, pathname } = await uploadCameraImage(camera.id, photo.id, bytes);
 
       const reading = await readLevel({
