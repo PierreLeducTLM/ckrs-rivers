@@ -61,6 +61,7 @@ async function migrate() {
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS approved BOOLEAN NOT NULL DEFAULT false`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false`,
+    `ALTER TABLE stations ADD COLUMN IF NOT EXISTS predictor_key TEXT`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

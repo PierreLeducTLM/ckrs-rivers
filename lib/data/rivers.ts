@@ -43,6 +43,7 @@ interface StationRow {
   rapids: Rapid[] | null;
   approved: boolean | null;
   hidden: boolean | null;
+  predictor_key: string | null;
 }
 
 function rowToStation(row: StationRow): RiverStation {
@@ -72,6 +73,7 @@ function rowToStation(row: StationRow): RiverStation {
     rapids: row.rapids ?? [],
     approved: row.approved ?? false,
     hidden: row.hidden ?? false,
+    predictorKey: row.predictor_key ?? undefined,
   });
 }
 

@@ -24,6 +24,8 @@ import {
 import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
 import CameraSnapshot, { type CameraSnapshotData } from "./camera-snapshot";
+import PredictorCard from "./predictor-card";
+import { listPredictorOptions } from "@/lib/prediction/registry";
 import ShareButton from "@/app/components/share-button";
 import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
 import AutoNavigate from "./auto-navigate";
@@ -396,6 +398,8 @@ export default async function RiverPage({
             initialRapids={rapids}
             initialApproved={station.approved ?? false}
             initialHidden={station.hidden ?? false}
+            initialPredictorKey={station.predictorKey ?? null}
+            predictorOptions={listPredictorOptions()}
             rapidsFlagState={rapidsFlagState}
             regime={station.regime ?? null}
           />
@@ -441,6 +445,11 @@ export default async function RiverPage({
               </div>
             )}
           </section>
+        )}
+
+        {/* Predicted gauge level (if a predictor is assigned) */}
+        {station.predictorKey && (
+          <PredictorCard predictorKey={station.predictorKey} />
         )}
 
         {/* Hourly flow chart */}

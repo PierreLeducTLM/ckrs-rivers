@@ -277,6 +277,8 @@ interface StationMetaEditorProps {
   initialDescription?: string | null;
   initialApproved?: boolean;
   initialHidden?: boolean;
+  initialPredictorKey?: string | null;
+  predictorOptions?: ReadonlyArray<{ key: string; label: string; description: string }>;
   isAdmin?: boolean;
   approved?: boolean;
   unlocked?: boolean;
@@ -294,6 +296,8 @@ export default function StationMetaEditor({
   initialDescription = null,
   initialApproved = false,
   initialHidden = false,
+  initialPredictorKey = null,
+  predictorOptions = [],
   isAdmin = false,
   approved: approvedProp,
   unlocked: unlockedProp,
@@ -311,6 +315,8 @@ export default function StationMetaEditor({
   const [editingDesc, setEditingDesc] = useState(false);
   const [savingDesc, setSavingDesc] = useState(false);
   const [savingClass, setSavingClass] = useState(false);
+  const [predictorKey, setPredictorKey] = useState(initialPredictorKey ?? "");
+  const [savingPredictor, setSavingPredictor] = useState(false);
 
   // Approve/hide state — controlled if parent passes them, otherwise local.
   const [approvedLocal, setApprovedLocal] = useState(initialApproved);
@@ -597,6 +603,38 @@ export default function StationMetaEditor({
         </select>
         {savingClass && (
           <span className="text-xs text-zinc-400">...</span>
+        )}
+      </div>
+
+      {/* Predictor assignment */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+          Predictor
+        </span>
+        <select
+          value={predictorKey}
+          onChange={async (e) => {
+            const value = e.target.value;
+            setPredictorKey(value);
+            setSavingPredictor(true);
+            await patch({ predictor_key: value || null });
+            setSavingPredictor(false);
+          }}
+          disabled={savingPredictor}
+          className="rounded border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+        >
+          <option value="">— None —</option>
+          {predictorOptions.map((p) => (
+            <option key={p.key} value={p.key}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+        {savingPredictor && <span className="text-xs text-zinc-400">...</span>}
+        {predictorKey && (
+          <span className="text-xs text-zinc-400 dark:text-zinc-500">
+            {predictorOptions.find((p) => p.key === predictorKey)?.description}
+          </span>
         )}
       </div>
 
