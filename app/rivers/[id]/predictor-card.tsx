@@ -1,43 +1,60 @@
 /**
- * Server-side predictor card. Looks up the predictor assigned to the
- * station, fetches the reference station's recent flow via CEHQ, and
- * renders the predicted local reading + uncertainty band.
- *
- * Returns null if no predictor is assigned or the lookup fails — the
- * page caller should treat that as "nothing to show" rather than an
- * error state.
+ * Server-side predictor card. Reads the reference station's recent flow
+ * from `forecast_cache` (same source as the chart) and runs the assigned
+ * predictor. We deliberately avoid hitting CEHQ directly from the request
+ * path — that endpoint 500s under our serverless egress IPs.
  */
 import type { FlowReading } from "@/lib/domain/flow-reading";
-import { fetchRealtimeData } from "@/lib/realtime/cehq-client";
+import { sql } from "@/lib/db/client";
 import { getPredictor } from "@/lib/prediction/registry";
 
 interface Props {
   predictorKey: string;
 }
 
+interface HourlyCacheRow {
+  hourly_json: Array<{ timestamp: string; observed: number | null }> | null;
+  generated_at: string;
+  source_station_id: string;
+}
+
 export default async function PredictorCard({ predictorKey }: Props) {
   const predictor = getPredictor(predictorKey);
   if (!predictor) return null;
 
-  let series: FlowReading[];
-  let fetchError: string | null = null;
-  let lastFetchedTs: string | null = null;
+  // Resolve the reference station's cache row. CEHQ station numbers
+  // (e.g. "062701") sometimes equal the station UUID and sometimes don't,
+  // so try both. Pick the freshest cache row that actually has hourly
+  // data.
+  let cacheRow: HourlyCacheRow | null = null;
+  let cacheError: string | null = null;
   try {
-    const realtime = await fetchRealtimeData(predictor.referenceStationId);
-    series = realtime.readings
-      .filter((r) => r.flow != null)
-      .map((r) => ({
-        stationId: predictor.referenceStationId,
-        timestamp: r.timestamp,
-        flow: r.flow as FlowReading["flow"],
-        source: "gauge",
-        quality: "provisional",
-      }));
-    lastFetchedTs = series.length > 0 ? series[series.length - 1].timestamp : null;
+    const rows = (await sql(
+      `SELECT fc.hourly_json,
+              fc.generated_at::text AS generated_at,
+              fc.station_id AS source_station_id
+         FROM forecast_cache fc
+         JOIN stations s ON s.id = fc.station_id
+        WHERE s.id = $1 OR s.station_number = $1
+        ORDER BY fc.generated_at DESC
+        LIMIT 1`,
+      [predictor.referenceStationId],
+    )) as HourlyCacheRow[];
+    cacheRow = rows[0] ?? null;
   } catch (err) {
-    fetchError = err instanceof Error ? err.message : String(err);
-    series = [];
+    cacheError = err instanceof Error ? err.message : String(err);
   }
+
+  const series: FlowReading[] = (cacheRow?.hourly_json ?? [])
+    .filter((p) => p.observed != null)
+    .map((p) => ({
+      stationId: predictor.referenceStationId,
+      timestamp: p.timestamp,
+      flow: p.observed as FlowReading["flow"],
+      source: "gauge",
+      quality: "provisional",
+    }));
+  const lastFetchedTs = series.length > 0 ? series[series.length - 1].timestamp : null;
 
   const result = predictor.predict(series);
   // eslint-disable-next-line react-hooks/purity -- server component runs per request
@@ -113,8 +130,14 @@ export default async function PredictorCard({ predictorKey }: Props) {
           <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
             <dt>reference station</dt>
             <dd>{predictor.referenceStationId}</dd>
-            <dt>fetch</dt>
-            <dd>{fetchError ? `error: ${fetchError}` : `ok — ${series.length} readings`}</dd>
+            <dt>cache lookup</dt>
+            <dd>
+              {cacheError
+                ? `error: ${cacheError}`
+                : cacheRow == null
+                  ? "no row found (reference station not refreshed?)"
+                  : `ok — station_id=${cacheRow.source_station_id}, generated_at=${cacheRow.generated_at}, ${series.length} readings`}
+            </dd>
             <dt>latest reading</dt>
             <dd>{lastFetchedTs ?? "—"}</dd>
             <dt>staleness vs now</dt>
