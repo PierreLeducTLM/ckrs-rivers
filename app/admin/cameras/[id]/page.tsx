@@ -3,6 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { runnabilityColors, runnabilityFor, runnabilityLabel } from "@/lib/skypoint/runnability";
 
 interface Camera {
@@ -42,6 +43,7 @@ export default function CameraDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [camera, setCamera] = useState<Camera | null>(null);
   const [images, setImages] = useState<CameraImage[]>([]);
@@ -49,6 +51,7 @@ export default function CameraDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -131,6 +134,29 @@ export default function CameraDetailPage({
       }
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function remove() {
+    if (!camera) return;
+    const ok = window.confirm(
+      `Remove camera "${camera.name}"? This deletes its photos and readings. This cannot be undone.`,
+    );
+    if (!ok) return;
+    setRemoving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/cameras/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(body.error ?? "Remove failed");
+        setRemoving(false);
+        return;
+      }
+      router.push("/admin/cameras");
+    } catch {
+      setError("Network error");
+      setRemoving(false);
     }
   }
 
@@ -322,6 +348,13 @@ export default function CameraDetailPage({
                 Last sync: {new Date(camera.last_synced_photo_date).toLocaleString()}
               </span>
             )}
+            <button
+              onClick={remove}
+              disabled={removing}
+              className="ml-auto rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-900/20"
+            >
+              {removing ? "Removing..." : "Remove camera"}
+            </button>
           </div>
         </section>
 

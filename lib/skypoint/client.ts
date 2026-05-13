@@ -164,12 +164,37 @@ export class SpypointClient implements SpypointApi {
     photo: SpypointPhoto | string,
     opts: { size?: SpypointPhotoSize } = {},
   ): Promise<Uint8Array> {
-    const size = opts.size ?? "medium";
-    const url = typeof photo === "string" ? photo : photoUrl(photo, size);
-    if (!url) throw new Error(`No URL available for size "${size}"`);
-    const response = await this.fetchFn(url, { method: "GET" });
-    if (!response.ok) throw new SpypointApiError(response);
-    return new Uint8Array(await response.arrayBuffer());
+    if (typeof photo === "string") {
+      const response = await this.fetchFn(photo, { method: "GET" });
+      if (!response.ok) throw new SpypointApiError(response);
+      return new Uint8Array(await response.arrayBuffer());
+    }
+
+    // Real Spypoint photos don't always populate every size — fall back to the
+    // other sizes (preferring quality close to the requested one) instead of
+    // failing the whole sync when, say, "medium" is missing.
+    const preferred = opts.size ?? "medium";
+    const order: SpypointPhotoSize[] = preferred === "medium"
+      ? ["medium", "large", "small"]
+      : preferred === "large"
+        ? ["large", "medium", "small"]
+        : ["small", "medium", "large"];
+
+    let lastError: unknown = null;
+    for (const size of order) {
+      const url = photoUrl(photo, size);
+      if (!url) continue;
+      try {
+        const response = await this.fetchFn(url, { method: "GET" });
+        if (!response.ok) throw new SpypointApiError(response);
+        return new Uint8Array(await response.arrayBuffer());
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (lastError instanceof Error) throw lastError;
+    throw new Error(`No URL available for photo ${photo.id} at any size`);
   }
 
   private async get(path: string): Promise<Response> {

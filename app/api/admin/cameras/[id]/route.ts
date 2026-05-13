@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { sql } from "@/lib/db/client";
+import { deleteCameraImages } from "@/lib/storage/blob";
 
 interface CameraDetailRow {
   id: string;
@@ -127,7 +128,23 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   try {
+    const blobs = (await sql(
+      `SELECT blob_url FROM camera_images WHERE camera_id = $1`,
+      [id],
+    )) as Array<{ blob_url: string }>;
+
+    // CASCADE drops the camera_images rows; clean up the Vercel Blob storage
+    // best-effort so we don't orphan files.
     await sql(`DELETE FROM cameras WHERE id = $1`, [id]);
+
+    if (blobs.length > 0) {
+      try {
+        await deleteCameraImages(blobs.map((b) => b.blob_url));
+      } catch {
+        // Storage cleanup is non-fatal; the camera is already gone from the DB.
+      }
+    }
+
     return Response.json({ success: true });
   } catch (err) {
     return Response.json(
