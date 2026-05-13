@@ -52,3 +52,21 @@ export class SpypointApiInvalidCredentialsError extends SpypointApiError {
     this.name = "SpypointApiInvalidCredentialsError";
   }
 }
+
+// Shared shape implemented by both SpypointClient and SpypointMockClient,
+// so callers can swap implementations transparently when SKYPOINT_MOCK=1.
+export interface SpypointApi {
+  getCameras(): Promise<SpypointCamera[]>;
+  getPhotos(opts: {
+    cameras: Array<string | { id: string }>;
+    dateEnd?: string;
+    hd?: boolean;
+    favorite?: boolean;
+    limit?: number;
+    tags?: string[];
+  }): Promise<SpypointPhoto[]>;
+  downloadPhoto(
+    photo: SpypointPhoto | string,
+    opts?: { size?: SpypointPhotoSize },
+  ): Promise<Uint8Array>;
+}

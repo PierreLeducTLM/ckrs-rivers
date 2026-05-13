@@ -1,12 +1,14 @@
 import {
   SpypointApiError,
   SpypointApiInvalidCredentialsError,
+  type SpypointApi,
   type SpypointCamera,
   type SpypointPhoto,
   type SpypointPhotoSize,
   type SpypointPhotoUrlSection,
   photoUrl,
 } from "./types";
+import { SpypointMockClient } from "./mock-client";
 
 const DEFAULT_BASE_URL = "https://restapi.spypoint.com/api/v3";
 const ONLINE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
@@ -77,7 +79,7 @@ export interface SpypointClientOptions {
   fetch?: typeof fetch;
 }
 
-export class SpypointClient {
+export class SpypointClient implements SpypointApi {
   private readonly username: string;
   private readonly password: string;
   private readonly baseUrl: string;
@@ -200,11 +202,14 @@ export class SpypointClient {
   }
 }
 
-export function createSpypointClient(): SpypointClient {
+export function createSpypointClient(): SpypointApi {
+  if (process.env.SKYPOINT_MOCK === "1") {
+    return new SpypointMockClient();
+  }
   const email = process.env.SPYPOINT_EMAIL;
   const password = process.env.SPYPOINT_PASSWORD;
   if (!email || !password) {
-    throw new Error("SPYPOINT_EMAIL and SPYPOINT_PASSWORD must be set");
+    throw new Error("SPYPOINT_EMAIL and SPYPOINT_PASSWORD must be set (or set SKYPOINT_MOCK=1 for mock mode)");
   }
   return new SpypointClient(email, password);
 }

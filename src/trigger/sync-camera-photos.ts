@@ -1,7 +1,7 @@
 import { logger, schedules, task } from "@trigger.dev/sdk/v3";
 import { neon } from "@neondatabase/serverless";
-import { SpypointClient } from "@/lib/skypoint/client";
-import type { SpypointPhoto } from "@/lib/skypoint/types";
+import { createSpypointClient } from "@/lib/skypoint/client";
+import type { SpypointApi, SpypointPhoto } from "@/lib/skypoint/types";
 import { uploadCameraImage } from "@/lib/storage/blob";
 import { readLevel } from "@/lib/skypoint/read-level";
 
@@ -24,18 +24,9 @@ interface CameraRow {
   last_synced_photo_date: string | null;
 }
 
-function createSpypointClient(): SpypointClient {
-  const email = process.env.SPYPOINT_EMAIL;
-  const password = process.env.SPYPOINT_PASSWORD;
-  if (!email || !password) {
-    throw new Error("SPYPOINT_EMAIL and SPYPOINT_PASSWORD must be set");
-  }
-  return new SpypointClient(email, password);
-}
-
 async function syncCamera(
   sql: SqlFn,
-  client: SpypointClient,
+  client: SpypointApi,
   camera: CameraRow,
 ): Promise<{ inserted: number; skipped: number; readingErrors: number }> {
   const watermark = camera.last_synced_photo_date ? new Date(camera.last_synced_photo_date) : null;
