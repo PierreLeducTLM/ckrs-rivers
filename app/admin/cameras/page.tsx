@@ -59,6 +59,7 @@ export default function CamerasAdminPage() {
   // currently-expanded account id.
   const [expandedAccount, setExpandedAccount] = useState<string | null>(null);
   const [accountCameras, setAccountCameras] = useState<Record<string, BlinkCameraOption[]>>({});
+  const [diagnostics, setDiagnostics] = useState<Record<string, string>>({});
 
   // Add-Blink-account form state
   const [showBlinkForm, setShowBlinkForm] = useState(false);
@@ -211,6 +212,17 @@ export default function CamerasAdminPage() {
       await refresh();
     } finally {
       setBlinkSubmitting(false);
+    }
+  }
+
+  async function diagnoseBlinkAccount(accountId: string) {
+    setDiagnostics((prev) => ({ ...prev, [accountId]: "Loading…" }));
+    try {
+      const res = await fetch(`/api/admin/cameras/blink/accounts/${accountId}/diagnose`, { cache: "no-store" });
+      const body = await res.json();
+      setDiagnostics((prev) => ({ ...prev, [accountId]: JSON.stringify(body, null, 2) }));
+    } catch (err) {
+      setDiagnostics((prev) => ({ ...prev, [accountId]: `Error: ${err instanceof Error ? err.message : String(err)}` }));
     }
   }
 
@@ -498,6 +510,14 @@ export default function CamerasAdminPage() {
                                 {expandedAccount === a.id ? "Hide" : "Cameras"}
                               </button>
                             )}
+                            {a.hasTokens && (
+                              <button
+                                onClick={() => diagnoseBlinkAccount(a.id)}
+                                className="rounded-lg border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                              >
+                                Diagnose
+                              </button>
+                            )}
                             <button
                               onClick={() => deleteBlinkAccount(a.id)}
                               className="rounded-lg border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-950/30"
@@ -506,6 +526,12 @@ export default function CamerasAdminPage() {
                             </button>
                           </div>
                         </div>
+
+                        {diagnostics[a.id] && (
+                          <pre className="mt-3 max-h-96 overflow-auto rounded border border-zinc-300 bg-zinc-50 p-2 text-[10px] leading-snug text-zinc-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                            {diagnostics[a.id]}
+                          </pre>
+                        )}
 
                         {expandedAccount === a.id && (
                           <div className="mt-3 border-t border-zinc-200 pt-3 dark:border-zinc-800">

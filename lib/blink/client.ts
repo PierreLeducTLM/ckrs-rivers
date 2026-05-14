@@ -556,6 +556,36 @@ export class BlinkClient {
    * get the raw product_type and the thumbnail timestamp — without
    * those we can't build the v3 media URL.
    */
+  /**
+   * Debug-only: hit the camera-enumeration endpoints and return the raw
+   * status + (truncated) body for each. The admin UI uses this to
+   * diagnose "no cameras detected" situations.
+   */
+  async fetchDiagnostics(): Promise<{
+    tierHost: string;
+    accountId: number | string;
+    endpoints: Array<{ url: string; status: number; body: string }>;
+  }> {
+    const tokens = await this.ensureValidToken();
+    const host = `https://${tokens.tierHost}`;
+    const urls = [
+      `${host}/api/v1/camera/usage`,
+      `${host}/api/v3/accounts/${tokens.accountId}/homescreen`,
+      `${host}/networks`,
+    ];
+    const out: Array<{ url: string; status: number; body: string }> = [];
+    for (const url of urls) {
+      try {
+        const r = await this.fetchFn(url, { method: "GET", headers: this.authHeaders(tokens) });
+        const body = await r.text().catch(() => "");
+        out.push({ url, status: r.status, body: body.slice(0, 4000) });
+      } catch (err) {
+        out.push({ url, status: 0, body: err instanceof Error ? err.message : String(err) });
+      }
+    }
+    return { tierHost: tokens.tierHost, accountId: tokens.accountId, endpoints: out };
+  }
+
   async listCameras(): Promise<BlinkCamera[]> {
     const tokens = await this.ensureValidToken();
     const host = `https://${tokens.tierHost}`;
