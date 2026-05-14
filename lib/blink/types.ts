@@ -20,11 +20,15 @@ export interface BlinkCamera {
   id: number | string;
   networkId: number | string;
   name: string;
+  // Coarse family used to dispatch the snap action URL.
   type: BlinkCameraType;
+  // Raw Blink product_type from /network/.../config — needed for the v3
+  // media thumbnail URL ("catalina" for Outdoor 4, "owl" for Mini, etc.).
+  productType: string | null;
   model: string | null;
-  // Relative thumbnail path returned by the homescreen e.g.
-  //   "/api/v3/media/accounts/123/networks/456/owls/789/thumbnail/thumbnail.jpg"
-  // We append ".jpg" + a ts query and prepend the tier host.
+  // Fully-formed thumbnail URL (or relative path to be joined against the
+  // tier host). Already includes the `ts=...&ext=` query for new-API
+  // cameras. Null if the config call didn't return a thumbnail.
   thumbnailPath: string | null;
   thumbnailUpdatedAt: Date | null;
 }

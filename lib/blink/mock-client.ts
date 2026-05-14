@@ -47,6 +47,7 @@ export class BlinkMockClient {
         networkId: "mock-net-1",
         name: "Mock Blink Outdoor (test)",
         type: "default",
+        productType: "catalina",
         model: "Blink Outdoor 4",
         thumbnailPath: "https://placehold.co/640x480/png?text=Mock+Blink+River",
         thumbnailUpdatedAt: now,

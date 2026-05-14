@@ -158,6 +158,24 @@ interface HomescreenPayload {
   doorbells?: HomescreenCameraPayload[];
 }
 
+interface CameraUsageNetwork {
+  network_id?: number | string;
+  cameras?: Array<{ id?: number | string; name?: string }>;
+}
+interface CameraUsagePayload {
+  networks?: CameraUsageNetwork[];
+}
+
+interface CameraConfigPayload {
+  camera?: Array<{
+    id?: number | string;
+    name?: string;
+    type?: string; // raw blink product_type — "catalina", "owl", "lotus", etc.
+    thumbnail?: string | number;
+    updated_at?: string;
+  }>;
+}
+
 interface CommandPayload {
   id?: number | string;
   network_id?: number | string;
@@ -178,12 +196,6 @@ export interface BlinkSession {
 export interface BlinkClientOptions {
   fetch?: typeof fetch;
   onTokensRefreshed?: (tokens: BlinkTokens) => void | Promise<void>;
-}
-
-function classifyCamera(source: "cameras" | "owls" | "doorbells"): BlinkCameraType {
-  if (source === "owls") return "mini";
-  if (source === "doorbells") return "doorbell";
-  return "default";
 }
 
 function parseDate(raw: unknown): Date | null {
@@ -531,28 +543,124 @@ export class BlinkClient {
   // Camera endpoints (unchanged from previous version)
   // -------------------------------------------------------------------------
 
+  /**
+   * Enumerate every camera on the account. blinkpy's setup_camera_list
+   * uses three sources because Blink's API split cameras across them:
+   *
+   *  - `/api/v1/camera/usage` → "default"-family cameras (Outdoor 4 / XT /
+   *    XT2 / etc.) grouped by sync-module network.
+   *  - `homescreen.owls`      → Mini cameras (sync-less).
+   *  - `homescreen.doorbells` → Doorbells.
+   *
+   * For each camera we then fetch `/network/{nid}/camera/{cid}/config` to
+   * get the raw product_type and the thumbnail timestamp — without
+   * those we can't build the v3 media URL.
+   */
   async listCameras(): Promise<BlinkCamera[]> {
     const tokens = await this.ensureValidToken();
-    const url = `https://${tokens.tierHost}/api/v3/accounts/${tokens.accountId}/homescreen`;
-    const response = await this.authedGet(url);
-    const payload = (await response.json()) as HomescreenPayload;
+    const host = `https://${tokens.tierHost}`;
 
+    interface Stub {
+      id: number | string;
+      networkId: number | string;
+      name: string;
+      type: BlinkCameraType;
+    }
+    const stubs: Stub[] = [];
+
+    // 1) Default cameras via camera/usage
+    try {
+      const usageResp = await this.authedGet(`${host}/api/v1/camera/usage`);
+      const usage = (await usageResp.json()) as CameraUsagePayload;
+      for (const network of usage.networks ?? []) {
+        if (network.network_id == null) continue;
+        for (const cam of network.cameras ?? []) {
+          if (cam.id == null) continue;
+          stubs.push({
+            id: cam.id,
+            networkId: network.network_id,
+            name: typeof cam.name === "string" ? cam.name : String(cam.id),
+            type: "default",
+          });
+        }
+      }
+    } catch {
+      // Tolerate — proceed with whatever the homescreen returns.
+    }
+
+    // 2) Owls + doorbells via homescreen
+    try {
+      const homeResp = await this.authedGet(`${host}/api/v3/accounts/${tokens.accountId}/homescreen`);
+      const home = (await homeResp.json()) as HomescreenPayload;
+      for (const owl of home.owls ?? []) {
+        if (owl.id == null || owl.network_id == null) continue;
+        stubs.push({
+          id: owl.id,
+          networkId: owl.network_id,
+          name: typeof owl.name === "string" ? owl.name : String(owl.id),
+          type: "mini",
+        });
+      }
+      for (const db of home.doorbells ?? []) {
+        if (db.id == null || db.network_id == null) continue;
+        stubs.push({
+          id: db.id,
+          networkId: db.network_id,
+          name: typeof db.name === "string" ? db.name : String(db.id),
+          type: "doorbell",
+        });
+      }
+    } catch {
+      // Tolerate — the user may not have any owls/doorbells.
+    }
+
+    // 3) Hydrate each stub with config (product_type + thumbnail)
     const out: BlinkCamera[] = [];
-    const push = (raw: HomescreenCameraPayload, source: "cameras" | "owls" | "doorbells") => {
-      if (raw.id == null || raw.network_id == null) return;
+    for (const stub of stubs) {
+      let productType: string | null = null;
+      let rawThumbnail: string | number | null = null;
+      let updatedAt: Date | null = null;
+      try {
+        const cfgResp = await this.authedGet(
+          `${host}/network/${stub.networkId}/camera/${stub.id}/config`,
+        );
+        const cfgBody = (await cfgResp.json()) as CameraConfigPayload;
+        const entry = cfgBody.camera?.[0];
+        if (entry) {
+          productType = typeof entry.type === "string" ? entry.type : null;
+          rawThumbnail = entry.thumbnail ?? null;
+          updatedAt = parseDate(entry.updated_at);
+        }
+      } catch {
+        // Best-effort — we still surface the camera, just without thumbnail.
+      }
+
+      let thumbnailPath: string | null = null;
+      if (rawThumbnail != null) {
+        const asString = String(rawThumbnail);
+        // New API: integer timestamp → build the v3 media URL.
+        if (/^\d+$/.test(asString) && productType) {
+          thumbnailPath = `/api/v3/media/accounts/${tokens.accountId}/networks/${stub.networkId}/${productType}/${stub.id}/thumbnail/thumbnail.jpg?ts=${asString}&ext=`;
+          // `thumbnail` is unix seconds in the new API.
+          if (!updatedAt) updatedAt = new Date(Number(asString) * 1000);
+        } else if (asString.endsWith("&ext=")) {
+          thumbnailPath = asString;
+        } else {
+          thumbnailPath = asString.endsWith(".jpg") ? asString : `${asString}.jpg`;
+        }
+      }
+
       out.push({
-        id: raw.id,
-        networkId: raw.network_id,
-        name: typeof raw.name === "string" ? raw.name : String(raw.id),
-        type: classifyCamera(source),
-        model: typeof raw.model === "string" ? raw.model : (typeof raw.type === "string" ? raw.type : null),
-        thumbnailPath: typeof raw.thumbnail === "string" ? raw.thumbnail : null,
-        thumbnailUpdatedAt: parseDate(raw.updated_at),
+        id: stub.id,
+        networkId: stub.networkId,
+        name: stub.name,
+        type: stub.type,
+        productType,
+        model: productType,
+        thumbnailPath,
+        thumbnailUpdatedAt: updatedAt,
       });
-    };
-    for (const c of payload.cameras ?? []) push(c, "cameras");
-    for (const c of payload.owls ?? []) push(c, "owls");
-    for (const c of payload.doorbells ?? []) push(c, "doorbells");
+    }
     return out;
   }
 
@@ -588,9 +696,11 @@ export class BlinkClient {
     if (!camera.thumbnailPath) {
       throw new BlinkApiError(`Blink camera ${camera.id} has no thumbnail`, 404, "");
     }
-    const ts = camera.thumbnailUpdatedAt ? camera.thumbnailUpdatedAt.getTime() : Date.now();
-    const path = camera.thumbnailPath.endsWith(".jpg") ? camera.thumbnailPath : `${camera.thumbnailPath}.jpg`;
-    const url = `https://${tokens.tierHost}${path}?ts=${ts}`;
+    // thumbnailPath is already fully-formed by listCameras — either an
+    // absolute URL or a leading-slash path relative to the tier host.
+    const url = camera.thumbnailPath.startsWith("http")
+      ? camera.thumbnailPath
+      : `https://${tokens.tierHost}${camera.thumbnailPath}`;
     const response = await this.fetchFn(url, {
       method: "GET",
       headers: this.authHeaders(tokens),
