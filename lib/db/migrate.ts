@@ -62,6 +62,21 @@ async function migrate() {
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS approved_at TIMESTAMPTZ`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT false`,
     `ALTER TABLE stations ADD COLUMN IF NOT EXISTS predictor_key TEXT`,
+
+    // Cameras: multi-provider support (Spypoint + Blink + future).
+    // Keep the original spypoint_camera_id / spypoint_photo_id columns around
+    // (just nullable) so existing rows and any lingering reads stay valid.
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'spypoint'`,
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS provider_camera_id TEXT`,
+    `UPDATE cameras SET provider_camera_id = spypoint_camera_id WHERE provider_camera_id IS NULL AND spypoint_camera_id IS NOT NULL`,
+    `ALTER TABLE cameras ALTER COLUMN spypoint_camera_id DROP NOT NULL`,
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS provider_account_id TEXT REFERENCES camera_provider_accounts(id) ON DELETE SET NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_cameras_provider_external ON cameras(provider, provider_camera_id) WHERE provider_camera_id IS NOT NULL`,
+
+    `ALTER TABLE camera_images ADD COLUMN IF NOT EXISTS provider_photo_id TEXT`,
+    `UPDATE camera_images SET provider_photo_id = spypoint_photo_id WHERE provider_photo_id IS NULL AND spypoint_photo_id IS NOT NULL`,
+    `ALTER TABLE camera_images ALTER COLUMN spypoint_photo_id DROP NOT NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_camera_images_provider_external ON camera_images(provider_photo_id) WHERE provider_photo_id IS NOT NULL`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

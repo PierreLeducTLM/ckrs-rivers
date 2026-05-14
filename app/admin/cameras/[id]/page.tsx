@@ -8,7 +8,9 @@ import { runnabilityColors, runnabilityFor, runnabilityLabel } from "@/lib/skypo
 
 interface Camera {
   id: string;
-  spypoint_camera_id: string;
+  provider: string;
+  provider_camera_id: string | null;
+  provider_account_id: string | null;
   name: string;
   station_id: string | null;
   scale_description: string | null;
@@ -223,7 +225,12 @@ export default function CameraDetailPage({
         </Link>
 
         <h1 className="mt-4 text-2xl font-bold text-zinc-900 dark:text-zinc-50">{camera.name}</h1>
-        <p className="mt-1 font-mono text-xs text-zinc-500">{camera.spypoint_camera_id}</p>
+        <p className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+          <span className="rounded bg-zinc-200 px-1.5 py-0.5 font-semibold uppercase tracking-wider text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+            {camera.provider}
+          </span>
+          <span className="font-mono">{camera.provider_camera_id ?? "—"}</span>
+        </p>
 
         {error && (
           <div className="mt-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-200">
