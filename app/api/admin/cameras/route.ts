@@ -4,7 +4,9 @@ import { createSpypointClient } from "@/lib/skypoint/client";
 
 interface LocalCameraRow {
   id: string;
-  spypoint_camera_id: string;
+  provider: string;
+  provider_camera_id: string | null;
+  provider_account_id: string | null;
   name: string;
   station_id: string | null;
   active: boolean;
@@ -21,7 +23,9 @@ export async function GET() {
     local = (await sql(
       `SELECT
          c.id,
-         c.spypoint_camera_id,
+         c.provider,
+         c.provider_camera_id,
+         c.provider_account_id,
          c.name,
          c.station_id,
          c.active,
@@ -50,55 +54,83 @@ export async function GET() {
 
   // Try to enumerate Spypoint cameras so admin can import new ones.
   // Tolerate failure (missing creds, network) — just return local list.
-  let remote: Array<{ id: string; name: string; model: string | null; isOnline: boolean }> = [];
-  let remoteError: string | null = null;
+  let remoteSpypoint: Array<{ id: string; name: string; model: string | null; isOnline: boolean }> = [];
+  let spypointError: string | null = null;
   try {
     const client = createSpypointClient();
     const cameras = await client.getCameras();
-    remote = cameras.map((c) => ({ id: c.id, name: c.name, model: c.model, isOnline: c.isOnline }));
+    remoteSpypoint = cameras.map((c) => ({ id: c.id, name: c.name, model: c.model, isOnline: c.isOnline }));
   } catch (err) {
-    remoteError = err instanceof Error ? err.message : "Spypoint API error";
+    spypointError = err instanceof Error ? err.message : "Spypoint API error";
   }
 
-  const localIds = new Set(local.map((c) => c.spypoint_camera_id));
-  const unassigned = remote.filter((c) => !localIds.has(c.id));
+  const localKeys = new Set(local.map((c) => `${c.provider}:${c.provider_camera_id ?? ""}`));
+  const unassignedSpypoint = remoteSpypoint.filter((c) => !localKeys.has(`spypoint:${c.id}`));
 
-  return Response.json({ local, unassigned, remoteError });
+  return Response.json({
+    local,
+    unassignedSpypoint,
+    spypointError,
+    // The remote-Blink list isn't here because it's per-account; the admin
+    // UI fetches it from /api/admin/cameras/blink/accounts/[id] when the
+    // admin expands an account.
+  });
+}
+
+interface PostBody {
+  provider?: string;
+  providerCameraId?: string;
+  // Spypoint legacy field — accepted as an alias for providerCameraId so
+  // existing UI keeps working during the rollout.
+  spypointCameraId?: string;
+  providerAccountId?: string | null;
+  name?: string;
 }
 
 export async function POST(req: NextRequest) {
-  let body: { spypointCameraId?: string; name?: string };
+  let body: PostBody;
   try {
-    body = (await req.json()) as { spypointCameraId?: string; name?: string };
+    body = (await req.json()) as PostBody;
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const spypointCameraId = body.spypointCameraId?.trim();
-  if (!spypointCameraId) {
-    return Response.json({ error: "spypointCameraId is required" }, { status: 400 });
+  const provider = (body.provider ?? "spypoint").trim();
+  if (provider !== "spypoint" && provider !== "blink") {
+    return Response.json({ error: `Unknown provider: ${provider}` }, { status: 400 });
   }
 
-  // Fetch the camera name from Spypoint so admin doesn't have to type it.
+  const providerCameraId = (body.providerCameraId ?? body.spypointCameraId)?.trim();
+  if (!providerCameraId) {
+    return Response.json({ error: "providerCameraId is required" }, { status: 400 });
+  }
+
   let name = body.name?.trim();
   if (!name) {
-    try {
-      const client = createSpypointClient();
-      const cameras = await client.getCameras();
-      const remote = cameras.find((c) => c.id === spypointCameraId);
-      name = remote?.name ?? spypointCameraId;
-    } catch {
-      name = spypointCameraId;
+    if (provider === "spypoint") {
+      try {
+        const client = createSpypointClient();
+        const cameras = await client.getCameras();
+        const remote = cameras.find((c) => c.id === providerCameraId);
+        name = remote?.name ?? providerCameraId;
+      } catch {
+        name = providerCameraId;
+      }
+    } else {
+      name = providerCameraId;
     }
   }
 
+  const providerAccountId = body.providerAccountId ?? null;
+  const legacySpypointId = provider === "spypoint" ? providerCameraId : null;
+
   try {
     const rows = (await sql(
-      `INSERT INTO cameras (spypoint_camera_id, name)
-       VALUES ($1, $2)
-       ON CONFLICT (spypoint_camera_id) DO NOTHING
+      `INSERT INTO cameras (provider, provider_camera_id, provider_account_id, spypoint_camera_id, name)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (provider, provider_camera_id) WHERE provider_camera_id IS NOT NULL DO NOTHING
        RETURNING id`,
-      [spypointCameraId, name],
+      [provider, providerCameraId, providerAccountId, legacySpypointId, name],
     )) as Array<{ id: string }>;
 
     if (rows.length === 0) {

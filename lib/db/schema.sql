@@ -261,3 +261,30 @@ CREATE TABLE IF NOT EXISTS camera_images (
 
 CREATE INDEX IF NOT EXISTS idx_camera_images_camera_time
   ON camera_images(camera_id, captured_at DESC);
+
+-- 17. Camera provider accounts (per-provider OAuth/credentials state).
+-- Spypoint uses static env vars so it does not need rows here. Blink uses
+-- OAuth with email-pin 2FA on first login and rotating refresh tokens.
+CREATE TABLE IF NOT EXISTS camera_provider_accounts (
+  id                  TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  provider            TEXT NOT NULL,
+  label               TEXT NOT NULL,
+  username            TEXT NOT NULL,
+  hardware_id         TEXT NOT NULL,
+  tokens_json         JSONB,
+  -- Transient OAuth state held between the initial signin (which gets a
+  -- 412 2FA-required response) and the subsequent verify-pin request.
+  -- Contains the PKCE code_verifier, CSRF token, and session cookies that
+  -- need to be replayed when the admin enters the pin. Cleared on success.
+  pending_auth_json   JSONB,
+  pending_2fa         BOOLEAN NOT NULL DEFAULT false,
+  last_used_at        TIMESTAMPTZ,
+  last_error          TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_camera_provider_accounts_provider
+  ON camera_provider_accounts(provider);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_camera_provider_accounts_username
+  ON camera_provider_accounts(provider, username);

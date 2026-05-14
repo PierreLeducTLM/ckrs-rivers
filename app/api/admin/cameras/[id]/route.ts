@@ -4,7 +4,9 @@ import { deleteCameraImages } from "@/lib/storage/blob";
 
 interface CameraDetailRow {
   id: string;
-  spypoint_camera_id: string;
+  provider: string;
+  provider_camera_id: string | null;
+  provider_account_id: string | null;
   name: string;
   station_id: string | null;
   scale_description: string | null;
@@ -31,7 +33,8 @@ interface ImageRow {
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const cameras = (await sql(
-    `SELECT id, spypoint_camera_id, name, station_id,
+    `SELECT id, provider, provider_camera_id, provider_account_id,
+            name, station_id,
             scale_description, scale_min, scale_max, scale_unit,
             paddling_min_reading, paddling_ideal_reading, paddling_max_reading,
             active, last_synced_photo_date::text AS last_synced_photo_date
