@@ -63,6 +63,8 @@ export const RiverStationSchema = z.object({
   rapids: z.array(RapidSchema).default([]),
   approved: z.boolean().default(false),
   hidden: z.boolean().default(false),
+  /** Key of a predictor registered in `lib/prediction/registry.ts`. */
+  predictorKey: z.string().optional(),
 });
 
 export type RiverStation = z.infer<typeof RiverStationSchema>;

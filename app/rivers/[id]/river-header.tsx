@@ -44,6 +44,8 @@ interface RiverHeaderProps {
   initialRapids?: Rapid[];
   initialApproved?: boolean;
   initialHidden?: boolean;
+  initialPredictorKey?: string | null;
+  predictorOptions?: ReadonlyArray<{ key: string; label: string; description: string }>;
   rapidsFlagState?: FlagState;
   regime?: string | null;
 }
@@ -64,6 +66,8 @@ export default function RiverHeader({
   initialRapids = [],
   initialApproved = false,
   initialHidden = false,
+  initialPredictorKey = null,
+  predictorOptions = [],
   rapidsFlagState = "off",
   regime = null,
 }: RiverHeaderProps) {
@@ -122,6 +126,8 @@ export default function RiverHeader({
         initialDescription={initialDescription}
         initialApproved={approved}
         initialHidden={hidden}
+        initialPredictorKey={initialPredictorKey}
+        predictorOptions={predictorOptions}
         isAdmin={isAdmin}
         approved={approved}
         unlocked={unlocked}

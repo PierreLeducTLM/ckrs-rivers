@@ -49,6 +49,7 @@ export async function PATCH(
     rapids?: Rapid[];
     approved?: boolean;
     hidden?: boolean;
+    predictor_key?: string | null;
     unlock?: boolean;
   };
 
@@ -192,6 +193,21 @@ export async function PATCH(
   if (body.hidden !== undefined) {
     sets.push(`hidden = $${idx++}`);
     values.push(body.hidden);
+  }
+
+  if (body.predictor_key !== undefined) {
+    const key = body.predictor_key;
+    if (key !== null) {
+      const { getPredictor } = await import("@/lib/prediction/registry");
+      if (!getPredictor(key)) {
+        return Response.json(
+          { error: `Unknown predictor key "${key}"` },
+          { status: 400 },
+        );
+      }
+    }
+    sets.push(`predictor_key = $${idx++}`);
+    values.push(key);
   }
 
   if (sets.length === 0) {

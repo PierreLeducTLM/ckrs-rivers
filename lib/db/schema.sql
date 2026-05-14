@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS stations (
   approved           BOOLEAN NOT NULL DEFAULT false,
   approved_at        TIMESTAMPTZ,
   hidden             BOOLEAN NOT NULL DEFAULT false,
+  predictor_key      TEXT,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
