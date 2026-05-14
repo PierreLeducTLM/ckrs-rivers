@@ -25,7 +25,7 @@ const responseSchema = z.object({
 });
 
 const SYSTEM_PROMPT =
-  "You read water-level scales from outdoor camera photos. The user gives a photo and a description of the scale, including its valid numeric range. Return JSON only.";
+  "You read level markings from camera photos. The user gives a photo and a description of the scale, including its valid numeric range and what indicates the current level. In production the indicator is usually the water surface meeting the scale; in test setups the scale description may specify a different indicator (e.g. the top edge of a wooden plank standing in for the water line). Return JSON only.";
 
 function buildUserPrompt(input: ReadLevelInput): string {
   const desc = input.scaleDescription?.trim() || "(no description provided)";
@@ -37,12 +37,12 @@ function buildUserPrompt(input: ReadLevelInput): string {
     `Scale description: ${desc}`,
     `Scale range: ${range}`,
     "",
-    "Read the current water level where the water surface meets the scale.",
+    "Read the current level where the indicator described in the scale description meets the scale. If no indicator is specified, assume the water surface line.",
     input.scaleMin != null && input.scaleMax != null
-      ? `The "value" must be a number between ${input.scaleMin} and ${input.scaleMax} (inclusive), or null if the scale or water line is not clearly visible.`
-      : 'The "value" must be a number, or null if the scale or water line is not clearly visible.',
+      ? `The "value" must be a number between ${input.scaleMin} and ${input.scaleMax} (inclusive), or null if the scale or the level indicator is not clearly visible.`
+      : 'The "value" must be a number, or null if the scale or the level indicator is not clearly visible.',
     "",
-    "Use confidence='unreadable' (and value=null) if the scale is obscured, dark, snowed over, or the water line is ambiguous. Keep notes short (one sentence).",
+    "Use confidence='unreadable' (and value=null) if the scale is obscured, dark, snowed over, or the indicator position is ambiguous. Keep notes short (one sentence).",
   ].join("\n");
 }
 
