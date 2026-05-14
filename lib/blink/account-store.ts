@@ -47,10 +47,23 @@ function parseJsonField<T>(raw: T | string | null): T | null {
   return raw;
 }
 
+// Existing rows may have a stale tierHost format that's missing the
+// `rest-` prefix (the previous build saved e.g. "u065.immedia-semi.com",
+// which doesn't resolve). Normalize on load so we don't force the admin
+// to re-login.
+function normalizeTokens(tokens: BlinkTokens | null): BlinkTokens | null {
+  if (!tokens) return tokens;
+  const host = tokens.tierHost;
+  if (typeof host === "string" && /^u\d+\.immedia-semi\.com$/i.test(host)) {
+    return { ...tokens, tierHost: `rest-${host}` };
+  }
+  return tokens;
+}
+
 function rowFromRaw(raw: RawAccountRow): BlinkAccountRow {
   return {
     ...raw,
-    tokens_json: parseJsonField<BlinkTokens>(raw.tokens_json),
+    tokens_json: normalizeTokens(parseJsonField<BlinkTokens>(raw.tokens_json)),
     pending_auth_json: parseJsonField<BlinkPendingAuth>(raw.pending_auth_json),
   };
 }

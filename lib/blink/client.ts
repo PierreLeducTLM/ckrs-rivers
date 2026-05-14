@@ -536,7 +536,11 @@ export class BlinkClient {
     if (!tier || accountId == null) {
       throw new BlinkApiError("Blink tier_info response missing tier/account_id", response.status, TIER_ENDPOINT);
     }
-    return { tierHost: `${tier}.${"immedia-semi.com"}`, accountId };
+    // blinkpy's BlinkURLHandler builds the host as `rest-{tier}.immedia-semi.com`
+    // (e.g. tier="u065" → host="rest-u065.immedia-semi.com"). Without the
+    // `rest-` prefix DNS doesn't resolve, which surfaces as a generic
+    // "fetch failed" on every subsequent API call.
+    return { tierHost: `rest-${tier}.immedia-semi.com`, accountId };
   }
 
   // -------------------------------------------------------------------------
@@ -580,7 +584,13 @@ export class BlinkClient {
         const body = await r.text().catch(() => "");
         out.push({ url, status: r.status, body: body.slice(0, 4000) });
       } catch (err) {
-        out.push({ url, status: 0, body: err instanceof Error ? err.message : String(err) });
+        // Node's fetch throws TypeError("fetch failed") and stashes the
+        // real reason on .cause — surface both so DNS/TLS/connection
+        // failures are diagnosable instead of opaque.
+        const e = err as { message?: string; cause?: { message?: string; code?: string } } & Error;
+        const detail = e?.cause?.message ?? e?.cause?.code ?? "";
+        const msg = detail ? `${e.message}: ${detail}` : (e?.message ?? String(err));
+        out.push({ url, status: 0, body: msg });
       }
     }
     return { tierHost: tokens.tierHost, accountId: tokens.accountId, endpoints: out };
