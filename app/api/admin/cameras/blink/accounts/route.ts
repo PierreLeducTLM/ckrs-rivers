@@ -90,8 +90,12 @@ export async function POST(req: NextRequest) {
       );
     }
     if (err instanceof BlinkInvalidCredentialsError) {
-      await markBlinkAccountError(sqlFn, account.id, "Invalid credentials");
-      return Response.json({ error: "Invalid Blink credentials" }, { status: 401 });
+      const detail = err.body ? `Invalid credentials. Blink response: ${err.body.slice(0, 300)}` : "Invalid credentials";
+      await markBlinkAccountError(sqlFn, account.id, detail);
+      return Response.json(
+        { error: "Invalid Blink credentials", blinkResponse: err.body },
+        { status: 401 },
+      );
     }
     const msg = err instanceof Error ? err.message : "Login failed";
     await markBlinkAccountError(sqlFn, account.id, msg);

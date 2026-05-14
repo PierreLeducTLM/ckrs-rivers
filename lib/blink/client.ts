@@ -171,7 +171,10 @@ export class BlinkClient {
     });
 
     if (response.status === 412) throw new BlinkTwoFARequiredError();
-    if (response.status === 401) throw new BlinkInvalidCredentialsError();
+    if (response.status === 401) {
+      const body = await response.text().catch(() => null);
+      throw new BlinkInvalidCredentialsError(body);
+    }
     if (!response.ok) {
       const body = await response.text().catch(() => null);
       throw new BlinkApiError(`Blink token request failed (${response.status})`, response.status, OAUTH_TOKEN_URL, body);

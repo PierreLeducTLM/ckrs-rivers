@@ -163,13 +163,14 @@ export default function CamerasAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ label: blinkLabel || undefined, username: blinkUsername, password: blinkPassword }),
       });
-      const body = (await res.json()) as { success?: boolean; accountId?: string; pending2fa?: boolean; message?: string; error?: string };
+      const body = (await res.json()) as { success?: boolean; accountId?: string; pending2fa?: boolean; message?: string; error?: string; blinkResponse?: string | null };
       if (res.status === 202 && body.pending2fa && body.accountId) {
         setPendingAccountId(body.accountId);
         return;
       }
       if (!res.ok) {
-        setError(body.error ?? "Login failed");
+        const msg = body.blinkResponse ? `${body.error ?? "Login failed"} — ${body.blinkResponse}` : (body.error ?? "Login failed");
+        setError(msg);
         return;
       }
       // Success without 2FA — close form and refresh
@@ -194,9 +195,10 @@ export default function CamerasAdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: blinkPassword, pin: blinkPin }),
       });
-      const body = (await res.json()) as { success?: boolean; error?: string };
+      const body = (await res.json()) as { success?: boolean; error?: string; blinkResponse?: string | null };
       if (!res.ok) {
-        setError(body.error ?? "Verification failed");
+        const msg = body.blinkResponse ? `${body.error ?? "Verification failed"} — ${body.blinkResponse}` : (body.error ?? "Verification failed");
+        setError(msg);
         return;
       }
       // Done — reset and refresh

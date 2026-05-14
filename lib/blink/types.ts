@@ -61,8 +61,14 @@ export class BlinkTwoFARequiredError extends Error {
 }
 
 export class BlinkInvalidCredentialsError extends Error {
-  constructor() {
+  // The raw response body from Blink's token endpoint, when available.
+  // Useful for distinguishing "wrong password" from rarer cases like
+  // "account locked" or unexpected API shape changes.
+  body: string | null;
+
+  constructor(body: string | null = null) {
     super("Blink login failed: invalid credentials");
     this.name = "BlinkInvalidCredentialsError";
+    this.body = body;
   }
 }

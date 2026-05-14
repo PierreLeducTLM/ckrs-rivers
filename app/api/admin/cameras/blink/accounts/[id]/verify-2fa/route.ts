@@ -48,8 +48,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       return Response.json({ error: "Pin rejected. Request a fresh pin and try again." }, { status: 401 });
     }
     if (err instanceof BlinkInvalidCredentialsError) {
-      await markBlinkAccountError(sqlFn, account.id, "Invalid credentials");
-      return Response.json({ error: "Invalid credentials" }, { status: 401 });
+      const detail = err.body ? `Invalid credentials. Blink response: ${err.body.slice(0, 300)}` : "Invalid credentials";
+      await markBlinkAccountError(sqlFn, account.id, detail);
+      return Response.json(
+        { error: "Invalid credentials", blinkResponse: err.body },
+        { status: 401 },
+      );
     }
     const msg = err instanceof Error ? err.message : "Verification failed";
     await markBlinkAccountError(sqlFn, account.id, msg);
