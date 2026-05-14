@@ -53,10 +53,25 @@ export class BlinkApiError extends Error {
   }
 }
 
+// Transient state captured during the v2 OAuth signin step when Blink
+// returns 412 (2FA required). Must be persisted across HTTP requests so
+// the subsequent /verify-2fa call can replay the same session.
+export interface BlinkPendingAuth {
+  codeVerifier: string;
+  csrfToken: string;
+  // Session cookies as a flat name→value map. We only keep name=value
+  // pairs (no expiry/path tracking) — sufficient for the short-lived
+  // signin session.
+  cookies: Record<string, string>;
+}
+
 export class BlinkTwoFARequiredError extends Error {
-  constructor() {
+  pending: BlinkPendingAuth;
+
+  constructor(pending: BlinkPendingAuth) {
     super("Blink two-factor authentication required. Check email for pin.");
     this.name = "BlinkTwoFARequiredError";
+    this.pending = pending;
   }
 }
 

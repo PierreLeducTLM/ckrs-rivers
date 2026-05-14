@@ -7,7 +7,7 @@ import {
   findBlinkAccountByUsername,
   listBlinkAccounts,
   markBlinkAccountError,
-  markBlinkAccountPending2fa,
+  saveBlinkPendingAuth,
   saveBlinkTokens,
 } from "@/lib/blink/account-store";
 
@@ -58,8 +58,6 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "username and password are required" }, { status: 400 });
   }
 
-  // Re-use the row if it already exists for this username (e.g. admin is
-  // re-logging-in after a token expiry); otherwise create a fresh one.
   let account = await findBlinkAccountByUsername(sqlFn, username);
   if (!account) {
     account = await createBlinkAccount(sqlFn, { label, username });
@@ -70,15 +68,21 @@ export async function POST(req: NextRequest) {
     hardwareId: account.hardware_id,
     tokens: account.tokens_json,
   };
-  const client = new BlinkClient(session);
+  const client = new BlinkClient(session, {
+    onTokensRefreshed: async (tokens) => {
+      await saveBlinkTokens(sqlFn, account.id, tokens);
+    },
+  });
 
   try {
-    const tokens = await client.login(password);
-    await saveBlinkTokens(sqlFn, account.id, tokens);
+    await client.login(password);
+    // login() persists tokens via the onTokensRefreshed callback.
     return Response.json({ success: true, accountId: account.id, pending2fa: false });
   } catch (err) {
     if (err instanceof BlinkTwoFARequiredError) {
-      await markBlinkAccountPending2fa(sqlFn, account.id);
+      // Stash the PKCE verifier, CSRF token, and cookie jar so the
+      // verify-2fa endpoint can resume this session with the email pin.
+      await saveBlinkPendingAuth(sqlFn, account.id, err.pending);
       return Response.json(
         {
           success: false,

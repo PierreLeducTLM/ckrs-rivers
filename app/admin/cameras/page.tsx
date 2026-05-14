@@ -193,7 +193,7 @@ export default function CamerasAdminPage() {
       const res = await fetch(`/api/admin/cameras/blink/accounts/${pendingAccountId}/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: blinkPassword, pin: blinkPin }),
+        body: JSON.stringify({ pin: blinkPin }),
       });
       const body = (await res.json()) as { success?: boolean; error?: string; blinkResponse?: string | null };
       if (!res.ok) {

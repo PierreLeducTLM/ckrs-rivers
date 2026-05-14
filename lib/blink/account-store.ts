@@ -1,10 +1,12 @@
 // Persistence layer between camera_provider_accounts rows and BlinkClient.
-// Spypoint uses static env vars, but Blink's OAuth refresh tokens rotate
-// every login and we need to persist them across cron ticks.
+// The v2 OAuth flow takes two HTTP requests to our backend (signin →
+// verify-2fa) and the transient PKCE + CSRF + cookie state needs to span
+// both, so we stash it in the dedicated pending_auth_json column while
+// the user goes to their email for the pin.
 
 import { randomUUID } from "node:crypto";
 import { BlinkClient, type BlinkSession } from "./client";
-import type { BlinkTokens } from "./types";
+import type { BlinkPendingAuth, BlinkTokens } from "./types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SqlFn = (query: string, params?: any[]) => Promise<any[]>;
@@ -15,6 +17,7 @@ export interface BlinkAccountRow {
   username: string;
   hardware_id: string;
   tokens_json: BlinkTokens | null;
+  pending_auth_json: BlinkPendingAuth | null;
   pending_2fa: boolean;
   last_used_at: string | null;
   last_error: string | null;
@@ -26,16 +29,17 @@ interface RawAccountRow {
   username: string;
   hardware_id: string;
   tokens_json: BlinkTokens | string | null;
+  pending_auth_json: BlinkPendingAuth | string | null;
   pending_2fa: boolean;
   last_used_at: string | null;
   last_error: string | null;
 }
 
-function parseTokens(raw: BlinkTokens | string | null): BlinkTokens | null {
+function parseJsonField<T>(raw: T | string | null): T | null {
   if (raw == null) return null;
   if (typeof raw === "string") {
     try {
-      return JSON.parse(raw) as BlinkTokens;
+      return JSON.parse(raw) as T;
     } catch {
       return null;
     }
@@ -44,13 +48,19 @@ function parseTokens(raw: BlinkTokens | string | null): BlinkTokens | null {
 }
 
 function rowFromRaw(raw: RawAccountRow): BlinkAccountRow {
-  return { ...raw, tokens_json: parseTokens(raw.tokens_json) };
+  return {
+    ...raw,
+    tokens_json: parseJsonField<BlinkTokens>(raw.tokens_json),
+    pending_auth_json: parseJsonField<BlinkPendingAuth>(raw.pending_auth_json),
+  };
 }
+
+const SELECT_COLUMNS = `id, label, username, hardware_id, tokens_json, pending_auth_json, pending_2fa,
+        last_used_at::text AS last_used_at, last_error`;
 
 export async function listBlinkAccounts(sql: SqlFn): Promise<BlinkAccountRow[]> {
   const rows = (await sql(
-    `SELECT id, label, username, hardware_id, tokens_json, pending_2fa,
-            last_used_at::text AS last_used_at, last_error
+    `SELECT ${SELECT_COLUMNS}
        FROM camera_provider_accounts
       WHERE provider = 'blink'
       ORDER BY created_at DESC`,
@@ -60,8 +70,7 @@ export async function listBlinkAccounts(sql: SqlFn): Promise<BlinkAccountRow[]> 
 
 export async function getBlinkAccount(sql: SqlFn, id: string): Promise<BlinkAccountRow | null> {
   const rows = (await sql(
-    `SELECT id, label, username, hardware_id, tokens_json, pending_2fa,
-            last_used_at::text AS last_used_at, last_error
+    `SELECT ${SELECT_COLUMNS}
        FROM camera_provider_accounts
       WHERE provider = 'blink' AND id = $1`,
     [id],
@@ -72,8 +81,7 @@ export async function getBlinkAccount(sql: SqlFn, id: string): Promise<BlinkAcco
 
 export async function findBlinkAccountByUsername(sql: SqlFn, username: string): Promise<BlinkAccountRow | null> {
   const rows = (await sql(
-    `SELECT id, label, username, hardware_id, tokens_json, pending_2fa,
-            last_used_at::text AS last_used_at, last_error
+    `SELECT ${SELECT_COLUMNS}
        FROM camera_provider_accounts
       WHERE provider = 'blink' AND username = $1`,
     [username],
@@ -90,8 +98,7 @@ export async function createBlinkAccount(
   const rows = (await sql(
     `INSERT INTO camera_provider_accounts (provider, label, username, hardware_id, pending_2fa)
      VALUES ('blink', $1, $2, $3, true)
-     RETURNING id, label, username, hardware_id, tokens_json, pending_2fa,
-               last_used_at::text AS last_used_at, last_error`,
+     RETURNING ${SELECT_COLUMNS}`,
     [input.label, input.username, hardwareId],
   )) as RawAccountRow[];
   return rowFromRaw(rows[0]);
@@ -101,6 +108,7 @@ export async function saveBlinkTokens(sql: SqlFn, accountId: string, tokens: Bli
   await sql(
     `UPDATE camera_provider_accounts
         SET tokens_json = $1::jsonb,
+            pending_auth_json = NULL,
             pending_2fa = false,
             last_used_at = now(),
             last_error = NULL,
@@ -110,12 +118,15 @@ export async function saveBlinkTokens(sql: SqlFn, accountId: string, tokens: Bli
   );
 }
 
-export async function markBlinkAccountPending2fa(sql: SqlFn, accountId: string): Promise<void> {
+export async function saveBlinkPendingAuth(sql: SqlFn, accountId: string, pending: BlinkPendingAuth): Promise<void> {
   await sql(
     `UPDATE camera_provider_accounts
-        SET pending_2fa = true, updated_at = now()
-      WHERE id = $1`,
-    [accountId],
+        SET pending_auth_json = $1::jsonb,
+            pending_2fa = true,
+            last_error = NULL,
+            updated_at = now()
+      WHERE id = $2`,
+    [JSON.stringify(pending), accountId],
   );
 }
 
@@ -145,6 +156,28 @@ export function clientForAccount(sql: SqlFn, account: BlinkAccountRow): BlinkCli
     username: account.username,
     hardwareId: account.hardware_id,
     tokens: account.tokens_json,
+  };
+  return new BlinkClient(session, {
+    onTokensRefreshed: async (tokens) => {
+      await saveBlinkTokens(sql, account.id, tokens);
+    },
+  });
+}
+
+/**
+ * Build a BlinkClient for the verify-2FA half of an in-flight login. The
+ * client is hydrated with the pending OAuth state (PKCE verifier, CSRF
+ * token, cookie jar) saved during the signin step.
+ */
+export function clientForPendingAuth(sql: SqlFn, account: BlinkAccountRow): BlinkClient {
+  if (!account.pending_auth_json) {
+    throw new Error(`Blink account ${account.label} has no pending auth state — start signin first`);
+  }
+  const session: BlinkSession = {
+    username: account.username,
+    hardwareId: account.hardware_id,
+    tokens: null,
+    pending: account.pending_auth_json,
   };
   return new BlinkClient(session, {
     onTokensRefreshed: async (tokens) => {

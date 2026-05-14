@@ -77,6 +77,10 @@ async function migrate() {
     `UPDATE camera_images SET provider_photo_id = spypoint_photo_id WHERE provider_photo_id IS NULL AND spypoint_photo_id IS NOT NULL`,
     `ALTER TABLE camera_images ALTER COLUMN spypoint_photo_id DROP NOT NULL`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_camera_images_provider_external ON camera_images(provider_photo_id) WHERE provider_photo_id IS NOT NULL`,
+
+    // Holds the PKCE verifier, CSRF token, and cookie jar across the
+    // signin POST and the verify-2fa POST for Blink's OAuth v2 flow.
+    `ALTER TABLE camera_provider_accounts ADD COLUMN IF NOT EXISTS pending_auth_json JSONB`,
   ];
 
   console.log(`\nRunning ${alterStatements.length} alter statements...`);

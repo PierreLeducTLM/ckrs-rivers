@@ -27,7 +27,7 @@ export class BlinkMockClient {
     return MOCK_TOKENS;
   }
 
-  async verifyTwoFactor(_password: string, _pin: string): Promise<BlinkTokens> {
+  async verifyTwoFactor(_pin: string): Promise<BlinkTokens> {
     return MOCK_TOKENS;
   }
 
