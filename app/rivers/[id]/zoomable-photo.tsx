@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ZoomablePhotoProps {
   src: string;
@@ -31,6 +32,62 @@ export default function ZoomablePhoto({ src, alt }: ZoomablePhotoProps) {
     };
   }, [open]);
 
+  const lightbox = open ? (
+    <div
+      className="fixed inset-0 z-[9999] bg-black/90"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) close();
+      }}
+    >
+      <button
+        type="button"
+        onClick={close}
+        aria-label="Close"
+        className="fixed right-4 top-4 z-[10000] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+      >
+        <svg
+          className="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <div
+        className={`flex h-full w-full items-center justify-center ${
+          zoomed ? "overflow-auto" : "overflow-hidden"
+        }`}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) close();
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setZoomed((z) => !z)}
+          aria-label={zoomed ? "Zoom out" : "Zoom in"}
+          className={`relative shrink-0 transition-transform duration-200 ${
+            zoomed
+              ? "h-[200vh] w-[200vw] max-w-none cursor-zoom-out"
+              : "h-full w-full cursor-zoom-in"
+          }`}
+        >
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            unoptimized
+            sizes="100vw"
+            className="object-contain"
+            priority
+          />
+        </button>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <>
       <button
@@ -49,59 +106,7 @@ export default function ZoomablePhoto({ src, alt }: ZoomablePhotoProps) {
         />
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) close();
-          }}
-        >
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div
-            className={`flex h-full w-full items-center justify-center ${zoomed ? "overflow-auto" : "overflow-hidden"}`}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) close();
-            }}
-          >
-            <button
-              type="button"
-              onClick={() => setZoomed((z) => !z)}
-              aria-label={zoomed ? "Zoom out" : "Zoom in"}
-              className={`relative shrink-0 transition-transform duration-200 ${
-                zoomed
-                  ? "h-[200vh] w-[200vw] max-w-none cursor-zoom-out"
-                  : "h-full w-full cursor-zoom-in"
-              }`}
-            >
-              <Image
-                src={src}
-                alt={alt}
-                fill
-                unoptimized
-                sizes="100vw"
-                className="object-contain"
-                priority
-              />
-            </button>
-          </div>
-        </div>
-      )}
+      {lightbox && typeof document !== "undefined" && createPortal(lightbox, document.body)}
     </>
   );
 }
