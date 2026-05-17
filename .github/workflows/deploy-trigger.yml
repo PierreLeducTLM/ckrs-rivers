@@ -35,4 +35,7 @@ jobs:
       - name: Deploy Trigger.dev tasks
         env:
           TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
-        run: npx trigger.dev@4 deploy
+        run: |
+          SDK_VERSION=$(node -p "require('./package.json').dependencies['@trigger.dev/sdk'].replace(/^[\^~]/, '')")
+          echo "Deploying with trigger.dev@${SDK_VERSION}"
+          npx --yes trigger.dev@${SDK_VERSION} deploy
