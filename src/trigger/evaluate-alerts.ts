@@ -297,6 +297,39 @@ function computeTrend(
 }
 
 // ---------------------------------------------------------------------------
+// Oscillation detection (dam-controlled rivers chopping around a threshold)
+// ---------------------------------------------------------------------------
+
+const OSCILLATION_LOOKBACK_MS = 24 * 3600_000;
+const OSCILLATION_MIN_CROSSINGS = 2;
+
+function isOscillatingAround(
+  hourlyData: HourlyPoint[],
+  threshold: number | undefined,
+  nowMs: number,
+): boolean {
+  if (threshold == null) return false;
+  const recent = hourlyData
+    .filter((p) => {
+      const ts = new Date(p.timestamp).getTime();
+      return ts >= nowMs - OSCILLATION_LOOKBACK_MS && ts <= nowMs && p.observed != null;
+    })
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  if (recent.length < 3) return false;
+
+  let crossings = 0;
+  for (let i = 1; i < recent.length; i++) {
+    const prev = recent[i - 1].observed!;
+    const curr = recent[i].observed!;
+    const wasOver = prev > threshold;
+    const isOver = curr > threshold;
+    if (wasOver !== isOver) crossings++;
+  }
+  return crossings >= OSCILLATION_MIN_CROSSINGS;
+}
+
+// ---------------------------------------------------------------------------
 // Snapshot computation
 // ---------------------------------------------------------------------------
 
@@ -429,6 +462,8 @@ function detectAlerts(
   stationName: string,
   paddling: PaddlingLevels | undefined,
   regime?: string | null,
+  oscillatingHigh: boolean = false,
+  oscillatingLow: boolean = false,
 ): AlertCandidate[] {
   const alerts: AlertCandidate[] = [];
   const wasRunnable = prev ? isGoodRange(prev.paddlingStatus) : false;
@@ -451,7 +486,7 @@ function detectAlerts(
   // its-on \u2014 skip when the river only briefly bumped above min from below
   // while the forward tendency is falling (forecast says it'll drop back out).
   // Coming from too-high (descending into range) is still a legit transition.
-  if (nowRunnable && !wasRunnable) {
+  if (nowRunnable && !wasRunnable && !oscillatingHigh && !oscillatingLow) {
     const cameFromBelow =
       !prev || prev.paddlingStatus === "too-low" || prev.paddlingStatus === "unknown";
     const briefBump =
@@ -465,7 +500,7 @@ function detectAlerts(
   }
 
   // safety-warning
-  if (curr.paddlingStatus === "too-high" && prev?.paddlingStatus !== "too-high") {
+  if (curr.paddlingStatus === "too-high" && prev?.paddlingStatus !== "too-high" && !oscillatingHigh) {
     add("safety-warning", `${stationName} has exceeded safe levels at ${flow} m\u00b3/s. Exercise extreme caution.`);
   }
 
@@ -495,7 +530,7 @@ function detectAlerts(
   }
 
   // rising-into-range
-  if (curr.trendDirection === "rising" && curr.paddlingStatus === "too-low" && curr.currentFlow != null && paddling?.min != null && curr.currentFlow > paddling.min * 0.8) {
+  if (curr.trendDirection === "rising" && curr.paddlingStatus === "too-low" && curr.currentFlow != null && paddling?.min != null && curr.currentFlow > paddling.min * 0.8 && !oscillatingLow) {
     add("rising-into-range", `${stationName} is rising (${flow} m\u00b3/s) and approaching runnable range.`);
   }
 
@@ -834,7 +869,29 @@ export const evaluateAlerts = task({
       stationSnapshots.set(station.id, snapshot);
       const prevSnapshot = prevSnapshots.get(station.id) ?? null;
 
-      const candidates = detectAlerts(snapshot, prevSnapshot, station.name, paddling, station.regime);
+      const isDam = station.regime === "Influencé";
+      const hourly = cache.hourly_json ?? [];
+      const oscillatingHigh = isDam && isOscillatingAround(hourly, paddling.max, now.getTime());
+      const oscillatingLow = isDam && isOscillatingAround(hourly, paddling.min, now.getTime());
+
+      if (oscillatingHigh || oscillatingLow) {
+        logger.info(`Station ${station.id}: oscillation suppression active`, {
+          oscillatingHigh,
+          oscillatingLow,
+          paddlingMin: paddling.min,
+          paddlingMax: paddling.max,
+        });
+      }
+
+      const candidates = detectAlerts(
+        snapshot,
+        prevSnapshot,
+        station.name,
+        paddling,
+        station.regime,
+        oscillatingHigh,
+        oscillatingLow,
+      );
 
       if (candidates.length > 0) {
         logger.info(`Station ${station.id}: ${candidates.length} alert candidates`, {
