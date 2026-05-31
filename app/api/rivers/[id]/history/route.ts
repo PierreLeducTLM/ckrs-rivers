@@ -63,6 +63,7 @@ export async function GET(
   let predictorUnit: string | undefined;
   let predictorLabel: string | undefined;
   let predictorByTs = new Map<number, number>();
+  let refTimestamps: string[] = [];
   try {
     const stationRows = (await sql(
       `SELECT predictor_key FROM stations WHERE id = $1`,
@@ -78,6 +79,7 @@ export async function GET(
         startMs,
         endMs,
       );
+      refTimestamps = refHistory.map((p) => p.timestamp);
       const readings: FlowReading[] = refHistory.map((p) => ({
         stationId: predictor.referenceStationId,
         timestamp: p.timestamp,
@@ -85,7 +87,11 @@ export async function GET(
         source: "gauge",
         quality: "provisional",
       }));
-      const overlay = computePredictorOverlay(predictorKey, readings);
+      // History may be daily-resolution (CEHQ often lacks instantaneous
+      // flow); densify so the predictor's slope window has enough samples.
+      const overlay = computePredictorOverlay(predictorKey, readings, {
+        densify: true,
+      });
       if (overlay) {
         predictorUnit = overlay.unit;
         predictorLabel = overlay.label;
@@ -96,19 +102,28 @@ export async function GET(
     console.error(`[history] ${id}: predictor overlay failed`, err);
   }
 
-  const points = observed.map((p) => {
-    const ts = Date.parse(p.timestamp);
-    return {
-      timestamp: p.timestamp,
-      label: labelFor(ts),
-      observed: p.flow,
-      predicted: null,
-      confidenceLow: null,
-      confidenceHigh: null,
-      cehqForecast: null,
-      predictorValue: predictorByTs.get(ts) ?? null,
-    };
-  });
+  // Build the point timeline from observed flow when the displayed station
+  // has a gauge; otherwise (predictor-only rivers with no gauge of their own)
+  // fall back to the reference station's timestamps so the predicted line
+  // still renders.
+  const observedByTs = new Map<number, number>();
+  for (const p of observed) observedByTs.set(Date.parse(p.timestamp), p.flow);
+
+  const timelineTs =
+    observed.length > 0
+      ? observed.map((p) => Date.parse(p.timestamp))
+      : [...new Set(refTimestamps.map((t) => Date.parse(t)))].sort((a, b) => a - b);
+
+  const points = timelineTs.map((ts) => ({
+    timestamp: new Date(ts).toISOString(),
+    label: labelFor(ts),
+    observed: observedByTs.get(ts) ?? null,
+    predicted: null,
+    confidenceLow: null,
+    confidenceHigh: null,
+    cehqForecast: null,
+    predictorValue: predictorByTs.get(ts) ?? null,
+  }));
 
   return Response.json({
     start: new Date(startMs).toISOString(),

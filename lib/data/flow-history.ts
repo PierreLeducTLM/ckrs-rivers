@@ -9,6 +9,7 @@
 
 import { sql } from "@/lib/db/client";
 import { fetchInstantaneousFlow } from "@/lib/data/cehq-instantaneous";
+import { fetchHistoricalFlowData } from "@/lib/data/cehq-historical";
 import { observedToHourly } from "@/lib/realtime/diurnal-profile";
 
 export interface HourlyHistoryPoint {
@@ -21,8 +22,6 @@ interface ResolvedStation {
   stationNumber: string | null;
 }
 
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
 const UPSERT_CHUNK = 1000;
 
 /**
@@ -58,22 +57,23 @@ function yearsInRange(startMs: number, endMs: number): number[] {
 async function upsertHourly(
   stationId: string,
   points: Array<{ timestamp: string; flow: number }>,
+  source: string,
 ): Promise<void> {
   for (let i = 0; i < points.length; i += UPSERT_CHUNK) {
     const chunk = points.slice(i, i + UPSERT_CHUNK);
     const values: string[] = [];
     const params: unknown[] = [];
     chunk.forEach((p, k) => {
-      const b = k * 3;
-      values.push(`($${b + 1}, $${b + 2}, $${b + 3})`);
-      params.push(stationId, p.timestamp, p.flow);
+      const b = k * 4;
+      values.push(`($${b + 1}, $${b + 2}, $${b + 3}, $${b + 4})`);
+      params.push(stationId, p.timestamp, p.flow, source);
     });
     await sql(
-      `INSERT INTO flow_readings_hourly (station_id, ts, flow_m3s)
+      `INSERT INTO flow_readings_hourly (station_id, ts, flow_m3s, source)
        VALUES ${values.join(", ")}
        ON CONFLICT (station_id, ts) DO UPDATE SET
          flow_m3s = EXCLUDED.flow_m3s,
-         source = 'cehq-instantaneous'`,
+         source = EXCLUDED.source`,
       params,
     );
   }
@@ -95,8 +95,24 @@ export async function ensureHourlyHistory(
 ): Promise<void> {
   const station = await resolveStation(stationKey);
   if (!station || !station.stationNumber) return; // unknown / custom river — nothing to fetch
+  const stationNumber = station.stationNumber;
 
   const currentYear = new Date().getUTCFullYear();
+
+  // The full daily record is fetched at most once per call and covers every
+  // year, so we guard it to avoid re-downloading the (large) historical file.
+  let dailyDone = false;
+  const backfillDaily = async (): Promise<boolean> => {
+    if (dailyDone) return false;
+    dailyDone = true;
+    const records = await fetchHistoricalFlowData(stationNumber);
+    const points = records
+      .map((r) => ({ timestamp: `${r.date}T00:00:00Z`, flow: r.flow }))
+      .filter((p) => Number.isFinite(Date.parse(p.timestamp)) && p.flow > 0);
+    if (points.length === 0) return false;
+    await upsertHourly(station.id, points, "cehq-daily");
+    return true;
+  };
 
   for (const year of yearsInRange(startMs, endMs)) {
     if (year > currentYear) continue;
@@ -104,29 +120,26 @@ export async function ensureHourlyHistory(
     const yearEnd = `${year + 1}-01-01T00:00:00Z`;
 
     const cov = (await sql(
-      `SELECT count(*)::int AS n,
-              to_char(max(ts) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS mx
+      `SELECT count(*)::int AS n
          FROM flow_readings_hourly
         WHERE station_id = $1 AND ts >= $2 AND ts < $3`,
       [station.id, yearStart, yearEnd],
-    )) as Array<{ n: number; mx: string | null }>;
+    )) as Array<{ n: number }>;
+    if ((cov[0]?.n ?? 0) > 0) continue; // already have data for this year
 
-    const n = cov[0]?.n ?? 0;
-    const maxTs = cov[0]?.mx ? Date.parse(cov[0].mx) : null;
-
-    const needFetch =
-      n === 0 ||
-      (year === currentYear && (maxTs === null || endMs > maxTs + DAY_MS));
-    if (!needFetch) continue;
-
-    const readings = await fetchInstantaneousFlow(station.stationNumber, year);
-    if (readings.length === 0) continue;
-
+    // Prefer true sub-daily resolution when CEHQ publishes it…
+    const readings = await fetchInstantaneousFlow(stationNumber, year);
     const hourly = observedToHourly(readings).map((p) => ({
       timestamp: p.timestamp,
       flow: p.flow,
     }));
-    if (hourly.length > 0) await upsertHourly(station.id, hourly);
+    if (hourly.length > 0) {
+      await upsertHourly(station.id, hourly, "cehq-instantaneous");
+      continue;
+    }
+
+    // …otherwise fall back to the reliable daily record (covers all years).
+    await backfillDaily();
   }
 }
 
