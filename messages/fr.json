@@ -309,7 +309,13 @@
     "cehqLabel": "CEHQ : ",
     "rangeLabel": "Plage : ",
     "predictedLevel": "Niveau predit",
-    "predictedLabel": "Predit : "
+    "predictedLabel": "Predit : ",
+    "live": "En direct",
+    "previousWeek": "Semaine precedente",
+    "nextWeek": "Semaine suivante",
+    "loadingHistory": "Chargement de l'historique…",
+    "noHistory": "Aucun historique pour cette periode",
+    "historyError": "Echec du chargement de l'historique"
   },
   "map": {
     "station": "Station",

@@ -5,7 +5,7 @@ import { getStationById, getPaddlingLevels } from "@/lib/data/rivers";
 import { getFeatureFlagState } from "@/lib/feature-flags";
 import { sql } from "@/lib/db/client";
 import { notFound } from "next/navigation";
-import HourlyChart from "./hourly-chart";
+import ChartNav from "./chart-nav";
 import RefreshButton from "./refresh-button";
 import ReportIssueLink from "./report-issue-link";
 import RiverHeader from "./river-header";
@@ -26,6 +26,7 @@ import NavigateToPoint from "./navigate-to-point";
 import CameraSnapshot, { type CameraSnapshotData } from "./camera-snapshot";
 import PredictorCard from "./predictor-card";
 import { getPredictor, listPredictorOptions } from "@/lib/prediction/registry";
+import { computePredictorOverlay, type PredictorOverlay } from "@/lib/prediction/overlay";
 import type { FlowReading } from "@/lib/domain/flow-reading";
 import ShareButton from "@/app/components/share-button";
 import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
@@ -45,18 +46,12 @@ function formatDate(date: string): string {
   });
 }
 
-interface PredictorOverlay {
-  unit: string;
-  label: string;
-  /** Predicted value keyed by timestamp epoch (ms). */
-  byTs: Map<number, number>;
-}
-
 /**
  * Compute a moving nowcast for the assigned predictor so it can be overlaid
- * on the hourly chart. Reads the reference station's observed flow (same
- * source as PredictorCard) and runs the predictor at each observed timestamp,
- * anchoring on the readings available up to that point.
+ * on the live (recent) chart window. Reads the reference station's observed
+ * flow from the cache (same source as PredictorCard) and delegates to the
+ * shared overlay helper. The historical windows compute the same overlay
+ * from backfilled hourly history via `/api/rivers/[id]/history`.
  */
 async function buildPredictorOverlay(
   predictorKey: string,
@@ -90,21 +85,8 @@ async function buildPredictorOverlay(
       source: "gauge",
       quality: "provisional",
     }));
-  if (readings.length === 0) return null;
 
-  const sorted = [...readings].sort(
-    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp),
-  );
-  const byTs = new Map<number, number>();
-  for (let i = 0; i < sorted.length; i++) {
-    const ts = Date.parse(sorted[i].timestamp);
-    if (!Number.isFinite(ts)) continue;
-    const res = predictor.predict(sorted.slice(0, i + 1), new Date(ts));
-    if (res.ok) byTs.set(ts, res.output.value);
-  }
-  if (byTs.size === 0) return null;
-
-  return { unit: predictor.unit, label: predictor.label, byTs };
+  return computePredictorOverlay(predictorKey, readings);
 }
 
 // ---------------------------------------------------------------------------
@@ -523,13 +505,14 @@ export default async function RiverPage({
         {/* Hourly flow chart */}
         {chartData.length > 0 && (
           <section className="mt-6">
-            <HourlyChart
+            <ChartNav
               data={chartData}
               nowTimestamp={nowTimestamp}
               paddling={paddling}
               correction={forecastCorrection}
               predictorUnit={predictorOverlay?.unit}
               predictorLabel={predictorOverlay?.label}
+              stationId={id}
             />
           </section>
         )}
