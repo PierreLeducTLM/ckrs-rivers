@@ -22,6 +22,12 @@ export interface HourlyChartPoint {
   confidenceLow: number | null;
   confidenceHigh: number | null;
   cehqForecast: number | null;
+  /**
+   * Custom predictor output (e.g. a gauge level in metres) aligned to this
+   * timestamp. Rendered against a secondary right-hand Y axis so it can be
+   * compared visually against flow even though the units differ.
+   */
+  predictorValue?: number | null;
 }
 
 export interface PaddlingLevels {
@@ -40,6 +46,14 @@ interface HourlyChartProps {
    * are adjusted in place — no separate line is drawn.
    */
   correction?: ForecastCorrection;
+  /**
+   * Unit symbol for the custom predictor series (e.g. "m"). When provided and
+   * at least one point carries a `predictorValue`, the chart draws a secondary
+   * right-hand Y axis and overlays the predictor line on it.
+   */
+  predictorUnit?: string;
+  /** Human-readable predictor name, shown in the legend/tooltip. */
+  predictorLabel?: string;
 }
 
 function formatTick(epoch: number): string {
@@ -51,7 +65,14 @@ function formatTick(epoch: number): string {
   return `${h.toString().padStart(2, "0")}:00`;
 }
 
-export default function HourlyChart({ data, nowTimestamp, paddling, correction }: HourlyChartProps) {
+export default function HourlyChart({
+  data,
+  nowTimestamp,
+  paddling,
+  correction,
+  predictorUnit,
+  predictorLabel,
+}: HourlyChartProps) {
   const { t } = useTranslation();
   const nowTs = new Date(nowTimestamp).getTime();
 
@@ -102,6 +123,23 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
   const padY = Math.max(dataRange * 0.1, 0.5);
   const yMin = Math.max(0, Math.floor(minDataFlow - padY));
   const yMax = Math.ceil(maxDataFlow + padY);
+
+  // Secondary axis for the custom predictor. Auto-scaled to its own data so
+  // the line roughly overlays the flow curve (units differ — "approx" align).
+  const predictorValues = chartData
+    .map((d) => d.predictorValue)
+    .filter((v): v is number => v !== null && v !== undefined);
+  const hasPredictor = predictorUnit != null && predictorValues.length > 0;
+  let pMin = 0;
+  let pMax = 1;
+  if (hasPredictor) {
+    const minP = Math.min(...predictorValues);
+    const maxP = Math.max(...predictorValues);
+    const pRange = maxP - minP;
+    const padP = Math.max(pRange * 0.15, 0.1);
+    pMin = Math.max(0, minP - padP);
+    pMax = maxP + padP;
+  }
 
   // Classify each threshold: in-range, above, or below
   const thresholds: { value: number; label: string; color: string; inRange: boolean; position: "above" | "below" | "in" }[] = [];
@@ -196,6 +234,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
           />
 
           <YAxis
+            yAxisId="left"
             domain={[yMin, yMax]}
             tick={{ fontSize: 10, fill: "currentColor", opacity: 0.5 }}
             tickLine={false}
@@ -209,6 +248,26 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             }}
           />
 
+          {/* Secondary axis for the custom predictor (different units) */}
+          {hasPredictor && (
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              domain={[pMin, pMax]}
+              tick={{ fontSize: 10, fill: "#0d9488", opacity: 0.7 }}
+              tickFormatter={(v: number) => v.toFixed(2)}
+              tickLine={false}
+              axisLine={{ stroke: "#0d9488", opacity: 0.3 }}
+              label={{
+                value: predictorUnit,
+                angle: 90,
+                position: "insideRight",
+                offset: 10,
+                style: { fontSize: 10, fill: "#0d9488", opacity: 0.7 },
+              }}
+            />
+          )}
+
           <Tooltip
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
@@ -216,6 +275,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                 | (HourlyChartPoint & { ts: number })
                 | undefined;
               if (!d) return null;
+              const predictorVal = d.predictorValue;
               return (
                 <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
                   <p className="font-medium text-zinc-900 dark:text-zinc-100">
@@ -244,6 +304,11 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
                       {t("chart.rangeLabel")}{d.confidenceLow.toFixed(1)} &ndash; {d.confidenceHigh.toFixed(1)}
                     </p>
                   )}
+                  {predictorVal !== null && predictorVal !== undefined && (
+                    <p className="mt-0.5 text-teal-600">
+                      {t("chart.predictedLabel")}<span className="font-semibold">{predictorVal.toFixed(2)} {predictorUnit}</span>
+                    </p>
+                  )}
                 </div>
               );
             }}
@@ -251,6 +316,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
 
           {/* Now reference line */}
           <ReferenceLine
+            yAxisId="left"
             x={nowTs}
             stroke="#f59e0b"
             strokeDasharray="4 4"
@@ -263,6 +329,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             .map((t) => (
               <ReferenceLine
                 key={t.label}
+                yAxisId="left"
                 y={t.value}
                 stroke={t.color}
                 strokeDasharray="6 4"
@@ -273,6 +340,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
 
           {/* CEHQ confidence band (q25–q75) */}
           <Area
+            yAxisId="left"
             dataKey="cehqRange"
             fill="url(#cehqConfFill)"
             stroke="#a855f7"
@@ -284,6 +352,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
 
           {/* Observed flow */}
           <Line
+            yAxisId="left"
             dataKey="observed"
             stroke="#2563eb"
             strokeWidth={2}
@@ -294,6 +363,7 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
 
           {/* CEHQ official forecast (bias-corrected in place when a correction is active) */}
           <Line
+            yAxisId="left"
             dataKey="cehqForecast"
             stroke="#a855f7"
             strokeWidth={2}
@@ -302,6 +372,19 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
             connectNulls
             isAnimationActive={false}
           />
+
+          {/* Custom predictor overlay (secondary axis) */}
+          {hasPredictor && (
+            <Line
+              yAxisId="right"
+              dataKey="predictorValue"
+              stroke="#0d9488"
+              strokeWidth={2}
+              dot={false}
+              connectNulls
+              isAnimationActive={false}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
 
@@ -311,6 +394,12 @@ export default function HourlyChart({ data, nowTimestamp, paddling, correction }
           <span className="inline-block h-0.5 w-5 rounded bg-blue-600" />
           {t("chart.observed")}
         </span>
+        {hasPredictor && (
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-0.5 w-5 rounded" style={{ backgroundColor: "#0d9488" }} />
+            {predictorLabel ?? t("chart.predictedLevel")}
+          </span>
+        )}
         {data.some((d) => d.cehqForecast !== null) && (
           <>
             <span className="flex items-center gap-1.5">

@@ -25,7 +25,8 @@ import RiverMapWrapper from "./river-map-wrapper";
 import NavigateToPoint from "./navigate-to-point";
 import CameraSnapshot, { type CameraSnapshotData } from "./camera-snapshot";
 import PredictorCard from "./predictor-card";
-import { listPredictorOptions } from "@/lib/prediction/registry";
+import { getPredictor, listPredictorOptions } from "@/lib/prediction/registry";
+import type { FlowReading } from "@/lib/domain/flow-reading";
 import ShareButton from "@/app/components/share-button";
 import DeepLinkBouncer from "@/app/components/deep-link-bouncer";
 import AutoNavigate from "./auto-navigate";
@@ -42,6 +43,68 @@ function formatDate(date: string): string {
     month: "short",
     day: "numeric",
   });
+}
+
+interface PredictorOverlay {
+  unit: string;
+  label: string;
+  /** Predicted value keyed by timestamp epoch (ms). */
+  byTs: Map<number, number>;
+}
+
+/**
+ * Compute a moving nowcast for the assigned predictor so it can be overlaid
+ * on the hourly chart. Reads the reference station's observed flow (same
+ * source as PredictorCard) and runs the predictor at each observed timestamp,
+ * anchoring on the readings available up to that point.
+ */
+async function buildPredictorOverlay(
+  predictorKey: string,
+): Promise<PredictorOverlay | null> {
+  const predictor = getPredictor(predictorKey);
+  if (!predictor) return null;
+
+  let row: { hourly_json: Array<{ timestamp: string; observed: number | null }> | null } | null =
+    null;
+  try {
+    const rows = (await sql(
+      `SELECT fc.hourly_json
+         FROM forecast_cache fc
+         JOIN stations s ON s.id = fc.station_id
+        WHERE s.id = $1 OR s.station_number = $1
+        ORDER BY fc.generated_at DESC
+        LIMIT 1`,
+      [predictor.referenceStationId],
+    )) as Array<{ hourly_json: Array<{ timestamp: string; observed: number | null }> | null }>;
+    row = rows[0] ?? null;
+  } catch {
+    return null;
+  }
+
+  const readings: FlowReading[] = (row?.hourly_json ?? [])
+    .filter((p) => p.observed != null)
+    .map((p) => ({
+      stationId: predictor.referenceStationId,
+      timestamp: p.timestamp,
+      flow: p.observed as FlowReading["flow"],
+      source: "gauge",
+      quality: "provisional",
+    }));
+  if (readings.length === 0) return null;
+
+  const sorted = [...readings].sort(
+    (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp),
+  );
+  const byTs = new Map<number, number>();
+  for (let i = 0; i < sorted.length; i++) {
+    const ts = Date.parse(sorted[i].timestamp);
+    if (!Number.isFinite(ts)) continue;
+    const res = predictor.predict(sorted.slice(0, i + 1), new Date(ts));
+    if (res.ok) byTs.set(ts, res.output.value);
+  }
+  if (byTs.size === 0) return null;
+
+  return { unit: predictor.unit, label: predictor.label, byTs };
 }
 
 // ---------------------------------------------------------------------------
@@ -314,6 +377,10 @@ export default async function RiverPage({
   twoDaysAgo.setUTCDate(twoDaysAgo.getUTCDate() - 2);
   const cutoff = twoDaysAgo.toISOString().slice(0, 10) + "T00:00:00Z";
 
+  const predictorOverlay = station.predictorKey
+    ? await buildPredictorOverlay(station.predictorKey)
+    : null;
+
   const chartData = hourlyData
     .filter((p) => p.timestamp >= cutoff)
     .map((p) => ({
@@ -324,6 +391,7 @@ export default async function RiverPage({
       confidenceLow: p.cehqLow ?? null,
       confidenceHigh: p.cehqHigh ?? null,
       cehqForecast: p.cehqForecast,
+      predictorValue: predictorOverlay?.byTs.get(Date.parse(p.timestamp)) ?? null,
     }));
 
   const nowTimestamp = new Date().toISOString();
@@ -455,7 +523,14 @@ export default async function RiverPage({
         {/* Hourly flow chart */}
         {chartData.length > 0 && (
           <section className="mt-6">
-            <HourlyChart data={chartData} nowTimestamp={nowTimestamp} paddling={paddling} correction={forecastCorrection} />
+            <HourlyChart
+              data={chartData}
+              nowTimestamp={nowTimestamp}
+              paddling={paddling}
+              correction={forecastCorrection}
+              predictorUnit={predictorOverlay?.unit}
+              predictorLabel={predictorOverlay?.label}
+            />
           </section>
         )}
 
