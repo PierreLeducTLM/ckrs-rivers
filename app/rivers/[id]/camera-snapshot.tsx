@@ -1,9 +1,9 @@
-import Image from "next/image";
 import {
   runnabilityColors,
   runnabilityFor,
   runnabilityLabel,
 } from "@/lib/skypoint/runnability";
+import ZoomableImage from "./zoomable-image";
 
 export interface CameraSnapshotData {
   imageUrl: string;
@@ -30,11 +30,9 @@ export default function CameraSnapshot({ data }: { data: CameraSnapshotData }) {
         Camera
       </h2>
       <div className="relative mt-3 aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-950">
-        <Image
+        <ZoomableImage
           src={data.imageUrl}
           alt="Latest river camera photo"
-          fill
-          unoptimized
           sizes="(max-width: 768px) 100vw, 768px"
           className="object-cover"
         />
