@@ -16,6 +16,8 @@ interface CameraDetailRow {
   paddling_min_reading: number | null;
   paddling_ideal_reading: number | null;
   paddling_max_reading: number | null;
+  reference_blob_url: string | null;
+  reference_annotations_json: unknown;
   active: boolean;
   last_synced_photo_date: string | null;
 }
@@ -37,6 +39,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
             name, station_id,
             scale_description, scale_min, scale_max, scale_unit,
             paddling_min_reading, paddling_ideal_reading, paddling_max_reading,
+            reference_blob_url, reference_annotations_json,
             active, last_synced_photo_date::text AS last_synced_photo_date
      FROM cameras WHERE id = $1`,
     [id],
@@ -136,13 +139,22 @@ export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: str
       [id],
     )) as Array<{ blob_url: string }>;
 
+    const refRows = (await sql(
+      `SELECT reference_blob_pathname FROM cameras WHERE id = $1`,
+      [id],
+    )) as Array<{ reference_blob_pathname: string | null }>;
+
     // CASCADE drops the camera_images rows; clean up the Vercel Blob storage
     // best-effort so we don't orphan files.
     await sql(`DELETE FROM cameras WHERE id = $1`, [id]);
 
-    if (blobs.length > 0) {
+    const targets = blobs.map((b) => b.blob_url);
+    const refPath = refRows[0]?.reference_blob_pathname;
+    if (refPath) targets.push(refPath);
+
+    if (targets.length > 0) {
       try {
-        await deleteCameraImages(blobs.map((b) => b.blob_url));
+        await deleteCameraImages(targets);
       } catch {
         // Storage cleanup is non-fatal; the camera is already gone from the DB.
       }

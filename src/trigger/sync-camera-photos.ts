@@ -26,6 +26,7 @@ interface CameraRow {
   scale_min: number | null;
   scale_max: number | null;
   scale_unit: string | null;
+  reference_blob_url: string | null;
   last_synced_photo_date: string | null;
 }
 
@@ -39,6 +40,7 @@ interface SyncResult {
 const CAMERA_SELECT = `
   SELECT id, provider, provider_camera_id, provider_account_id,
          scale_description, scale_min, scale_max, scale_unit,
+         reference_blob_url,
          last_synced_photo_date::text AS last_synced_photo_date
 `;
 
@@ -74,6 +76,7 @@ async function storePhoto(
     scaleMin: camera.scale_min,
     scaleMax: camera.scale_max,
     scaleUnit: camera.scale_unit,
+    referenceImageUrl: camera.reference_blob_url,
   });
 
   const readingError =

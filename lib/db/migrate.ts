@@ -73,6 +73,12 @@ async function migrate() {
     `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS provider_account_id TEXT REFERENCES camera_provider_accounts(id) ON DELETE SET NULL`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_cameras_provider_external ON cameras(provider, provider_camera_id) WHERE provider_camera_id IS NOT NULL`,
 
+    // Per-camera annotated reference image: a flattened frame with boxes/arrows
+    // marking where the scale is, fed to the vision reader alongside each photo.
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS reference_blob_url TEXT`,
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS reference_blob_pathname TEXT`,
+    `ALTER TABLE cameras ADD COLUMN IF NOT EXISTS reference_annotations_json JSONB`,
+
     `ALTER TABLE camera_images ADD COLUMN IF NOT EXISTS provider_photo_id TEXT`,
     `UPDATE camera_images SET provider_photo_id = spypoint_photo_id WHERE provider_photo_id IS NULL AND spypoint_photo_id IS NOT NULL`,
     `ALTER TABLE camera_images ALTER COLUMN spypoint_photo_id DROP NOT NULL`,

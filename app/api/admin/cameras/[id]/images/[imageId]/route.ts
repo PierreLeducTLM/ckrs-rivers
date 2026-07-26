@@ -13,6 +13,7 @@ interface CameraRow {
   scale_min: number | null;
   scale_max: number | null;
   scale_unit: string | null;
+  reference_blob_url: string | null;
 }
 
 interface PatchBody {
@@ -41,7 +42,7 @@ export async function PATCH(
 
   if (body.rerun) {
     const cams = (await sql(
-      `SELECT scale_description, scale_min, scale_max, scale_unit FROM cameras WHERE id = $1`,
+      `SELECT scale_description, scale_min, scale_max, scale_unit, reference_blob_url FROM cameras WHERE id = $1`,
       [cameraId],
     )) as CameraRow[];
     if (cams.length === 0) return Response.json({ error: "Camera not found" }, { status: 404 });
@@ -53,6 +54,7 @@ export async function PATCH(
       scaleMin: cam.scale_min,
       scaleMax: cam.scale_max,
       scaleUnit: cam.scale_unit,
+      referenceImageUrl: cam.reference_blob_url,
     });
 
     await sql(
