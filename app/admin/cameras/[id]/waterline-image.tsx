@@ -37,7 +37,7 @@ export default function WaterlineImage({ src, waterline, label, alt = "" }: Prop
               x2={waterline.x2}
               y2={waterline.y2}
               stroke="rgba(0,0,0,0.7)"
-              strokeWidth={5}
+              strokeWidth={6}
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
             />
@@ -47,7 +47,7 @@ export default function WaterlineImage({ src, waterline, label, alt = "" }: Prop
               x2={waterline.x2}
               y2={waterline.y2}
               stroke="#fde047"
-              strokeWidth={2}
+              strokeWidth={3}
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
             />
@@ -56,7 +56,7 @@ export default function WaterlineImage({ src, waterline, label, alt = "" }: Prop
           {label && (
             <span
               className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-black/75 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-yellow-200"
-              style={{ left: `${mx * 100}%`, top: `${my * 100}%` }}
+              style={{ left: `${mx * 100}%`, top: `calc(${my * 100}% - 250px)` }}
             >
               {label}
             </span>
