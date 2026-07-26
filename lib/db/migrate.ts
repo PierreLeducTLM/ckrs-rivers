@@ -84,6 +84,10 @@ async function migrate() {
     `ALTER TABLE camera_images ALTER COLUMN spypoint_photo_id DROP NOT NULL`,
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_camera_images_provider_external ON camera_images(provider_photo_id) WHERE provider_photo_id IS NOT NULL`,
 
+    // Where the vision reader read the level, as a normalized {x1,y1,x2,y2}
+    // line segment, drawn on the photo as a diagnostic overlay.
+    `ALTER TABLE camera_images ADD COLUMN IF NOT EXISTS reading_waterline_json JSONB`,
+
     // Holds the PKCE verifier, CSRF token, and cookie jar across the
     // signin POST and the verify-2fa POST for Blink's OAuth v2 flow.
     `ALTER TABLE camera_provider_accounts ADD COLUMN IF NOT EXISTS pending_auth_json JSONB`,

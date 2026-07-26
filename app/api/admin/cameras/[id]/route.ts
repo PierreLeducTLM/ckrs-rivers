@@ -30,6 +30,7 @@ interface ImageRow {
   reading_confidence: string | null;
   reading_source: string;
   reading_notes: string | null;
+  reading_waterline_json: { x1: number; y1: number; x2: number; y2: number } | null;
 }
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -48,7 +49,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
   const images = (await sql(
     `SELECT id, captured_at::text AS captured_at, blob_url,
-            reading_value, reading_confidence, reading_source, reading_notes
+            reading_value, reading_confidence, reading_source, reading_notes,
+            reading_waterline_json
      FROM camera_images
      WHERE camera_id = $1
      ORDER BY captured_at DESC

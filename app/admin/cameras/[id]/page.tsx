@@ -6,6 +6,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { runnabilityColors, runnabilityFor, runnabilityLabel } from "@/lib/skypoint/runnability";
 import ReferenceEditor, { type ReferenceAnnotations } from "./reference-editor";
+import WaterlineImage from "./waterline-image";
+import type { Waterline } from "@/lib/skypoint/read-level";
 
 interface Camera {
   id: string;
@@ -35,6 +37,7 @@ interface CameraImage {
   reading_confidence: string | null;
   reading_source: string;
   reading_notes: string | null;
+  reading_waterline_json: Waterline | null;
 }
 
 interface RiverOption {
@@ -60,6 +63,7 @@ export default function CameraDetailPage({
   const [busyImageId, setBusyImageId] = useState<string | null>(null);
   const [editingReference, setEditingReference] = useState(false);
   const [removingReference, setRemovingReference] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
@@ -435,9 +439,19 @@ export default function CameraDetailPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Recent photos
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Recent photos
+            </h2>
+            <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={showOverlay}
+                onChange={(e) => setShowOverlay(e.target.checked)}
+              />
+              Show detected level
+            </label>
+          </div>
           {images.length === 0 ? (
             <p className="mt-3 text-sm text-zinc-500">
               No photos yet. Configure the scale, then hit &quot;Sync now&quot;.
@@ -452,16 +466,15 @@ export default function CameraDetailPage({
                     key={img.id}
                     className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
                   >
-                    <div className="relative aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-950">
-                      <Image
-                        src={img.blob_url}
-                        alt=""
-                        fill
-                        unoptimized
-                        sizes="(max-width: 640px) 100vw, 50vw"
-                        className="object-cover"
-                      />
-                    </div>
+                    <WaterlineImage
+                      src={img.blob_url}
+                      waterline={showOverlay ? img.reading_waterline_json : null}
+                      label={
+                        img.reading_value != null
+                          ? `${img.reading_value.toFixed(2)}${camera.scale_unit ? ` ${camera.scale_unit}` : ""}`
+                          : undefined
+                      }
+                    />
                     <div className="space-y-2 p-3 text-sm">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-zinc-500 text-xs">

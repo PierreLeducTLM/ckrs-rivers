@@ -259,6 +259,7 @@ CREATE TABLE IF NOT EXISTS camera_images (
   reading_confidence  TEXT,
   reading_source      TEXT NOT NULL DEFAULT 'ai',
   reading_notes       TEXT,
+  reading_waterline_json JSONB,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

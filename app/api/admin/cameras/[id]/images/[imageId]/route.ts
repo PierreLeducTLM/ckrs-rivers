@@ -59,9 +59,16 @@ export async function PATCH(
 
     await sql(
       `UPDATE camera_images
-       SET reading_value = $1, reading_confidence = $2, reading_source = 'ai', reading_notes = $3
-       WHERE id = $4`,
-      [reading.value, reading.confidence, reading.notes, imageId],
+       SET reading_value = $1, reading_confidence = $2, reading_source = 'ai', reading_notes = $3,
+           reading_waterline_json = $4
+       WHERE id = $5`,
+      [
+        reading.value,
+        reading.confidence,
+        reading.notes,
+        reading.waterline ? JSON.stringify(reading.waterline) : null,
+        imageId,
+      ],
     );
     return Response.json({ success: true, reading });
   }
@@ -83,6 +90,8 @@ export async function PATCH(
     setField("reading_value", value);
     setField("reading_source", "manual");
     setField("reading_confidence", value === null ? "unreadable" : "high");
+    // A hand-entered value has no AI-detected line; drop any stale overlay.
+    setField("reading_waterline_json", null);
   }
   if (body.notes !== undefined) setField("reading_notes", body.notes);
 

@@ -91,9 +91,10 @@ async function storePhoto(
     `INSERT INTO camera_images (
        camera_id, provider_photo_id, spypoint_photo_id, captured_at,
        blob_url, blob_pathname,
-       reading_value, reading_confidence, reading_source, reading_notes
+       reading_value, reading_confidence, reading_source, reading_notes,
+       reading_waterline_json
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ai', $9)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ai', $9, $10)`,
     [
       camera.id,
       photo.photoId,
@@ -104,6 +105,7 @@ async function storePhoto(
       reading.value,
       reading.confidence,
       reading.notes,
+      reading.waterline ? JSON.stringify(reading.waterline) : null,
     ],
   );
 
