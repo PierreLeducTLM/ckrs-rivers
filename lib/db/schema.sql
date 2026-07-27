@@ -235,6 +235,9 @@ CREATE TABLE IF NOT EXISTS cameras (
   paddling_min_reading     DOUBLE PRECISION,
   paddling_ideal_reading   DOUBLE PRECISION,
   paddling_max_reading     DOUBLE PRECISION,
+  reference_blob_url       TEXT,
+  reference_blob_pathname  TEXT,
+  reference_annotations_json JSONB,
   last_synced_photo_date   TIMESTAMPTZ,
   active                   BOOLEAN NOT NULL DEFAULT true,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -256,6 +259,7 @@ CREATE TABLE IF NOT EXISTS camera_images (
   reading_confidence  TEXT,
   reading_source      TEXT NOT NULL DEFAULT 'ai',
   reading_notes       TEXT,
+  reading_waterline_json JSONB,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

@@ -26,6 +26,7 @@ interface CameraRow {
   scale_min: number | null;
   scale_max: number | null;
   scale_unit: string | null;
+  reference_blob_url: string | null;
   last_synced_photo_date: string | null;
 }
 
@@ -39,6 +40,7 @@ interface SyncResult {
 const CAMERA_SELECT = `
   SELECT id, provider, provider_camera_id, provider_account_id,
          scale_description, scale_min, scale_max, scale_unit,
+         reference_blob_url,
          last_synced_photo_date::text AS last_synced_photo_date
 `;
 
@@ -74,6 +76,7 @@ async function storePhoto(
     scaleMin: camera.scale_min,
     scaleMax: camera.scale_max,
     scaleUnit: camera.scale_unit,
+    referenceImageUrl: camera.reference_blob_url,
   });
 
   const readingError =
@@ -88,9 +91,10 @@ async function storePhoto(
     `INSERT INTO camera_images (
        camera_id, provider_photo_id, spypoint_photo_id, captured_at,
        blob_url, blob_pathname,
-       reading_value, reading_confidence, reading_source, reading_notes
+       reading_value, reading_confidence, reading_source, reading_notes,
+       reading_waterline_json
      )
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ai', $9)`,
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'ai', $9, $10)`,
     [
       camera.id,
       photo.photoId,
@@ -101,6 +105,7 @@ async function storePhoto(
       reading.value,
       reading.confidence,
       reading.notes,
+      reading.waterline ? JSON.stringify(reading.waterline) : null,
     ],
   );
 

@@ -5,6 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { runnabilityColors, runnabilityFor, runnabilityLabel } from "@/lib/skypoint/runnability";
+import ReferenceEditor, { type ReferenceAnnotations } from "./reference-editor";
+import WaterlineImage from "./waterline-image";
+import type { Waterline } from "@/lib/skypoint/read-level";
 
 interface Camera {
   id: string;
@@ -20,6 +23,8 @@ interface Camera {
   paddling_min_reading: number | null;
   paddling_ideal_reading: number | null;
   paddling_max_reading: number | null;
+  reference_blob_url: string | null;
+  reference_annotations_json: ReferenceAnnotations | null;
   active: boolean;
   last_synced_photo_date: string | null;
 }
@@ -32,6 +37,7 @@ interface CameraImage {
   reading_confidence: string | null;
   reading_source: string;
   reading_notes: string | null;
+  reading_waterline_json: Waterline | null;
 }
 
 interface RiverOption {
@@ -55,6 +61,9 @@ export default function CameraDetailPage({
   const [syncing, setSyncing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [busyImageId, setBusyImageId] = useState<string | null>(null);
+  const [editingReference, setEditingReference] = useState(false);
+  const [removingReference, setRemovingReference] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
 
   const load = useCallback(async () => {
     setError(null);
@@ -159,6 +168,25 @@ export default function CameraDetailPage({
     } catch {
       setError("Network error");
       setRemoving(false);
+    }
+  }
+
+  async function removeReference() {
+    if (!camera) return;
+    const ok = window.confirm("Remove the annotated reference image for this camera?");
+    if (!ok) return;
+    setRemovingReference(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/cameras/${id}/reference`, { method: "DELETE" });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(body.error ?? "Failed to remove reference");
+        return;
+      }
+      await load();
+    } finally {
+      setRemovingReference(false);
     }
   }
 
@@ -278,6 +306,51 @@ export default function CameraDetailPage({
               />
             </Field>
 
+            <div>
+              <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                Reference image (shown to the vision reader)
+              </p>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                Annotate a frame with boxes/arrows marking the scale. The fixed camera view means it
+                lines up with every photo, helping the reader on this wide-angle shot.
+              </p>
+              <div className="mt-3 flex items-start gap-3">
+                {camera.reference_blob_url && (
+                  <div className="relative aspect-[4/3] w-40 shrink-0 overflow-hidden rounded-lg border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950">
+                    <Image
+                      src={camera.reference_blob_url}
+                      alt="Camera reference"
+                      fill
+                      unoptimized
+                      sizes="160px"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setEditingReference(true)}
+                    disabled={images.length === 0}
+                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                  >
+                    {camera.reference_blob_url ? "Edit annotations" : "Create reference"}
+                  </button>
+                  {camera.reference_blob_url && (
+                    <button
+                      onClick={removeReference}
+                      disabled={removingReference}
+                      className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-900/20"
+                    >
+                      {removingReference ? "Removing..." : "Remove"}
+                    </button>
+                  )}
+                  {images.length === 0 && (
+                    <span className="text-xs text-zinc-500">Sync a photo first to annotate.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-3 gap-3">
               <Field label="Scale min">
                 <NumberInput value={camera.scale_min} onChange={bind("scale_min")} />
@@ -366,9 +439,19 @@ export default function CameraDetailPage({
         </section>
 
         <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-            Recent photos
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Recent photos
+            </h2>
+            <label className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+              <input
+                type="checkbox"
+                checked={showOverlay}
+                onChange={(e) => setShowOverlay(e.target.checked)}
+              />
+              Show detected level
+            </label>
+          </div>
           {images.length === 0 ? (
             <p className="mt-3 text-sm text-zinc-500">
               No photos yet. Configure the scale, then hit &quot;Sync now&quot;.
@@ -383,16 +466,15 @@ export default function CameraDetailPage({
                     key={img.id}
                     className="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
                   >
-                    <div className="relative aspect-[4/3] w-full bg-zinc-100 dark:bg-zinc-950">
-                      <Image
-                        src={img.blob_url}
-                        alt=""
-                        fill
-                        unoptimized
-                        sizes="(max-width: 640px) 100vw, 50vw"
-                        className="object-cover"
-                      />
-                    </div>
+                    <WaterlineImage
+                      src={img.blob_url}
+                      waterline={showOverlay ? img.reading_waterline_json : null}
+                      label={
+                        img.reading_value != null
+                          ? `${img.reading_value.toFixed(2)}${camera.scale_unit ? ` ${camera.scale_unit}` : ""}`
+                          : undefined
+                      }
+                    />
                     <div className="space-y-2 p-3 text-sm">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="text-zinc-500 text-xs">
@@ -448,6 +530,23 @@ export default function CameraDetailPage({
           )}
         </section>
       </div>
+
+      {editingReference && (
+        <ReferenceEditor
+          cameraId={id}
+          images={images.map((img) => ({
+            id: img.id,
+            blob_url: img.blob_url,
+            captured_at: img.captured_at,
+          }))}
+          annotations={camera.reference_annotations_json}
+          onClose={() => setEditingReference(false)}
+          onSaved={() => {
+            setEditingReference(false);
+            void load();
+          }}
+        />
+      )}
 
       <style jsx>{`
         :global(.input) {

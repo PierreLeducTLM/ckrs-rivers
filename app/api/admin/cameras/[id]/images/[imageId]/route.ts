@@ -13,6 +13,7 @@ interface CameraRow {
   scale_min: number | null;
   scale_max: number | null;
   scale_unit: string | null;
+  reference_blob_url: string | null;
 }
 
 interface PatchBody {
@@ -41,7 +42,7 @@ export async function PATCH(
 
   if (body.rerun) {
     const cams = (await sql(
-      `SELECT scale_description, scale_min, scale_max, scale_unit FROM cameras WHERE id = $1`,
+      `SELECT scale_description, scale_min, scale_max, scale_unit, reference_blob_url FROM cameras WHERE id = $1`,
       [cameraId],
     )) as CameraRow[];
     if (cams.length === 0) return Response.json({ error: "Camera not found" }, { status: 404 });
@@ -53,13 +54,21 @@ export async function PATCH(
       scaleMin: cam.scale_min,
       scaleMax: cam.scale_max,
       scaleUnit: cam.scale_unit,
+      referenceImageUrl: cam.reference_blob_url,
     });
 
     await sql(
       `UPDATE camera_images
-       SET reading_value = $1, reading_confidence = $2, reading_source = 'ai', reading_notes = $3
-       WHERE id = $4`,
-      [reading.value, reading.confidence, reading.notes, imageId],
+       SET reading_value = $1, reading_confidence = $2, reading_source = 'ai', reading_notes = $3,
+           reading_waterline_json = $4
+       WHERE id = $5`,
+      [
+        reading.value,
+        reading.confidence,
+        reading.notes,
+        reading.waterline ? JSON.stringify(reading.waterline) : null,
+        imageId,
+      ],
     );
     return Response.json({ success: true, reading });
   }
@@ -81,6 +90,8 @@ export async function PATCH(
     setField("reading_value", value);
     setField("reading_source", "manual");
     setField("reading_confidence", value === null ? "unreadable" : "high");
+    // A hand-entered value has no AI-detected line; drop any stale overlay.
+    setField("reading_waterline_json", null);
   }
   if (body.notes !== undefined) setField("reading_notes", body.notes);
 

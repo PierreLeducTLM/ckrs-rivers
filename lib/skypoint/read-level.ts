@@ -4,28 +4,55 @@ import { z } from "zod";
 
 export type ReadingConfidence = "high" | "medium" | "low" | "unreadable";
 
+/**
+ * Where the model read the level, as a short line segment in normalized image
+ * coordinates (0–1, origin top-left). Used to draw the detected level on the
+ * photo for diagnostics.
+ */
+export interface Waterline {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 export interface ReadLevelInput {
   imageUrl: string;
   scaleDescription: string | null;
   scaleMin: number | null;
   scaleMax: number | null;
   scaleUnit: string | null;
+  /**
+   * Optional per-camera annotated reference frame (boxes/arrows marking where
+   * the scale is). When present it's shown to the model first, purely to help
+   * it locate the scale — the value is still read from the current photo.
+   */
+  referenceImageUrl?: string | null;
 }
 
 export interface ReadLevelResult {
   value: number | null;
   confidence: ReadingConfidence;
   notes: string;
+  waterline: Waterline | null;
 }
 
 const responseSchema = z.object({
   value: z.number().nullable(),
   confidence: z.enum(["high", "medium", "low", "unreadable"]),
   notes: z.string(),
+  waterline: z
+    .object({
+      x1: z.number(),
+      y1: z.number(),
+      x2: z.number(),
+      y2: z.number(),
+    })
+    .nullable(),
 });
 
 const SYSTEM_PROMPT =
-  "You read level markings from camera photos. The user gives a photo and a description of the scale, including its valid numeric range and what indicates the current level. In production the indicator is usually the water surface meeting the scale; in test setups the scale description may specify a different indicator (e.g. the top edge of a wooden plank standing in for the water line). Return JSON only.";
+  "You read level markings from camera photos. The user gives a photo and a description of the scale, including its valid numeric range and what indicates the current level. In production the indicator is usually the water surface meeting the scale; in test setups the scale description may specify a different indicator (e.g. the top edge of a wooden plank standing in for the water line). The user may also provide an annotated REFERENCE image of the same fixed camera view: use it only to locate the scale and the level indicator — always read the actual value from the current photo, not the reference. You also report where you read the level as a short line segment (`waterline`) so a human can visually verify the detection. Return JSON only.";
 
 function buildUserPrompt(input: ReadLevelInput): string {
   const desc = input.scaleDescription?.trim() || "(no description provided)";
@@ -43,6 +70,8 @@ function buildUserPrompt(input: ReadLevelInput): string {
       : 'The "value" must be a number, or null if the scale or the level indicator is not clearly visible.',
     "",
     "Use confidence='unreadable' (and value=null) if the scale is obscured, dark, snowed over, or the indicator position is ambiguous. Keep notes short (one sentence).",
+    "",
+    'Also return "waterline": a short line segment {x1,y1,x2,y2} in normalized image coordinates (0 to 1, origin at the TOP-LEFT of the current photo, x rightwards, y downwards), lying exactly where the level indicator meets the scale — this is drawn on the photo so a human can check where you read. Set waterline to null whenever value is null.',
   ].join("\n");
 }
 
@@ -52,8 +81,29 @@ export async function readLevel(input: ReadLevelInput): Promise<ReadLevelResult>
       value: null,
       confidence: "unreadable",
       notes: "ANTHROPIC_API_KEY missing — vision reader skipped",
+      waterline: null,
     };
   }
+
+  const referenceUrl = input.referenceImageUrl?.trim() || null;
+
+  // With a reference: show the annotated guide first (labelled), then the
+  // current photo, then the prompt. Without: today's exact single-image path.
+  const userContent = referenceUrl
+    ? ([
+        {
+          type: "text",
+          text: "REFERENCE — annotated guide showing where/how to read the scale on this fixed camera (boxes/arrows mark the scale and the level indicator). Do not read the value from this image.",
+        },
+        { type: "image", image: new URL(referenceUrl) },
+        { type: "text", text: "CURRENT PHOTO to read:" },
+        { type: "image", image: new URL(input.imageUrl) },
+        { type: "text", text: buildUserPrompt(input) },
+      ] as const)
+    : ([
+        { type: "image", image: new URL(input.imageUrl) },
+        { type: "text", text: buildUserPrompt(input) },
+      ] as const);
 
   try {
     const { object } = await generateObject({
@@ -63,10 +113,7 @@ export async function readLevel(input: ReadLevelInput): Promise<ReadLevelResult>
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: [
-            { type: "image", image: new URL(input.imageUrl) },
-            { type: "text", text: buildUserPrompt(input) },
-          ],
+          content: [...userContent],
         },
       ],
     });
@@ -81,9 +128,21 @@ export async function readLevel(input: ReadLevelInput): Promise<ReadLevelResult>
       }
     }
 
-    return { value, confidence, notes };
+    // Waterline only makes sense with a value; clamp its coords into frame.
+    const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+    const waterline =
+      value != null && object.waterline
+        ? {
+            x1: clamp01(object.waterline.x1),
+            y1: clamp01(object.waterline.y1),
+            x2: clamp01(object.waterline.x2),
+            y2: clamp01(object.waterline.y2),
+          }
+        : null;
+
+    return { value, confidence, notes, waterline };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { value: null, confidence: "unreadable", notes: `Vision call failed: ${msg}` };
+    return { value: null, confidence: "unreadable", notes: `Vision call failed: ${msg}`, waterline: null };
   }
 }
