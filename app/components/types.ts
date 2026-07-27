@@ -9,6 +9,18 @@ export interface StationCard {
   municipality?: string;
   catchmentArea?: number;
   lastFlow: number | null;
+  /**
+   * Unit label for the displayed value — "m³/s" for a CEHQ flow, or the
+   * camera scale's own unit (e.g. "m", "cm") for a camera-reading river.
+   * Empty string when a camera has no scale unit configured.
+   */
+  flowUnit: string;
+  /**
+   * True when `lastFlow` holds a camera scale reading rather than a CEHQ
+   * flow. Used to format the value (2 decimals) and hide the flow-trend
+   * arrow, which has no meaning for a single camera reading.
+   */
+  isReading: boolean;
   forecastAt: string | null;
   sparkData: Array<{
     ts: number;

@@ -93,12 +93,14 @@ export default function RiverCard({
               className="inline-flex h-10 w-10 items-center justify-center rounded-full text-base font-bold tabular-nums"
               style={{ backgroundColor: displayColor, color: "#fff" }}
             >
-              {displayFlow.toFixed(0)}
+              {card.isReading ? displayFlow.toFixed(2) : displayFlow.toFixed(0)}
             </span>
-            <span className="text-xs font-medium text-foreground/50">
-              m&sup3;/s
-            </span>
-            {!isProjected && card.lastFlow != null && (
+            {card.flowUnit && (
+              <span className="text-xs font-medium text-foreground/50">
+                {card.flowUnit}
+              </span>
+            )}
+            {!isProjected && !card.isReading && card.lastFlow != null && (
               <FlowTendency trend={card.trend} />
             )}
           </div>
