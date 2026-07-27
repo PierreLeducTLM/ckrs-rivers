@@ -107,12 +107,16 @@ export default function RiverListItem({
                   color: "#fff",
                 }}
               >
-                {displayFlow.toFixed(1)}
-                <span className="ml-1 text-[10px] font-semibold opacity-90">
-                  m&sup3;/s
-                </span>
+                {card.isReading ? displayFlow.toFixed(2) : displayFlow.toFixed(1)}
+                {card.flowUnit && (
+                  <span className="ml-1 text-[10px] font-semibold opacity-90">
+                    {card.flowUnit}
+                  </span>
+                )}
               </span>
-              {!isProjected && <FlowTendency trend={card.trend} />}
+              {!isProjected && !card.isReading && (
+                <FlowTendency trend={card.trend} />
+              )}
             </>
           ) : (
             <p className="text-xs text-foreground/40">{t("app.noData")}</p>

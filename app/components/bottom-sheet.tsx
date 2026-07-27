@@ -131,9 +131,13 @@ export default function BottomSheet({ card, onClose, t }: BottomSheetProps) {
           {card.lastFlow != null && (
             <div className="mt-3 flex items-baseline gap-2">
               <span className="text-2xl font-bold tabular-nums">
-                {card.lastFlow.toFixed(1)}
+                {card.isReading
+                  ? card.lastFlow.toFixed(2)
+                  : card.lastFlow.toFixed(1)}
               </span>
-              <span className="text-sm text-foreground/50">m&sup3;/s</span>
+              {card.flowUnit && (
+                <span className="text-sm text-foreground/50">{card.flowUnit}</span>
+              )}
             </div>
           )}
 

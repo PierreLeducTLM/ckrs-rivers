@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { getStations, getPaddlingLevels } from "@/lib/data/rivers";
+import { getStations, getPaddlingLevels, type PaddlingLevels } from "@/lib/data/rivers";
 import { sql } from "@/lib/db/client";
 import { getPaddlingStatus, statusColor } from "@/lib/notifications/paddling-status";
 import { computeTrend } from "@/lib/notifications/evaluate";
@@ -60,6 +60,33 @@ export default async function Home() {
   }>;
   const dataMap = new Map(rows.map((r) => [r.station_id, r]));
 
+  // Latest camera reading per station. Camera-based rivers have no CEHQ flow,
+  // so their level comes from the most recent AI reading of a linked camera.
+  // Thresholds and the value are in the camera scale's own units.
+  const cameraRows = (await sql(
+    `SELECT DISTINCT ON (c.station_id)
+       c.station_id,
+       ci.reading_value,
+       c.scale_unit,
+       c.paddling_min_reading,
+       c.paddling_ideal_reading,
+       c.paddling_max_reading
+     FROM cameras c
+     JOIN camera_images ci ON ci.camera_id = c.id
+     WHERE c.active = true
+       AND c.station_id IS NOT NULL
+       AND ci.reading_value IS NOT NULL
+     ORDER BY c.station_id, ci.captured_at DESC`,
+  )) as Array<{
+    station_id: string;
+    reading_value: number;
+    scale_unit: string | null;
+    paddling_min_reading: number | null;
+    paddling_ideal_reading: number | null;
+    paddling_max_reading: number | null;
+  }>;
+  const cameraMap = new Map(cameraRows.map((r) => [r.station_id, r]));
+
   const nowTs = Date.now();
   const cutoffTs = nowTs - 2 * 24 * 60 * 60 * 1000;
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -68,7 +95,25 @@ export default async function Home() {
   const cards: StationCard[] = stations.map((station) => {
     const data = dataMap.get(station.id);
     const paddling = paddlingMap.get(station.id);
-    const { status, position } = getPaddlingStatus(data?.last_flow, paddling);
+
+    // Prefer the CEHQ flow. When a station has none (camera-based river),
+    // fall back to its latest camera reading and the camera's reading-unit
+    // thresholds so the card colours and sorts like every other river.
+    const cehqFlow = data?.last_flow ?? null;
+    const camera = cehqFlow == null ? cameraMap.get(station.id) : undefined;
+    const isReading = camera != null;
+
+    const value = isReading ? camera.reading_value : cehqFlow;
+    const effectivePaddling: PaddlingLevels | undefined = isReading
+      ? {
+          min: camera.paddling_min_reading ?? undefined,
+          ideal: camera.paddling_ideal_reading ?? undefined,
+          max: camera.paddling_max_reading ?? undefined,
+        }
+      : paddling;
+    const flowUnit = isReading ? (camera.scale_unit ?? "") : "m³/s";
+
+    const { status, position } = getPaddlingStatus(value, effectivePaddling);
     const color = status === "too-low" ? "#a1a1aa"
       : status === "too-high" ? "#D32F2F"
       : status === "unknown" ? "#a1a1aa"
@@ -110,12 +155,18 @@ export default async function Home() {
       lon: Number(station.coordinates.lon),
       municipality: municipalityMap.get(station.id) ?? undefined,
       catchmentArea: station.catchmentArea as number | undefined,
-      lastFlow: data?.last_flow ?? null,
+      lastFlow: value,
+      flowUnit,
+      isReading,
       forecastAt: data?.forecast_at ?? null,
       sparkData,
       nowTs,
-      paddling: paddling
-        ? { min: paddling.min, ideal: paddling.ideal, max: paddling.max }
+      paddling: effectivePaddling
+        ? {
+            min: effectivePaddling.min,
+            ideal: effectivePaddling.ideal,
+            max: effectivePaddling.max,
+          }
         : null,
       status,
       position,
