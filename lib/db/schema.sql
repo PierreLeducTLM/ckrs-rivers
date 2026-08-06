@@ -40,6 +40,20 @@ CREATE TABLE IF NOT EXISTS flow_readings (
 CREATE INDEX IF NOT EXISTS idx_flow_station_date
   ON flow_readings(station_id, date DESC);
 
+-- 2b. Hourly flow history (sub-daily time-series for the detail-page chart)
+-- Backfilled from CEHQ's instantaneous (15-min) archive, aggregated to hourly.
+-- Distinct from flow_readings (daily, used for model training).
+CREATE TABLE IF NOT EXISTS flow_readings_hourly (
+  station_id   TEXT NOT NULL REFERENCES stations(id) ON DELETE CASCADE,
+  ts           TIMESTAMPTZ NOT NULL,
+  flow_m3s     DOUBLE PRECISION NOT NULL,
+  source       TEXT NOT NULL DEFAULT 'cehq-instantaneous',
+  PRIMARY KEY (station_id, ts)
+);
+
+CREATE INDEX IF NOT EXISTS idx_flow_hourly_station_ts
+  ON flow_readings_hourly(station_id, ts DESC);
+
 -- 3. Models (per-station, versioned)
 CREATE TABLE IF NOT EXISTS models (
   id                    SERIAL PRIMARY KEY,
