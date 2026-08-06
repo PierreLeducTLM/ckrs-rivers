@@ -1,0 +1,13 @@
+app_identifier("com.flowcast.app") # Bundle ID — mirrors capacitor.config.ts
+
+# Supply these via environment variables or `fastlane match`/CI secrets:
+#
+#   FASTLANE_APPLE_ID               → Apple ID email (used by `apple_id` below)
+#   FASTLANE_TEAM_ID                → Apple Developer team ID (10-char)
+#   FASTLANE_ITC_TEAM_ID            → App Store Connect team ID
+#   APP_STORE_CONNECT_API_KEY_PATH  → path to an App Store Connect API key (.p8)
+#
+# Uncomment and fill in if you prefer committing non-secret IDs:
+# apple_id("your-apple-id@example.com")
+# team_id("XXXXXXXXXX")
+# itc_team_id("XXXXXXXX")

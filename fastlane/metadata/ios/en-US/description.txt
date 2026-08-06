@@ -1,0 +1,16 @@
+FlowCast brings real-time river flow data and forecasts to whitewater paddlers, kayakers, and canoeists.
+
+FEATURES
+• Live flow readings from public hydrometric stations (USGS, Environment Canada, and more)
+• Forecasts that tell you when a river will hit paddlable levels — "should be good in N days"
+• Favorite your go-to rivers for instant access
+• Push notifications when a favorite river comes into range
+• Detailed station view with flow history charts
+• Clean, fast, mobile-first interface — built for checking on the drive to the put-in
+
+Whether you're chasing a seasonal run, planning a weekend trip, or just watching the levels of your home river, FlowCast puts the data you need one tap away.
+
+PRIVACY
+We don't sell your data. Notifications are opt-in and tied only to a push token — no account required.
+
+Built by paddlers, for paddlers.

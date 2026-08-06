@@ -77,6 +77,50 @@ Screenshots are pulled from the live production URL
 The feature graphic (`images/featureGraphic.png`, 1024×500) is still
 hand-designed — see `images/featureGraphic.README.md` for the brief.
 
+## App Store release (iOS)
+
+iOS listing metadata lives under `fastlane/metadata/ios/` in the
+[`fastlane deliver`](https://docs.fastlane.tools/actions/deliver/) layout,
+with `en-US` and `fr-CA` locales mirroring the Android setup. Lanes are
+defined in `fastlane/Fastfile`.
+
+Prerequisites (must be supplied via environment / CI secrets — nothing
+sensitive is committed):
+
+- Apple Developer account + App Store Connect access
+- An App Store Connect API key (`.p8`) — path via `APP_STORE_CONNECT_API_KEY_PATH`
+- Apple ID / team IDs (see `fastlane/Appfile`)
+- macOS host with Xcode (iOS builds can't run on Linux)
+
+Install fastlane (one-time, on the macOS build machine):
+
+```bash
+gem install fastlane
+```
+
+Common lanes:
+
+```bash
+bundle exec fastlane ios metadata   # Upload listing + screenshots only (no binary)
+bundle exec fastlane ios build      # Build a signed App Store IPA into ios/build/
+bundle exec fastlane ios beta       # Build + push to TestFlight
+bundle exec fastlane ios release    # Build + upload IPA & listing (does NOT submit for review)
+```
+
+### iOS release checklist
+
+1. Bump `MARKETING_VERSION` + `CURRENT_PROJECT_VERSION` in
+   `ios/App/App.xcodeproj/project.pbxproj`.
+2. `npm run build && npm run cap:sync`
+3. Edit `fastlane/metadata/ios/en-US/release_notes.txt` (and `fr-CA`) with
+   this release's notes.
+4. Review other text fields if features changed.
+5. Generate iPhone screenshots into `fastlane/screenshots/ios/<locale>/`
+   (no committed script yet — see `fastlane/screenshots/ios/README.md`).
+6. `bundle exec fastlane ios release` from the macOS build machine.
+7. In App Store Connect, review the draft and submit for review manually
+   (the lane stops short of submission on purpose).
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
